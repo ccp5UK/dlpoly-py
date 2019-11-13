@@ -3,7 +3,7 @@
 Module to handle DLPOLY control files
 '''
 
-from .utility import (map_types)
+from utility import (map_types)
 
 class Ignore:
     ''' Class definining properties that can be ignored '''
