@@ -17,7 +17,74 @@ try:
 except AttributeError:
     collectionsAbc = collections
 
-class Control():
+class IOParam:
+    """ Class defining io parameters """
+    def __init__(self):
+        self.field = "FIELD"
+        self.config = "CONFIG"
+        self.outstats = "STATIS"
+
+    def __str__(self):
+        return (f'io field {self.field}\n'
+                f'io config {self.config}\n'
+                f'io outstats {self.outstats}')
+
+class EnsembleParam:
+    """ Class containing ensemble data """
+    means = {"nve": (None),
+             "nvt": ("evans", "langevin", "andersen", "berendsen", "hoover", "gst"),
+             "npt": ("langevin", "berendsen", "hoover", "mtk")
+             "nst": ("langevin", "berendsen", "hoover", "mtk",
+                     "area", "tens", "tenssemi", "ortho", "orthosemi")}
+    def __init__(self, *argsIn):
+        args = argsIn[:] # Make copy
+        self._ensemble = args.pop(0)
+        self._means, self._args = args_setter(args)
+
+    @property
+    def ensemble(self):
+        return self._ensemble
+
+    @ensemble.setter
+    def ensemble(self, ensemble):
+        """ Set ensemble and check if valid """
+        if ensemble not in means:
+            raise ValueError('Cannot set ensemble to be {}. Valid ensembles {}.'.format(
+                ensemble, ", ".join(EnsembleParam.means.keys())))
+        self._ensemble = ensemble
+
+    @property
+    def means(self):
+        return self._means
+
+    @means.setter
+    def means(self, means):
+        if means not in EnsembleParam.means[self.ensemble]:
+            raise ValueError('Cannot set means to be {}. Valid means {}.'.format(
+                means, ", ".join(EnsembleParam.means[self.ensemble])))
+        self._means = means
+
+    def args_setter(self, args):
+        if self.ensemble == "nve":
+            return None, []
+        means = None
+        if "tens" in args:
+            means = args.pop(arg.index("tens"))
+        if "area" in args:
+            means = args.pop(arg.index("area"))
+        if "orth" in args:
+            means = args.pop(arg.index("orth"))
+        if "semi" in args:
+            means += args.pop(arg.index("semi"))
+        if means is None:
+            means = args.pop(0)
+        return means, args
+
+    def __str__(self):
+        outStr = str(self.ensemble)
+        return f'{self.ensemble} {self.means if self.means else ""} {" ".join(args)}'
+
+class Control:
     """ Class defining a DLPOLY control file """
     params = {'binsize': float, 'cap': float, 'close time': float,
               'collect': bool, 'coulomb': bool, 'cutoff': float,
@@ -44,11 +111,9 @@ class Control():
         self.temperature = 300.0
         self.finish = True
         self.title = 'no title'
-        self.io = type('ioParam', (),
-                       {'field': 'FIELD', 'config': 'CONFIG', 'outstats': 'STATIS',
-                        '__str__': lambda self: (f'io field {self.field}\n'
-                                                 f'io config {self.config}\n'
-                                                 f'io outstats {self.outstats}')})
+        self.io = IOParam()
+        self.ensemble = type('ensembleParam', (),
+                             {'ensemble':
         self.ensemble = dict(type='nve', flavour='langevin', aniso='',
                            f=0.5, f1=0.5, f2=0.5, f3=0.5, gamma=0.5, semi=False)
         self.pressure = 0.0
@@ -76,28 +141,10 @@ class Control():
     params = property(lambda self: [key for key in Control.params])
 
     def write(self, filename="CONTROL"):
-        ctrl = self.adddire('title', nokey=True)
-
-        for key, val in self.d.items():
-            if key not in ['finish', 'title']:
-                if key == 'ensemble':
-                    ctrl += self.addensemble(val)
-                elif key in ['rdf', 'analysis', 'vaf', 'zden']:
-                    ctrl += self.addprint(key)
-                elif key in ['job', 'close']:
-                    ctrl += self.addattrib(key, 'time')
-                elif key == 'io':
-                    ctrl += self.addio(val)
-                elif key == 'variable':
-                    x = 0
-                elif key == 'timestep':
-                    ctrl += self.addtimestep(val)
-                else:
-                    ctrl += self.adddire(key)
-
-        ctrl += self.adddire('finish', nokey=True)
-        with open(filename, "w") as outFile:
-          outFile.write(ctrl)
+        """ Write the control out to a file """
+        with open(filename, 'w') as outFile:
+            for key, val in self.__dict__:
+                print(key, val)
 
 if __name__ == '__main__':
     pass
