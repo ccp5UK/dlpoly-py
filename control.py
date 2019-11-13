@@ -25,7 +25,7 @@ class IOParam:
         self.outstats = "STATIS"
 
     def __str__(self):
-        return (f'io field {self.field}\n'
+        return (f'field {self.field}\n' # First IO is key
                 f'io config {self.config}\n'
                 f'io outstats {self.outstats}')
 
@@ -33,13 +33,14 @@ class EnsembleParam:
     """ Class containing ensemble data """
     means = {"nve": (None),
              "nvt": ("evans", "langevin", "andersen", "berendsen", "hoover", "gst"),
-             "npt": ("langevin", "berendsen", "hoover", "mtk")
+             "npt": ("langevin", "berendsen", "hoover", "mtk"),
              "nst": ("langevin", "berendsen", "hoover", "mtk",
                      "area", "tens", "tenssemi", "ortho", "orthosemi")}
     def __init__(self, *argsIn):
-        args = argsIn[:] # Make copy
+        args = list(argsIn)[:] # Make copy
+        print(args)
         self._ensemble = args.pop(0)
-        self._means, self._args = args_setter(args)
+        self._means, self.args = self.args_setter(args)
 
     @property
     def ensemble(self):
@@ -65,24 +66,27 @@ class EnsembleParam:
         self._means = means
 
     def args_setter(self, args):
+
         if self.ensemble == "nve":
             return None, []
+        if not args:
+            raise ValueError('No arguments provided')
         means = None
         if "tens" in args:
-            means = args.pop(arg.index("tens"))
+            means = args.pop(args.index("tens"))
         if "area" in args:
-            means = args.pop(arg.index("area"))
+            means = args.pop(args.index("area"))
         if "orth" in args:
-            means = args.pop(arg.index("orth"))
+            means = args.pop(args.index("orth"))
         if "semi" in args:
-            means += args.pop(arg.index("semi"))
+            means += args.pop(args.index("semi"))
         if means is None:
             means = args.pop(0)
         return means, args
 
     def __str__(self):
         outStr = str(self.ensemble)
-        return f'{self.ensemble} {self.means if self.means else ""} {" ".join(args)}'
+        return f'{self.ensemble} {self.means if self.means else ""} {" ".join(self.args) if self.args else ""}'
 
 class Control:
     """ Class defining a DLPOLY control file """
@@ -107,15 +111,12 @@ class Control:
               'title': str, 'trajectory': (list, tuple), 'timestep': float,
               'variable': float, 'vdw': str, 'zden': int, 'zero': bool}
 
-    def __init__(self, **d):
+    def __init__(self, filename=None):
         self.temperature = 300.0
         self.finish = True
         self.title = 'no title'
         self.io = IOParam()
-        self.ensemble = type('ensembleParam', (),
-                             {'ensemble':
-        self.ensemble = dict(type='nve', flavour='langevin', aniso='',
-                           f=0.5, f1=0.5, f2=0.5, f3=0.5, gamma=0.5, semi=False)
+        self.ensemble = EnsembleParam("nve")
         self.pressure = 0.0
         self.collect = False
         self.steps = 10
@@ -125,6 +126,8 @@ class Control:
         self.cutoff = 0.0
         self.variable = False
         self.timestep = 0.001
+        if filename:
+            self.read_config(filename)
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -143,8 +146,9 @@ class Control:
     def write(self, filename="CONTROL"):
         """ Write the control out to a file """
         with open(filename, 'w') as outFile:
-            for key, val in self.__dict__:
+            for key, val in self.__dict__.items():
                 print(key, val)
 
 if __name__ == '__main__':
-    pass
+    cont = Control()
+    cont.write("geoff")
