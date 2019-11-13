@@ -36,6 +36,23 @@ class Specie():
 
 class Atom():
     """ Class defining a DLPOLY atom type """
+    params = {'species': Species,'pos':list,'vel':list,
+              'forces':list,'id':int}
+
+    def __init__(self):
+
+        self.species
+        self.pos = [0.0]*3
+        self.vel = [0.0]*3
+        self.forces = [0.0]*3
+
+    def __str__(self):
+        return "{0:8s {1:d}}\n{2:f 3:f 4:f}\n{5:f 6:f 7:f}\n{8:f} {9:f} {10:f}\n".format(self.species.element,self.id,self.pos,self.vel,self.forces)
+
+    def __getitem__(self, key):
+       return getattr(self, key)
+
+    params = property(lambda self: [key for key in Atom.params])
 
 class Config():
     """ Class defining a DLPOLY config file """
