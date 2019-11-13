@@ -91,25 +91,25 @@ class EnsembleParam:
 
 class Control:
     """ Class defining a DLPOLY control file """
-    params = {'binsize': float, 'cap': float, 'close time': float,
+    params = {'binsize': float, 'cap': float, 'close': float,
               'collect': bool, 'coulomb': bool, 'cutoff': float,
-              'defects': (list, tuple), 'densvar': float,
-              'distance': float, 'displacements': (list, tuple),
-              'dump': int, 'ensemble': (list, tuple), 'epsilon': float,
-              'equilibration': int, 'ewald': (list, tuple), 'exclude': bool,
-              'impact': (list, tuple), 'integrator': str,
-              'io': (list, tuple), 'job time': float, 'maxdis': float,
-              'metal': bool, 'mindis': float, 'minimise': (list, tuple),
-              'msdtmp': (list, tuple), 'multiple': int, 'mxquat': int,
-              'mxshak': int, 'mxstep': float, 'nfold': (list, tuple),
-              'ignore': (list, tuple), 'optimise': (list, tuple),
+              'defects': tuple, 'densvar': float,
+              'distance': float, 'displacements': tuple,
+              'dump': int, 'ensemble': tuple, 'epsilon': float,
+              'equilibration': int, 'ewald': tuple, 'exclude': bool,
+              'heat_flux': bool, 'impact': tuple, 'integrator': str,
+              'io': tuple, 'job': float, 'maxdis': float,
+              'metal': bool, 'mindis': float, 'minimise': tuple,
+              'msdtmp': tuple, 'multiple': int, 'mxquat': int,
+              'mxshak': int, 'mxstep': float, 'nfold': tuple,
+              'ignore': tuple, 'optimise': tuple,
               'pressure': float, 'print': int, 'print rdf': bool,
-              'print zden': bool, 'psuedo': (list, tuple), 'quaternion': float,
-              'rdf': int, 'reaction': (list, tuple), 'regauss': int, 'replay': bool,
-              'restart': (list, tuple), 'rlxtol': float, 'rvdw': float, 'scale': int,
-              'seed': (list, tuple), 'shift': (list, tuple), 'slab': bool,
-              'stack': bool, 'stats': bool, 'steps': bool, 'temperature': float,
-              'title': str, 'trajectory': (list, tuple), 'timestep': float,
+              'print zden': bool, 'psuedo': tuple, 'quaternion': float,
+              'rdf': int, 'reaction': tuple, 'regauss': int, 'replay': bool,
+              'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
+              'scale': int, 'seed': tuple, 'shift': tuple, 'slab': bool,
+              'stack': bool, 'stats': int, 'steps': int, 'temperature': float,
+              'title': str, 'trajectory': tuple, 'timestep': float,
               'variable': float, 'vdw': str, 'zden': int, 'zero': bool}
 
     def __init__(self, filename=None):
@@ -136,19 +136,26 @@ class Control:
     def __setitem__(self, key, val):
         if key not in Control.params:
             raise KeyError('Param {} not valid param name in control file.'.format(key))
-        if not isinstance(val, Control.params[key]):
+        try:
+            val = Control.params[key](val)
+        except TypeError:
             raise ValueError(
                 'Type of {} not valid, must be {}'.format(type(val).__name__,
                                                           Control.params[key].__name__))
         setattr(self, key, val)
 
-    params = property(lambda self: [key for key in Control.params])
+    keywords = property(lambda self: [key for key in Control.params])
 
     def read_config(self, filename):
         """ Read a config file """
         with open(filename, 'r') as inFile:
             self['title'] = inFile.readline()
             for line in inFile:
+                line = line.lower().strip()
+                if line == "finish":
+                    break
+                if not line or line.startswith('#') or line.startswith('l_'):
+                    continue
                 key, *args = line.split()
                 if key == "io":
                     setattr(self.io, args[0], args[1])
@@ -159,12 +166,15 @@ class Control:
                 else:
                     if len(args) == 1:
                         args = args[0]
-                    self['key'] = args
+                    self[key] = args
 
     def write(self, filename="CONTROL"):
         """ Write the control out to a file """
         with open(filename, 'w') as outFile:
+            print(self.title, file=outFile)
             for key, val in self.__dict__.items():
+                if key in ("title"):
+                    continue
                 if isinstance(val, bool):
                     if val:
                         print(key, file=outFile)
@@ -176,5 +186,5 @@ class Control:
             print("finish", file=outFile)
 
 if __name__ == '__main__':
-    cont = Control()
+    cont = Control("CONTROL")
     cont.write("geoff")
