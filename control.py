@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""
+'''
 Module to handle DLPOLY control files
-"""
+'''
 class Ignore:
-    """ Class definining properties that can be ignored """
-    __slots__ = ("elec", "index", "strict", "topology", "vdw")
+    ''' Class definining properties that can be ignored '''
+    __slots__ = ('elec', 'index', 'strict', 'topology', 'vdw')
     def __init__(self):
         self.elec = False
         self.index = False
@@ -13,19 +13,19 @@ class Ignore:
         self.vdw = False
 
     def __str__(self):
-        outStr = ""
+        outStr = ''
         for item in self.__slots__:
             if getattr(self, item):
-                outStr += f"no {item}\n"
+                outStr += f'no {item}\n'
         return outStr
 
 class IOParam:
-    """ Class defining io parameters """
-    __slots__ = ("field", "config", "outstats")
+    ''' Class defining io parameters '''
+    __slots__ = ('field', 'config', 'outstats')
     def __init__(self):
-        self.field = "FIELD"
-        self.config = "CONFIG"
-        self.outstats = "STATIS"
+        self.field = 'FIELD'
+        self.config = 'CONFIG'
+        self.outstats = 'STATIS'
 
     def __str__(self):
         return (f'io field {self.field}\n' # First IO is key
@@ -33,16 +33,22 @@ class IOParam:
                 f'io outstats {self.outstats}')
 
 class EnsembleParam:
-    """ Class containing ensemble data """
-    means = {"nve": (None),
-             "nvt": ("evans", "langevin", "andersen", "berendsen", "hoover", "gst"),
-             "npt": ("langevin", "berendsen", "hoover", "mtk"),
-             "nst": ("langevin", "berendsen", "hoover", "mtk",
-                     "area", "tens", "tenssemi", "ortho", "orthosemi")}
+    ''' Class containing ensemble data '''
+    validMeans = {'nve': (None),
+                  'nvt': ('evans', 'langevin', 'andersen', 'berendsen', 'hoover', 'gst'),
+                  'npt': ('langevin', 'berendsen', 'hoover', 'mtk'),
+                  'nst': ('langevin', 'berendsen', 'hoover', 'mtk')}
+    meansArgs = {('nve', None): 0,
+                 ('nvt', 'evans'): 0, ('nvt', 'langevin'): 1, ('nvt', 'andersen'): 2,
+                 ('nvt', 'berendsen'): 1, ('nvt', 'hoover'): (1,2), ('nvt', 'gst'): 2,
+                 ('npt', 'langevin'): 2, ('npt', 'berendsen'): 2, ('npt', 'hoover'): 2, ('npt', 'mtk'): 2,
+                 ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6), ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
     def __init__(self, *argsIn):
         args = list(argsIn)[:] # Make copy
         self._ensemble = args.pop(0)
-        self._means, self.args = self.args_setter(args)
+        if self.ensemble != 'nve':
+            self._means = args.pop(0)
+        self.args = args
 
     @property
     def ensemble(self):
@@ -50,10 +56,12 @@ class EnsembleParam:
 
     @ensemble.setter
     def ensemble(self, ensemble):
-        """ Set ensemble and check if valid """
-        if ensemble not in EnsembleParam.means:
+        ''' Set ensemble and check if valid '''
+        if ensemble not in EnsembleParam.validMeans:
             raise ValueError('Cannot set ensemble to be {}. Valid ensembles {}.'.format(
-                ensemble, ", ".join(EnsembleParam.means.keys())))
+                ensemble, ', '.join(EnsembleParam.validMeans.keys())))
+        self._means = None
+        self.args = []
         self._ensemble = ensemble
 
     @property
@@ -62,62 +70,54 @@ class EnsembleParam:
 
     @means.setter
     def means(self, means):
-        if means not in EnsembleParam.means[self.ensemble]:
+        if means not in EnsembleParam.validMeans[self.ensemble]:
             raise ValueError('Cannot set means to be {}. Valid means {}.'.format(
-                means, ", ".join(EnsembleParam.means[self.ensemble])))
+                means, ', '.join(EnsembleParam.validMeans[self.ensemble])))
+        self.args = []
         self._means = means
 
-    def args_setter(self, args):
-        """ Parse ensemble arguments """
-        if self.ensemble == "nve":
-            return None, []
-        if not args:
-            raise ValueError('No arguments provided')
-        means = None
-        if "tens" in args:
-            means = args.pop(args.index("tens"))
-        if "area" in args:
-            means = args.pop(args.index("area"))
-        if "orth" in args:
-            means = args.pop(args.index("orth"))
-        if "semi" in args:
-            means += args.pop(args.index("semi"))
-        if means is None:
-            means = args.pop(0)
-        return means, args
-
     def __str__(self):
-        return f'ensemble {self.ensemble} {self.means if self.means else ""} {" ".join(self.args) if self.args else ""}'
+        expect = EnsembleParam.meansArgs[(self.ensemble, self.means)]
+        received = len(self.args)
+        if ((isinstance(expect, (range, tuple)) and received not in expect) or
+                (isinstance(expect, int) and received != expect)):
+            raise IndexError('Wrong number of args in ensemble {} {}. Expected {}, received {}.'.format(
+                self.ensemble, self.means, expect, received))
+
+        return f'ensemble {self.ensemble} {self.means if self.means else ""} {" ".join(map(str, self.args)) if self.args else ""}'
 
 class Control:
-    """ Class defining a DLPOLY control file """
+    ''' Class defining a DLPOLY control file '''
     params = {'binsize': float, 'cap': float, 'close': float,
               'collect': bool, 'coulomb': bool, 'cutoff': float,
-              'defects': tuple, 'densvar': float,
-              'distance': float, 'displacements': tuple,
+              'densvar': float, 'distance': float,
               'dump': int, 'ensemble': tuple, 'epsilon': float,
               'equilibration': int, 'ewald': tuple, 'exclude': bool,
-              'heat_flux': bool, 'impact': tuple, 'integrator': str,
+              'heat_flux': bool, 'integrator': str,
               'io': tuple, 'job': float, 'maxdis': float,
-              'metal': bool, 'mindis': float, 'minimise': tuple,
-              'msdtmp': tuple, 'multiple': int, 'mxquat': int,
-              'mxshak': int, 'mxstep': float, 'nfold': tuple,
-              'ignore': tuple, 'optimise': tuple,
-              'pressure': float, 'print': int, 'print rdf': bool,
-              'print zden': bool, 'psuedo': tuple, 'quaternion': float,
-              'rdf': int, 'reaction': tuple, 'regauss': int, 'replay': bool,
+              'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
+              'mxshak': int, 'mxstep': float,
+              'ignore': tuple, 'pressure': float, 'print': int, 'print rdf': bool,
+              'print zden': bool, 'quaternion': float,
+              'rdf': int, 'regauss': int, 'replay': bool,
               'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
-              'scale': int, 'seed': tuple, 'shift': tuple, 'slab': bool,
-              'stack': bool, 'stats': int, 'steps': int, 'temperature': float,
-              'title': str, 'trajectory': tuple, 'timestep': float,
-              'variable': float, 'vdw': str, 'zden': int, 'zero': bool}
+              'scale': int, 'slab': bool,
+              'stack': int, 'stats': int, 'steps': int, 'temperature': float,
+              'title': str, 'timestep': float,
+              'variable': float, 'vdw': str, 'zden': int, 'zero': bool,
+              'defects': (int, int, float), 'displacements': (int, int, float),
+              'impact': (int, int, float, float, float, float),
+              'minimise': (str, int, float), 'msdtemp': (int, int),
+              'nfold': (int, int, int), 'optimise': (str, float),
+              'pseudo': (str, float, float), 'seed': (int, int),
+              'trajectory': (int, int, int)}
 
     def __init__(self, filename=None):
         self.temperature = 300.0
         self.title = 'no title'
         self.io = IOParam()
         self.ignore = Ignore()
-        self.ensemble = EnsembleParam("nve")
+        self.ensemble = EnsembleParam('nve')
         self.pressure = 0.0
         self.collect = False
         self.steps = 10
@@ -128,7 +128,7 @@ class Control:
         self.variable = False
         self.timestep = 0.001
         if filename:
-            self.read_config(filename)
+            self.read_control(filename)
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -136,44 +136,57 @@ class Control:
     def __setitem__(self, key, val):
         if key not in Control.params:
             raise KeyError('Param {} not valid param name in control file.'.format(key))
-        try:
-            val = Control.params[key](val)
-        except TypeError:
-            raise ValueError(
-                'Type of {} not valid, must be {}'.format(type(val).__name__,
-                                                          Control.params[key].__name__))
+
+        targetType = Control.params[key]
+        if not isinstance(targetType, tuple):
+            try:
+                val = targetType(val)
+            except TypeError:
+                raise ValueError(
+                    'Type of {} ({}) not valid, must be castable to {}'.format(val, type(val).__name__,
+                                                              Control.params[key].__name__))
+        else:
+            try:
+                val = [targetType(item) for item, targetType in zip(val, Control.listTypes[key])]
+            except TypeError:
+                raise ValueError(
+                    'Type of {} ({}) not valid, must be castable to {}'.format(val,
+                        [type(x).__name__ for x in val],
+                        [x.__name__ for x in  Control.listTypes[key]]))
+
         setattr(self, key, val)
 
     keywords = property(lambda self: [key for key in Control.params])
 
-    def read_config(self, filename):
-        """ Read a config file """
+    def read_control(self, filename):
+        ''' Read a control file '''
         with open(filename, 'r') as inFile:
             self['title'] = inFile.readline()
             for line in inFile:
-                line = line.lower().strip()
-                if line == "finish":
+                line = line.strip()
+                if line == 'finish':
                     break
                 if not line or line.startswith('#') or line.startswith('l_'):
                     continue
                 key, *args = line.split()
-                if key == "io":
+                key = key.lower()
+                if key == 'io':
                     setattr(self.io, args[0], args[1])
-                elif key == "no":
-                    setattr(self.ignore, args, True)
-                elif key == "ensemble":
+                elif key == 'no':
+                    setattr(self.ignore, args[0], True)
+                elif key == 'ensemble':
                     self.ensemble = EnsembleParam(*args)
                 else:
                     if len(args) == 1:
                         args = args[0]
                     self[key] = args
 
-    def write(self, filename="CONTROL"):
-        """ Write the control out to a file """
+    def write(self, filename='CONTROL'):
+        ''' Write the control out to a file '''
         with open(filename, 'w') as outFile:
             print(self.title, file=outFile)
             for key, val in self.__dict__.items():
-                if key in ("title"):
+                if key in ('title'):
                     continue
                 if isinstance(val, bool):
                     if val:
@@ -183,8 +196,13 @@ class Control:
                     print(val, file=outFile)
                 else:
                     print(key, val, file=outFile)
-            print("finish", file=outFile)
+            print('finish', file=outFile)
 
 if __name__ == '__main__':
-    cont = Control("CONTROL")
-    cont.write("geoff")
+    cont = Control('CONTROL')
+    print(cont.ensemble.args)
+    print(cont.ensemble)
+    cont.ensemble.ensemble = 'nvt'
+    cont.ensemble.means = 'langevin'
+    cont.ensemble.args = [0.5]
+    cont.write('geoff')
