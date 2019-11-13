@@ -82,7 +82,7 @@ class EnsembleParam:
 
     def __str__(self):
         outStr = str(self.ensemble)
-        return f'{self.ensemble} {self.means if self.means else ""}
+        return f'{self.ensemble} {self.means if self.means else ""} {" ".join(args)}'
 
 class Control:
     """ Class defining a DLPOLY control file """
