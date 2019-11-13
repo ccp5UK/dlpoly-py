@@ -2,6 +2,7 @@
 Module containing main DLPOLY class
 """
 
+import subprocess
 from control import Control
 from config import Config
 
@@ -34,3 +35,4 @@ class DlPoly:
                 cmd = ['sh ./env.sh']
         else:
             cmd = [cdlp]
+        subprocess.call(cmd, shell=True)
