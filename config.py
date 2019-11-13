@@ -52,16 +52,20 @@ class Atom():
         self.vel = [0.0]*3
         self.forces = [0.0]*3
 
-    def __str__(self):
-        
-        if self.level == 0 :
+    def write(self, level):
+        if level == 0:
           return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
                 self.id,self.pos)
-        elif self.level == 1:
+        elif level == 1:
           return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
                 self.id,self.pos,self.vel)
-        elif self.level == 2:
+        elif level == 2:
           return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
+                self.id,self.pos,self.vel,self.forces)
+
+
+    def __str__(self):
+        return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
                 self.id,self.pos,self.vel,self.forces)
 
     def __getitem__(self, key):
@@ -106,7 +110,7 @@ class Config():
        self.title = ""
        self.level = 0
        self.atoms = None
-       self.pbc = 0 
+       self.pbc = 0
        self.cell = np.zeros((3, 3))
 
     def __getitem__(self, key):
@@ -114,8 +118,8 @@ class Config():
 
 
     def write(self,filename='new.config',title='',level=0):
-       self.level = level 
-       with open(filename,"w") as f: 
+       self.level = level
+       with open(filename,"w") as f:
           f.write('{0:72s}\n'.format(title))
           f.write('{0:10d}{1:10d}{2:10d}\n'.format(level, self.pbc, self.natoms))
           if self.pbc > 0:
@@ -123,7 +127,7 @@ class Config():
                 f.write('{0:20.10f}{1:20.10f}{2:20.10f}\n'.format(
                     self.cell[j, 0], self.cell[j, 1], self.cell[j, 2]))
           for a in self.atoms:
-              print(a)
+              print(a.write(self.level), file=f)
 
     def read(self,filename='CONFIG'):
       try:
@@ -148,7 +152,7 @@ class Config():
       self.atoms = []
       while True:
           a = Atom().read(f,self.level)
-          if not a: 
+          if not a:
               break
           self.atoms.append(a)
       return self
