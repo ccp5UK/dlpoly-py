@@ -2,6 +2,9 @@
 '''
 Module to handle DLPOLY control files
 '''
+
+from .utility import (map_types)
+
 class Ignore:
     ''' Class definining properties that can be ignored '''
     __slots__ = ('elec', 'index', 'strict', 'topology', 'vdw')
@@ -137,22 +140,7 @@ class Control:
         if key not in Control.params:
             raise KeyError('Param {} not valid param name in control file.'.format(key))
 
-        targetTypes = Control.params[key]
-        if not isinstance(targetTypes, tuple):
-            try:
-                val = targetTypes(val)
-            except TypeError:
-                raise ValueError(
-                    'Type of {} ({}) not valid, must be castable to {}'.format(val, type(val).__name__,
-                                                              Control.params[key].__name__))
-        else:
-            try:
-                val = [targetType(item) for item, targetType in zip(val, targetTypes[key])]
-            except TypeError:
-                raise ValueError(
-                    'Type of {} ({}) not valid, must be castable to {}'.format(val,
-                        [type(x).__name__ for x in val],
-                        [x.__name__ for x in  Control.listTypes[key]]))
+        val = map_types(Control.params[key], val)
 
         setattr(self, key, val)
 
