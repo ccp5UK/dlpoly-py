@@ -2,16 +2,33 @@
 """
 Module to handle DLPOLY control files
 """
+class Ignore:
+    """ Class definining properties that can be ignored """
+    __slots__ = ("elec", "index", "strict", "topology", "vdw")
+    def __init__(self):
+        self.elec = False
+        self.index = False
+        self.strict = False
+        self.topology = False
+        self.vdw = False
+
+    def __str__(self):
+        outStr = ""
+        for item in self.__slots__:
+            if getattr(self, item):
+                outStr += f"no {item}\n"
+        return outStr
 
 class IOParam:
     """ Class defining io parameters """
+    __slots__ = ("field", "config", "outstats")
     def __init__(self):
         self.field = "FIELD"
         self.config = "CONFIG"
         self.outstats = "STATIS"
 
     def __str__(self):
-        return (f'field {self.field}\n' # First IO is key
+        return (f'io field {self.field}\n' # First IO is key
                 f'io config {self.config}\n'
                 f'io outstats {self.outstats}')
 
@@ -24,7 +41,6 @@ class EnsembleParam:
                      "area", "tens", "tenssemi", "ortho", "orthosemi")}
     def __init__(self, *argsIn):
         args = list(argsIn)[:] # Make copy
-        print(args)
         self._ensemble = args.pop(0)
         self._means, self.args = self.args_setter(args)
 
@@ -52,7 +68,7 @@ class EnsembleParam:
         self._means = means
 
     def args_setter(self, args):
-
+        """ Parse ensemble arguments """
         if self.ensemble == "nve":
             return None, []
         if not args:
@@ -71,8 +87,7 @@ class EnsembleParam:
         return means, args
 
     def __str__(self):
-        outStr = str(self.ensemble)
-        return f'{self.ensemble} {self.means if self.means else ""} {" ".join(self.args) if self.args else ""}'
+        return f'ensemble {self.ensemble} {self.means if self.means else ""} {" ".join(self.args) if self.args else ""}'
 
 class Control:
     """ Class defining a DLPOLY control file """
@@ -82,7 +97,7 @@ class Control:
               'distance': float, 'displacements': (list, tuple),
               'dump': int, 'ensemble': (list, tuple), 'epsilon': float,
               'equilibration': int, 'ewald': (list, tuple), 'exclude': bool,
-              'finish': bool, 'impact': (list, tuple), 'integrator': str,
+              'impact': (list, tuple), 'integrator': str,
               'io': (list, tuple), 'job time': float, 'maxdis': float,
               'metal': bool, 'mindis': float, 'minimise': (list, tuple),
               'msdtmp': (list, tuple), 'multiple': int, 'mxquat': int,
@@ -99,9 +114,9 @@ class Control:
 
     def __init__(self, filename=None):
         self.temperature = 300.0
-        self.finish = True
         self.title = 'no title'
         self.io = IOParam()
+        self.ignore = Ignore()
         self.ensemble = EnsembleParam("nve")
         self.pressure = 0.0
         self.collect = False
@@ -129,11 +144,36 @@ class Control:
 
     params = property(lambda self: [key for key in Control.params])
 
+    def read_config(self, filename):
+        """ Read a config file """
+        with open(filename, 'r') as inFile:
+            self['title'] = inFile.readline()
+            for line in inFile:
+                key, *args = line.split()
+                if key == "io":
+                    setattr(self.io, args[0], args[1])
+                elif key == "no":
+                    setattr(self.ignore, args, True)
+                elif key == "ensemble":
+                    self.ensemble = EnsembleParam(*args)
+                else:
+                    if len(args) == 1:
+                        args = args[0]
+                    self['key'] = args
+
     def write(self, filename="CONTROL"):
         """ Write the control out to a file """
         with open(filename, 'w') as outFile:
             for key, val in self.__dict__.items():
-                print(key, val)
+                if isinstance(val, bool):
+                    if val:
+                        print(key, file=outFile)
+                    continue
+                elif isinstance(val, (IOParam, EnsembleParam, Ignore)):
+                    print(val, file=outFile)
+                else:
+                    print(key, val, file=outFile)
+            print("finish", file=outFile)
 
 if __name__ == '__main__':
     cont = Control()
