@@ -3,20 +3,6 @@
 Module to handle DLPOLY control files
 """
 
-
-from collections import namedtuple
-import collections
-import six
-
-IOTypes = namedtuple('IOTypes', 'config field statsout')
-Ignore = namedtuple('Ignore', 'elec index strict topology vdw')
-
-# python 3.8+ compatibility
-try:
-    collectionsAbc = collections.abc
-except AttributeError:
-    collectionsAbc = collections
-
 class IOParam:
     """ Class defining io parameters """
     def __init__(self):
@@ -49,7 +35,7 @@ class EnsembleParam:
     @ensemble.setter
     def ensemble(self, ensemble):
         """ Set ensemble and check if valid """
-        if ensemble not in means:
+        if ensemble not in EnsembleParam.means:
             raise ValueError('Cannot set ensemble to be {}. Valid ensembles {}.'.format(
                 ensemble, ", ".join(EnsembleParam.means.keys())))
         self._ensemble = ensemble
