@@ -81,21 +81,25 @@ class Atom():
     params = property(lambda self: [key for key in Atom.params])
 
     def read(self,fh,level):
-        """ reads info for one atom """
-        line = fh.readline()
-        el,ids = line.split()
-        self.id=int(ids)
-        self.pos = [float(i) for i in fh.readline().split()]
-        if level > 0:
-           self.vel = [float(i) for i in fh.readline().split()]
-        if level > 1:
-           self.forces = [float(i) for i in fh.readline().split()]
+      """ reads info for one atom """
+      line = fh.readline()
+      if not line:
+          return False
+      el,ids = line.split()
+      self.id=int(ids)
+      self.pos = [float(i) for i in fh.readline().split()]
+      if level > 0:
+         self.vel = [float(i) for i in fh.readline().split()]
+      if level > 1:
+         self.forces = [float(i) for i in fh.readline().split()]
+      return self
 
 class Config():
     """ Class defining a DLPOLY config file """
     params = {'atoms': list,'cell':np.ndarray,'pbc':int,
             'natoms':int,'level':int,'title':str}
 
+    natoms = property(lambda self: len(self.atoms))
 
     def __init__(self):
 
@@ -140,11 +144,15 @@ class Config():
                       self.cell[j, i] = float(line[i])
                   except ValueError:
                       raise RuntimeError("error reading cell")
-      while f:
-          if self.atoms is None:
-              self.atoms = [Atom().read(f,self.level)]
-          else:
-              self.atoms.append(Atom().read(f,self.level))
+
+      self.atoms = []
+      while True:
+          a = Atom().read(f,self.level)
+          if not a: 
+              break
+          self.atoms.append(a)
+      return self
 
 if __name__ == '__main__':
     cnf = Config().read()
+    cnf.write()
