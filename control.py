@@ -137,17 +137,17 @@ class Control:
         if key not in Control.params:
             raise KeyError('Param {} not valid param name in control file.'.format(key))
 
-        targetType = Control.params[key]
-        if not isinstance(targetType, tuple):
+        targetTypes = Control.params[key]
+        if not isinstance(targetTypes, tuple):
             try:
-                val = targetType(val)
+                val = targetTypes(val)
             except TypeError:
                 raise ValueError(
                     'Type of {} ({}) not valid, must be castable to {}'.format(val, type(val).__name__,
                                                               Control.params[key].__name__))
         else:
             try:
-                val = [targetType(item) for item, targetType in zip(val, Control.listTypes[key])]
+                val = [targetType(item) for item, targetType in zip(val, targetTypes[key])]
             except TypeError:
                 raise ValueError(
                     'Type of {} ({}) not valid, must be castable to {}'.format(val,
