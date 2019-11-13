@@ -41,31 +41,32 @@ class Species():
 
 class Atom():
     """ Class defining a DLPOLY atom type """
-    params = {'species': list, 'pos':list, 'vel':list,
+    params = {'element': str, 'pos':list, 'vel':list,
               'forces':list, 'id':int}
 
     def __init__(self):
 
-        self.species = None
-        self.pos = [0.0]*3
-        self.vel = [0.0]*3
-        self.forces = [0.0]*3
+        self.element = ''
+        self.pos = np.zeros(3)
+        self.vel = np.zeros(3)
+        self.forces = np.zeros(3)
+        self.id = 1
 
     def write(self, level):
         if level == 0:
-            return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
-                self.id, self.pos)
-        elif level == 1:
-            return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
-                self.id, self.pos, self.vel)
-        elif level == 2:
-            return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
-                self.id, self.pos, self.vel, self.forces)
+            return "{:8s}{:10d}\n{:20.10f}{:20.10f}{:20.10f}".format(self.element,
+                self.id, *self.pos)
+        if level == 1:
+            return "{:8s}{:10d}\n{:20.10f}{:20.10f}{:20.10f}\n{:20.10f}{:20.10f}{:20.10f}".format(self.element,
+                self.id, *self.pos, *self.vel)
+        if level == 2:
+            return "{:8s}{:10d}\n{:20.10f}{:20.10f}{:20.10f}\n{:20.10f}{:20.10f}{:20.10f}\n{:20.10f}{:20.10f}{:20.10f}".format(self.element,
+                self.id, *self.pos, *self.vel, *self.forces)
 
 
     def __str__(self):
-        return "{0:8s}{1:10d}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n{0:20.10f}{1:20.10f}{2:20.10f}\n".format(self.species.element,
-                self.id, self.pos, self.vel, self.forces)
+        return "{:8s}{:10d}\n{:20.10f}{:20.10f}{:20.10f}\n{:20.10f}{:20.10f}{:20.10f}\n{:20.10f}{:20.10f}{:20.10f}\n".format(self.element,
+                self.id, *self.pos, *self.vel, *self.forces)
 
     def __getitem__(self, key):
        return getattr(self, key)
@@ -89,6 +90,7 @@ class Atom():
         if not line:
             return False
         el, ids = line.split()
+        self.element = el
         self.id = int(ids)
         self.pos = [float(i) for i in fh.readline().split()]
         if level > 0:
@@ -135,7 +137,7 @@ class Config():
             print("File {0:s} does not exist!".format(filename))
             return []
 
-        title = f.readline()
+        self.title = f.readline()
         line = f.readline().split()
         self.level = int(line[0])
         self.pbc = int(line[1])
