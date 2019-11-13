@@ -24,11 +24,13 @@ class Ignore:
 
 class IOParam:
     ''' Class defining io parameters '''
-    __slots__ = ('field', 'config', 'outstats')
-    def __init__(self):
-        self.field = 'FIELD'
-        self.config = 'CONFIG'
-        self.outstats = 'STATIS'
+    __slots__ = ('control', 'field', 'config', 'outstats')
+    def __init__(self, control='CONTROL', field='FIELD',
+                 config='CONFIG', outstats='STATIS'):
+        self.control = control
+        self.field = field
+        self.config = config
+        self.outstats = outstats
 
     def __str__(self):
         return (f'io field {self.field}\n' # First IO is key
@@ -118,7 +120,7 @@ class Control:
     def __init__(self, filename=None):
         self.temperature = 300.0
         self.title = 'no title'
-        self.io = IOParam()
+        self.io = IOParam(control=filename)
         self.ignore = Ignore()
         self.ensemble = EnsembleParam('nve')
         self.pressure = 0.0
@@ -174,7 +176,7 @@ class Control:
         with open(filename, 'w') as outFile:
             print(self.title, file=outFile)
             for key, val in self.__dict__.items():
-                if key in ('title'):
+                if key in ('title', 'filename'):
                     continue
                 if isinstance(val, bool):
                     if val:
