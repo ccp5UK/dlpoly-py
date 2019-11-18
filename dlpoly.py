@@ -8,29 +8,29 @@ from control import Control
 from config import Config
 from cli import get_command_args
 
-class DlPoly:
+class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     def __init__(self, control=None, config=None, field=None, statis=None):
         if control is not None:
-            self.control_file = control
+            self.controlFile = control
             self.load_control()
         else:
             # Default to having a control
             self.control = Control()
         if config is not None:
-            self.config_file = config
+            self.configFile = config
             self.load_config()
         if field is not None:
-            self.field_file = field
+            self.fieldFile = field
             self.load_field()
         if statis is not None:
-            self.statis = statis
+            self.statisFile = statis
             self.load_statis()
 
     def load_control(self, source=None):
         """ Load control file into class """
         if source is None:
-            source = self.control_file
+            source = self.controlFile
         if os.path.isfile(source):
             self.control = Control(source)
         else:
@@ -40,7 +40,7 @@ class DlPoly:
     def load_field(self, source=None):
         """ Load field file into class """
         if source is None:
-            source = self.field_file
+            source = self.fieldFile
         if os.path.isfile(source):
             self.field = Field(source)
         else:
@@ -49,7 +49,7 @@ class DlPoly:
     def load_config(self, source=None):
         """ Load config file into class """
         if source is None:
-            source = self.config_file
+            source = self.configFile
         if os.path.isfile(source):
             self.config = Config(source)
         else:
@@ -58,63 +58,68 @@ class DlPoly:
     def load_statis(self, source=None):
         """ Load statis file into class """
         if source is None:
-            source = self.statis_file
+            source = self.statisFile
         if os.path.isfile(source):
             self.config = Statis(source)
         else:
             print("Unable to find file: {}".format(source))
 
     @property
-    def control_file(self):
+    def controlFile(self):
+        """ Path to control file """
         return self.control.io.control
 
-    @control_file.setter
-    def control_file(self, control):
+    @controlFile.setter
+    def controlFile(self, control):
         self.control.io.control = control
 
     @property
-    def field_file(self):
+    def fieldFile(self):
+        """ Path to field file """
         return self.control.io.field
 
-    @field_file.setter
-    def field_file(self, field):
+    @fieldFile.setter
+    def fieldFile(self, field):
         self.control.io.field = field
 
     @property
-    def config_file(self):
+    def configFile(self):
+        """ Path to config file """
         return self.control.io.config
 
-    @config_file.setter
-    def config_file(self, config):
+    @configFile.setter
+    def configFile(self, config):
         self.control.io.config = config
 
     @property
-    def statis_file(self):
+    def statisFile(self):
+        """ Path to statis file """
         return self.control.io.outstats
 
-    @statis_file.setter
-    def statis_file(self, statis):
+    @statisFile.setter
+    def statisFile(self, statis):
         self.control.io.outstats = statis
 
 
-    def run(self, dlp="DLPOLY.Z", modules=(), np=1, mpi='mpirun -n'):
+    def run(self, executable="DLPOLY.Z", modules=(), numProcs=1, mpi='mpirun -n'):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
-        if np > 1:
-            cdlp = "{0:s} {1:d} {2:s} {3:s}".format(mpi, np, dlp, self.control_file)
+        if numProcs > 1:
+            runCommand = "{0:s} {1:d} {2:s} {3:s}".format(mpi, numProcs, executable, self.controlFile)
         else:
-            cdlp = "{0:s} {1:s}".format(dlp, self.control_file)
+            runCommand = "{0:s} {1:s}".format(executable, self.controlFile)
 
         if modules:
-            ll="module purge && module load " + modules
+            loadMods = "module purge && module load " + modules
             with open("env.sh", 'w') as outFile:
-                outFile.write(ll+"\n")
-                outFile.write(cdlp)
+                outFile.write(loadMods+"\n")
+                outFile.write(runCommand)
                 cmd = ['sh ./env.sh']
         else:
-            cmd = [cdlp]
+            cmd = [runCommand]
         subprocess.call(cmd, shell=True)
 
 if __name__ == "__main__":
     argList = get_command_args()
+    DLPoly(control=argList.control, config=argList.config, field=argList.field, statis=argList.statis)
