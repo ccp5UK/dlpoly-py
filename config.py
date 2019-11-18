@@ -106,13 +106,16 @@ class Config():
 
     natoms = property(lambda self: len(self.atoms))
 
-    def __init__(self):
+    def __init__(self, source=None):
 
         self.title = ""
         self.level = 0
         self.atoms = None
         self.pbc = 0
         self.cell = np.zeros((3, 3))
+
+        if source is not None:
+            self.read(source)
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -132,7 +135,7 @@ class Config():
 
     def read(self, filename='CONFIG'):
         try:
-            f=open(filename, 'r')
+            f = open(filename, 'r')
         except IOError:
             print("File {0:s} does not exist!".format(filename))
             return []
@@ -152,7 +155,7 @@ class Config():
 
         self.atoms = []
         while True:
-            a = Atom().read(f,self.level)
+            a = Atom().read(f, self.level)
             if not a:
                 break
             self.atoms.append(a)
