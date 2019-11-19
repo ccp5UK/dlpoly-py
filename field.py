@@ -17,7 +17,7 @@ class Interaction(ABC):
     @potClass.setter
     def potClass(self, potClass):
         if potClass not in self.potClasses:
-            raise IOError("Unrecognised potential class {} must be one of {}".format(potClass,
+            raise IOError("Unrecognised {} class {}. Must be one of {}".format(type(self).__name__, potClass,
                                                                                      ", ".join(self.potClasses)))
         self._potClass = potClass
 
