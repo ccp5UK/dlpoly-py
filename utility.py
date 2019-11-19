@@ -12,7 +12,7 @@ def peek(iterable):
         first = next(iterable)
     except StopIteration:
         return None
-    return first, itertools.chain([first], iterable)
+    return itertools.chain([first], iterable)
 
 def read_line(inFile):
     """ Read a line, stripping comments and blank lines """

@@ -9,6 +9,9 @@ from utility import read_line, peek
 
 class Interaction(ABC):
     """ Abstract base class for managing atomic interactions """
+    def __init__(self):
+        self._potClass = None
+
     nAtoms = {}
     @property
     def potClass(self):
@@ -18,7 +21,7 @@ class Interaction(ABC):
     def potClass(self, potClass):
         if potClass not in self.potClasses:
             raise IOError("Unrecognised {} class {}. Must be one of {}".format(type(self).__name__, potClass,
-                                                                                     ", ".join(self.potClasses)))
+                                                                               ", ".join(self.potClasses)))
         self._potClass = potClass
 
     potClasses = property(lambda self: [potClass for potClass in self.nAtoms.keys()])
@@ -27,6 +30,7 @@ class Bond(Interaction):
     """ Class containing information regarding bonds in molecules """
     nAtoms = {"atoms": 1, "bonds": 2, "constraints": 2, "angles": 3, "dihedrals": 4, "inversions": 4, "rigid": -1}
     def __init__(self, potClass=None, params=None):
+        Interaction.__init__(self)
         self.potClass = potClass
         # In bonds key comes first...
         self.potType, params = params[0], params[1:]
@@ -34,11 +38,15 @@ class Bond(Interaction):
         # Atoms always in alphabetical/numerical order
         self.atoms = sorted(self.atoms)
 
+    def __str__(self):
+        return "{} {} {}".format(self.potType, " ".join(self.atoms), " ".join(self.params))
+
 class Potential(Interaction):
     """ Class containing information regarding potentials """
     nAtoms = {"extern": 0, "vdw": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4}
 
     def __init__(self, potClass=None, params=None):
+        Interaction.__init__(self)
         self.potClass = potClass
         # In potentials atoms come first...
         self.atoms, params = params[0:Potential.nAtoms[potClass]], params[Potential.nAtoms[potClass]:]
@@ -46,6 +54,9 @@ class Potential(Interaction):
         if params is not None:
             # Atoms always in alphabetical/numerical order
             self.atoms = sorted(self.atoms)
+
+    def __str__(self):
+        return "{} {} {}".format(" ".join(self.atoms), self.potType, " ".join(self.params))
 
 class PotHaver(ABC):
     """ Abstract base class defining an object which contains potentials or bonds """
@@ -61,24 +72,39 @@ class PotHaver(ABC):
 
     def get_pot_by_species(self, species):
         """ Return all pots for a given pot species """
-        out = (pot for potSet in self.pots.values() for pot in potSet if species in pot.atoms)
-        if peek(out) is None:
+        out = peek(pot for potSet in self.pots.values() for pot in potSet if species in pot.atoms)
+        if out is None:
             print("No potentials for species {} found".format(species))
+            out = ()
         return out
 
     def get_pot_by_class(self, potClass):
         """ Return all pots for a given pot class """
-        out = (pot for potSet in self.pots.values() for pot in potSet if pot.potClass == potClass)
-        if peek(out) is None:
+        out = peek(pot for potSet in self.pots.values() for pot in potSet if pot.potClass == potClass)
+        if out is None:
             print("No potentials for potClass {} found".format(potClass))
+            out = ()
         return out
 
     def get_pot_by_type(self, potType):
         """ Return all pots for a given pot type """
-        out = (pot for potSet in self.pots.values() for pot in potSet if pot.potType == potType)
-        if peek(out) is None:
+        out = peek(pot for potSet in self.pots.values() for pot in potSet if pot.potType == potType)
+        if out is None:
             print("No potentials for potType {} found".format(potType))
+            out = ()
         return out
+
+    def get_num_pot_by_species(self, species):
+        """ Return all pots for a given pot species """
+        return len([pot for potSet in self.pots.values() for pot in potSet if species in pot.atoms])
+
+    def get_num_pot_by_class(self, potClass):
+        """ Return all pots for a given pot class """
+        return len([pot for potSet in self.pots.values() for pot in potSet if pot.potClass == potClass])
+
+    def get_num_pot_by_type(self, potType):
+        """ Return all pots for a given pot type """
+        return len([pot for potSet in self.pots.values() for pot in potSet if pot.potType == potType])
 
 
 class Molecule(PotHaver):
@@ -89,7 +115,9 @@ class Molecule(PotHaver):
         self.nMols = 0
         self.species = {}
 
-    def read_molecule(self, fieldFile):
+    activeBonds = property(lambda self: (name for name in Bond.nAtoms if self.get_num_pot_by_class(name)))
+
+    def read(self, fieldFile):
         """ Read a single molecule into class and return itself """
         self.name = read_line(fieldFile).strip()
         self.nMols = int(read_line(fieldFile).split()[1])
@@ -101,6 +129,21 @@ class Molecule(PotHaver):
             line = read_line(fieldFile)
         return self
 
+    def write(self, outFile):
+        """ Write self to outFile """
+        print(self.name, file=outFile)
+        print("nummols {}".format(self.nMols), file=outFile)
+        print("atoms {}".format(len(self.species)), file=outFile)
+        for element in self.species.values():
+            print(element, file=outFile)
+
+        for potClass in self.activeBonds:
+            pots = self.get_pot_by_class(potClass)
+            print("{} {}".format(potClass, len(list(pots)), file=outFile))
+            for pot in pots:
+                print(pot, file=outFile)
+        print("finish", file=outFile)
+        
     def _read_block(self, fieldFile, potClass, nPots):
         """ Read a potentials block """
         if potClass == "atoms":
@@ -135,7 +178,6 @@ class Field(PotHaver):
             self.source = source
             self.read(self.source)
 
-
     vdws = property(lambda self: list(self.get_pot_by_class("vdw")))
     metals = property(lambda self: list(self.get_pot_by_class("metal")))
     rdfs = property(lambda self: list(self.get_pot_by_class("rdf")))
@@ -153,6 +195,7 @@ class Field(PotHaver):
     nFbps = property(lambda self: len(self.fbps))
     nExterns = property(lambda self: len(self.externs))
 
+    activePots = property(lambda self: (name for name in Potential.nAtoms if self.get_num_pot_by_class(name)))
     species = property(lambda self: {spec.element: spec for mol in self.molecules for spec in mol.species.values()})
     potSpecies = property(lambda self: {spec for specPairs in self.pots for spec in specPairs})
 
@@ -182,12 +225,26 @@ class Field(PotHaver):
                 nVals = int(nVals)
                 if key == "molecules":
                     for _ in range(nVals):
-                        self.molecules.append(Molecule().read_molecule(inFile))
+                        self.molecules.append(Molecule().read(inFile))
                 else:
                     self._read_block(inFile, key, nVals)
                 line = read_line(inFile)
 
+    def write(self, fieldFile="FIELD"):
+        with open(fieldFile, 'w') as outFile:
+            print(self.header, file=outFile)
+            print("units {}".format(self.units), file=outFile)
+            print("molecules {}".format(self.nMolecules), file=outFile)
+            for molecule in self.molecules:
+                molecule.write(outFile)
+            for potClass in self.activePots:
+                pots = list(self.get_pot_by_class(potClass))
+                print("{} {}".format(potClass, len(list(pots))), file=outFile)
+                for pot in pots:
+                    print(pot, file=outFile)
+            print("close", file=outFile)
+
 if __name__ == "__main__":
     FLD = Field("FIELD")
-    print(FLD.species)
-    print(*FLD.get_pot_by_species("Ar"))
+    FLD.write("geoff")
+    
