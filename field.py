@@ -10,12 +10,16 @@ from utility import read_line, peek
 class Interaction(ABC):
     """ Abstract base class for managing atomic interactions """
     nAtoms = {}
+    @property
+    def potClass(self):
+        return self._potClass
+
     @potClass.setter
     def potClass(self, potClass):
         if potClass not in self.potClasses:
             raise IOError("Unrecognised potential class {} must be one of {}".format(potClass,
                                                                                      ", ".join(self.potClasses)))
-        self.potClass = potClass
+        self._potClass = potClass
 
     potClasses = property(lambda self: [potClass for potClass in self.nAtoms.keys()])
 
