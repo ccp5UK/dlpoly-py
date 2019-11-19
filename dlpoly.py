@@ -6,6 +6,7 @@ import subprocess
 import os.path
 from control import Control
 from config import Config
+from field import Field
 from cli import get_command_args
 
 class DLPoly:
