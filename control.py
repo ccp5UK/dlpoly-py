@@ -3,12 +3,14 @@
 Module to handle DLPOLY control files
 '''
 
-from utility import (map_types)
+from utility import DLPData
 
-class Ignore:
+class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
     __slots__ = ('elec', 'index', 'strict', 'topology', 'vdw')
     def __init__(self):
+        DLPData.__init__(self, {'elec': bool, 'index': bool, 'strict': bool,
+                                'topology': bool, 'vdw': bool})
         self.elec = False
         self.index = False
         self.strict = False
@@ -22,11 +24,13 @@ class Ignore:
                 outStr += f'no {item}\n'
         return outStr
 
-class IOParam:
+class IOParam(DLPData):
     ''' Class defining io parameters '''
     __slots__ = ('control', 'field', 'config', 'outstats')
     def __init__(self, control='CONTROL', field='FIELD',
                  config='CONFIG', outstats='STATIS'):
+        DLPData.__init__(self, {'control': str, 'field': str,
+                                'config': str, 'outstats': str})
         self.control = control
         self.field = field
         self.config = config
@@ -45,9 +49,10 @@ class EnsembleParam:
                   'nst': ('langevin', 'berendsen', 'hoover', 'mtk')}
     meansArgs = {('nve', None): 0,
                  ('nvt', 'evans'): 0, ('nvt', 'langevin'): 1, ('nvt', 'andersen'): 2,
-                 ('nvt', 'berendsen'): 1, ('nvt', 'hoover'): (1,2), ('nvt', 'gst'): 2,
+                 ('nvt', 'berendsen'): 1, ('nvt', 'hoover'): (1, 2), ('nvt', 'gst'): 2,
                  ('npt', 'langevin'): 2, ('npt', 'berendsen'): 2, ('npt', 'hoover'): 2, ('npt', 'mtk'): 2,
-                 ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6), ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
+                 ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6),
+                 ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
     def __init__(self, *argsIn):
         args = list(argsIn)[:] # Make copy
         self._ensemble = args.pop(0)
@@ -57,6 +62,7 @@ class EnsembleParam:
 
     @property
     def ensemble(self):
+        ''' The thermodynamic ensemble '''
         return self._ensemble
 
     @ensemble.setter
@@ -71,6 +77,7 @@ class EnsembleParam:
 
     @property
     def means(self):
+        ''' The integrator used to maintain the ensemble '''
         return self._means
 
     @means.setter
@@ -89,35 +96,36 @@ class EnsembleParam:
             raise IndexError('Wrong number of args in ensemble {} {}. Expected {}, received {}.'.format(
                 self.ensemble, self.means, expect, received))
 
-        return f'ensemble {self.ensemble} {self.means if self.means else ""} {" ".join(map(str, self.args)) if self.args else ""}'
+        return 'ensemble {} {} {}'.format(self.ensemble,
+                                          self.means if self.means else "",
+                                          " ".join(map(str, self.args)) if self.args else "")
 
-class Control:
+class Control(DLPData):
     ''' Class defining a DLPOLY control file '''
-    params = {'binsize': float, 'cap': float, 'close': float,
-              'collect': bool, 'coulomb': bool, 'cutoff': float,
-              'densvar': float, 'distance': float,
-              'dump': int, 'ensemble': tuple, 'epsilon': float,
-              'equilibration': int, 'ewald': tuple, 'exclude': bool,
-              'heat_flux': bool, 'integrator': str,
-              'io': tuple, 'job': float, 'maxdis': float,
-              'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
-              'mxshak': int, 'mxstep': float,
-              'ignore': tuple, 'pressure': float, 'print': int, 'print rdf': bool,
-              'print zden': bool, 'quaternion': float,
-              'rdf': int, 'regauss': int, 'replay': bool,
-              'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
-              'scale': int, 'slab': bool,
-              'stack': int, 'stats': int, 'steps': int, 'temperature': float,
-              'title': str, 'timestep': float,
-              'variable': float, 'vdw': str, 'zden': int, 'zero': bool,
-              'defects': (int, int, float), 'displacements': (int, int, float),
-              'impact': (int, int, float, float, float, float),
-              'minimise': (str, int, float), 'msdtemp': (int, int),
-              'nfold': (int, int, int), 'optimise': (str, float),
-              'pseudo': (str, float, float), 'seed': (int, int),
-              'trajectory': (int, int, int)}
-
     def __init__(self, filename=None):
+        DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': float,
+                                'collect': bool, 'coulomb': bool, 'cutoff': float,
+                                'densvar': float, 'distance': float,
+                                'dump': int, 'ensemble': tuple, 'epsilon': float,
+                                'equilibration': int, 'ewald': tuple, 'exclude': bool,
+                                'heat_flux': bool, 'integrator': str,
+                                'io': tuple, 'job': float, 'maxdis': float,
+                                'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
+                                'mxshak': int, 'mxstep': float,
+                                'ignore': tuple, 'pressure': float, 'print': int, 'print rdf': bool,
+                                'print zden': bool, 'quaternion': float,
+                                'rdf': int, 'regauss': int, 'replay': bool,
+                                'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
+                                'scale': int, 'slab': bool,
+                                'stack': int, 'stats': int, 'steps': int, 'temperature': float,
+                                'title': str, 'timestep': float,
+                                'variable': float, 'vdw': str, 'zden': int, 'zero': bool,
+                                'defects': (int, int, float), 'displacements': (int, int, float),
+                                'impact': (int, int, float, float, float, float),
+                                'minimise': (str, int, float), 'msdtemp': (int, int),
+                                'nfold': (int, int, int), 'optimise': (str, float),
+                                'pseudo': (str, float, float), 'seed': (int, int),
+                                'trajectory': (int, int, int)})
         self.temperature = 300.0
         self.title = 'no title'
         self.io = IOParam(control=filename)
@@ -134,19 +142,6 @@ class Control:
         self.timestep = 0.001
         if filename:
             self.read_control(filename)
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, val):
-        if key not in Control.params:
-            raise KeyError('Param {} not valid param name in control file.'.format(key))
-
-        val = map_types(Control.params[key], val)
-
-        setattr(self, key, val)
-
-    keywords = property(lambda self: [key for key in Control.params])
 
     def read_control(self, filename):
         ''' Read a control file '''
@@ -189,10 +184,10 @@ class Control:
             print('finish', file=outFile)
 
 if __name__ == '__main__':
-    cont = Control('CONTROL')
-    print(cont.ensemble.args)
-    print(cont.ensemble)
-    cont.ensemble.ensemble = 'nvt'
-    cont.ensemble.means = 'langevin'
-    cont.ensemble.args = [0.5]
-    cont.write('geoff')
+    CONT = Control('CONTROL')
+    print(CONT.ensemble.args)
+    print(CONT.ensemble)
+    CONT.ensemble.ensemble = 'nvt'
+    CONT.ensemble.means = 'langevin'
+    CONT.ensemble.args = [0.5]
+    CONT.write('geoff')

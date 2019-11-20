@@ -23,12 +23,12 @@ class StoreDictKeyPair(argparse.Action):
             newDict[key] = value
         setattr(namespace, self.dest, newDict)
 
-_parser = argparse.ArgumentParser(description='Parser for the DLPOLY file parser',
+_PARSER = argparse.ArgumentParser(description='Parser for the DLPOLY file parser',
                                   add_help=True, formatter_class=SmartFormatter)
-_parser.add_argument("-s", "--statis", help="Statis file to load", type=str)
-_parser.add_argument("-c", "--control", help="Control file to load", type=str)
-_parser.add_argument("-f", "--field", help="Field file to load", type=str)
-_parser.add_argument("-C", "--config", help="Config file to load", type=str)
+_PARSER.add_argument("-s", "--statis", help="Statis file to load", type=str)
+_PARSER.add_argument("-c", "--control", help="Control file to load", type=str)
+_PARSER.add_argument("-f", "--field", help="Field file to load", type=str)
+_PARSER.add_argument("-C", "--config", help="Config file to load", type=str)
 
 def get_command_args():
     """Run parser and parse arguments
@@ -37,8 +37,4 @@ def get_command_args():
     :rtype: argparse.Namespace
 
     """
-    argList = _parser.parse_args()
-    if not argList.sources:
-        _parser.print_help()
-        exit()
-    return argList
+    return _PARSER.parse_args()
