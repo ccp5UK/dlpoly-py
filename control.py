@@ -7,8 +7,7 @@ from utility import DLPData
 
 class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
-    __slots__ = ('elec', 'index', 'strict', 'topology', 'vdw')
-    def __init__(self):
+    def __init__(self, *args):
         DLPData.__init__(self, {'elec': bool, 'index': bool, 'strict': bool,
                                 'topology': bool, 'vdw': bool})
         self.elec = False
@@ -19,16 +18,15 @@ class Ignore(DLPData):
 
     def __str__(self):
         outStr = ''
-        for item in self.__slots__:
+        for item in self.keys:
             if getattr(self, item):
                 outStr += f'no {item}\n'
         return outStr
 
 class IOParam(DLPData):
     ''' Class defining io parameters '''
-    __slots__ = ('control', 'field', 'config', 'outstats')
     def __init__(self, control='CONTROL', field='FIELD',
-                 config='CONFIG', outstats='STATIS'):
+                 config='CONFIG', outstats='STATIS', *args):
         DLPData.__init__(self, {'control': str, 'field': str,
                                 'config': str, 'outstats': str})
         self.control = control
@@ -54,7 +52,10 @@ class EnsembleParam:
                  ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6),
                  ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
     def __init__(self, *argsIn):
+        if not argsIn:
+            argsIn = ("nve")
         args = list(argsIn)[:] # Make copy
+
         self._ensemble = args.pop(0)
         if self.ensemble != 'nve':
             self._means = args.pop(0)
@@ -106,13 +107,13 @@ class Control(DLPData):
         DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': float,
                                 'collect': bool, 'coulomb': bool, 'cutoff': float,
                                 'densvar': float, 'distance': float,
-                                'dump': int, 'ensemble': tuple, 'epsilon': float,
+                                'dump': int, 'ensemble': EnsembleParam, 'epsilon': float,
                                 'equilibration': int, 'ewald': tuple, 'exclude': bool,
                                 'heat_flux': bool, 'integrator': str,
-                                'io': tuple, 'job': float, 'maxdis': float,
+                                'io': IOParam, 'job': float, 'maxdis': float,
                                 'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
                                 'mxshak': int, 'mxstep': float,
-                                'ignore': tuple, 'pressure': float, 'print': int, 'print rdf': bool,
+                                'ignore': Ignore, 'pressure': float, 'print': int, 'print rdf': bool,
                                 'print zden': bool, 'quaternion': float,
                                 'rdf': int, 'regauss': int, 'replay': bool,
                                 'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
@@ -171,7 +172,7 @@ class Control(DLPData):
         with open(filename, 'w') as outFile:
             print(self.title, file=outFile)
             for key, val in self.__dict__.items():
-                if key in ('title', 'filename'):
+                if key in ('title', 'filename') or key.startswith('_'):
                     continue
                 if isinstance(val, bool):
                     if val:
@@ -179,15 +180,12 @@ class Control(DLPData):
                     continue
                 elif isinstance(val, (IOParam, EnsembleParam, Ignore)):
                     print(val, file=outFile)
+                elif isinstance(val, (tuple, list)):
+                    print(key, " ".join(val), file=outFile)
                 else:
                     print(key, val, file=outFile)
             print('finish', file=outFile)
 
 if __name__ == '__main__':
     CONT = Control('CONTROL')
-    print(CONT.ensemble.args)
-    print(CONT.ensemble)
-    CONT.ensemble.ensemble = 'nvt'
-    CONT.ensemble.means = 'langevin'
-    CONT.ensemble.args = [0.5]
     CONT.write('geoff')

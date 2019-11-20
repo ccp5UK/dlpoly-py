@@ -34,8 +34,13 @@ class DLPData(ABC):
     className = property(lambda self: type(self).__name__)
 
     def __setattr__(self, key, val):
-        if key == "_dataTypes":
+        if key == "_dataTypes": # Protect datatypes
+            if not hasattr(self, "dataTypes"):
+                self.__dict__[key] = val
+            else:
+                print("Cannot alter dataTypes")
             return
+
         if key not in self.dataTypes:
             print("Param {} not allowed in {} definition".format(key, self.className.lower()))
             return
@@ -44,24 +49,45 @@ class DLPData(ABC):
         self.__dict__[key] = val
 
     def __getitem__(self, key):
-        return getattr(self, key)
+        print(key)
+        return getattr(self, str(key))
 
     def __setitem__(self, key, val):
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
         """ Map argument types to their respective types """
-        if not isinstance(self.dataTypes[key], tuple):
+        dType = self._dataTypes[key]
+        if isinstance(dType, tuple):
             try:
-                val = self.dataTypes[key](vals)
-            except TypeError:
-                print('Type of {} ({}) not valid, must be castable to {}'.format(vals, type(vals).__name__,
-                                                                                 self.dataTypes[key].__name__))
-        else:
-            try:
-                val = [targetType(item) for item, targetType in zip(vals, self.dataTypes[key][key])]
+                if ... in dType:
+                    loc = dType.index(...)
+                    if loc != len(dType)-1:
+                        pre, ellided, post = dType[:loc], dType[loc-1], dType[loc+1:]
+                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                               [ellided(item) for item in vals[loc:-len(post)]] +
+                               [targetType(item) for item, targetType in zip(vals[-len(post):], post)])
+                    else:
+                        pre, ellided = dType[:loc], dType[loc-1]
+                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                               [ellided(item) for item in vals[loc:]])
+    
+                else:
+                    val = [targetType(item) for item, targetType in zip(vals, dType)]
             except TypeError:
                 print('Type of {} ({}) not valid, must be castable to {}'.format(vals,
                                                                                  [type(x).__name__ for x in vals],
-                                                                                 [x.__name__ for x in self.dataTypes[key]]))
+                                                                                 [x.__name__ for x in dType]))
+        elif isinstance(vals, dType): # Already right type
+            val = vals
+        elif dType is bool: # If present true unless explicitly false
+            val = vals not in (0, False)
+
+        else:
+            try:
+                val = self._dataTypes[key](vals)
+            except TypeError as err:
+                print(err)
+                print('Type of {} ({}) not valid, must be castable to {}'.format(vals, type(vals).__name__,
+                                                                                 dType.__name__))
         return val
