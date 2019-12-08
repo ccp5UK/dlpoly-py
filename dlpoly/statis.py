@@ -7,8 +7,9 @@ import numpy as np
 
 class Statis:
     __version__ = "0"
+
     def __init__(self):
-        self.n=10
+        self.ni = 10
 
 
 def read_rdf(filename="RDFDAT"):
