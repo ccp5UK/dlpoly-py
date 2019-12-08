@@ -1,14 +1,35 @@
+image: "python:3.7"
+
+before_script:
+  - python --version
+  - pip install -r requirements.txt
+
 stages:
+  - static
+  - build
   - test
 
+flake8:
+  stage: static
+  script:
+    - flake8 --max-line-length=120 dlpoly/*.py
+    - flake8 --max-line-length=120 examples/*.py
+
+pylint:
+  stage: static
+  allow_failure: true
+  script:
+    - pylint -d C0301 dlpoly/*.py      
+    - pylint -d C0301 examples/*.py      
+
 build:
-  image: python:3.7
-  stage: test
+  stage: build
   script: 
-    - apt-get update -qy
-    - apt install -y python3-pip
-    - pip3 install numpy 
     - python3 ./setup.py build  
     - python3 ./setup.py install 
+
+test:
+  stage: test
+  script:
     - cd examples && ./test-config.py 
 
