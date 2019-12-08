@@ -4,10 +4,10 @@ Module containing main DLPOLY class
 
 import subprocess
 import os.path
-from control import Control
-from config import Config
-from field import Field
-from cli import get_command_args
+from dlpoly.control import Control
+from dlpoly.config import Config
+from dlpoly.field import Field
+from dlpoly.cli import get_command_args
 
 class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """

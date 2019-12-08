@@ -2,7 +2,7 @@
 DLPOLY Species class
 """
 
-from utility import DLPData
+from dlpoly.utility import DLPData
 
 class Species(DLPData):
     """ Class defining a DLPOLY species type """

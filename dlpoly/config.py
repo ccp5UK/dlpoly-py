@@ -3,8 +3,8 @@ Module to handle DLPOLY config files
 '''
 
 import numpy as np
-from species import Species
-from utility import DLPData
+from dlpoly.species import Species
+from dlpoly.utility import DLPData
 
 class Atom(DLPData):
     ''' Class defining a DLPOLY atom type '''

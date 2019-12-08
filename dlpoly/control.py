@@ -3,7 +3,7 @@
 Module to handle DLPOLY control files
 '''
 
-from utility import DLPData
+from dlpoly.utility import DLPData
 
 class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''

@@ -4,8 +4,8 @@ Module containing data relating to DLPOLY field files
 
 from collections import defaultdict
 from abc import ABC
-from species import Species
-from utility import read_line, peek
+from dlpoly.species import Species
+from dlpoly.utility import read_line, peek
 
 class Interaction(ABC):
     ''' Abstract base class for managing atomic interactions '''
