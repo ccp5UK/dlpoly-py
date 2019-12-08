@@ -11,7 +11,7 @@ class ConfigTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(ConfigTest, cls).setUpClass()
-        cls.config = dlp.DLPoly(config="CONFIG").config
+        cls.config = dlp.DLPoly(config="tests/CONFIG").config
 
     def test_config_natoms(self):
         self.assertEqual(self.config.natoms, 99120,
