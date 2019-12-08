@@ -20,7 +20,13 @@ pylint:
   allow_failure: true
   script:
     - pylint -d C0301 dlpoly/*.py      
-    - pylint -d C0301 examples/*.py      
+    - pylint -d C0301 examples/*.py
+
+mypy:
+  stage: static
+  allow_failure: true
+  script:
+  - for i in dlpoly/*.py; do python -m mypy $i; done
 
 build:
   stage: build
