@@ -6,7 +6,8 @@ build:
   stage: test
   script: 
     - apt-get update -qy
-    - apt install -y python3-numpy-dev
+    - apt install -y python3-pip
+    - pip3 install numpy 
     - python3 ./setup.py build  
     - python3 ./setup.py install 
     - cd examples && ./test-config.py 
