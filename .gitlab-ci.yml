@@ -7,7 +7,6 @@ before_script:
 stages:
   - static
   - build
-  - test
 
 flake8:
   stage: static
@@ -33,9 +32,4 @@ build:
   script: 
     - python3 ./setup.py build  
     - python3 ./setup.py install 
-
-test:
-  stage: test
-  script:
     - cd examples && ./test-config.py 
-
