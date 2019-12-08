@@ -82,12 +82,13 @@ class Config():
         self.cell = np.zeros((3, 3))
 
         if source is not None:
+            self.source = source
             self.read(source)
 
-    def write(self, filename='new.config', title='', level=0):
+    def write(self, filename='new.config', title=None, level=0):
         self.level = level
         with open(filename, 'w') as outFile:
-            outFile.write('{0:72s}\n'.format(title))
+            outFile.write('{0:72s}\n'.format(self.title if title is None else title))
             outFile.write('{0:10d}{1:10d}{2:10d}\n'.format(level,
                                                            self.pbc,
                                                            self.natoms))
@@ -95,8 +96,8 @@ class Config():
                 for j in range(3):
                     outFile.write('{0:20.10f}{1:20.10f}{2:20.10f}\n'.format(
                         self.cell[j, 0], self.cell[j, 1], self.cell[j, 2]))
-                    for atom in self.atoms:
-                        print(atom.write(self.level), file=outFile)
+            for atom in self.atoms:
+                print(atom.write(self.level), file=outFile)
 
     def read(self, filename='CONFIG'):
         try:
@@ -105,7 +106,7 @@ class Config():
             print('File {0:s} does not exist!'.format(filename))
             return []
 
-        self.title = fileIn.readline()
+        self.title = fileIn.readline().strip()
         line = fileIn.readline().split()
         self.level = int(line[0])
         self.pbc = int(line[1])
