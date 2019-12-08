@@ -1,20 +1,28 @@
 ''' simple dlpoly utilities to play with inputs and outputs '''
 
 import sys
-import numpy as np 
+import numpy as np
 from distutils.version import LooseVersion
+from os.path import dirname, basename, isfile, join
+import glob
 
 if sys.version_info[0] == 2:
     raise ImportError('dlpoly-py requires Python3. This is Python2.')
 
-if LooseVersion(np.__version__) < '1.9':
+if LooseVersion(np.__version__) < '1.5':
     raise ImportError(
-        'dlpoly=py needs NumPy-1.9.0 or later. You have: %s' % np.__version__)
+        'dlpoly-py needs NumPy-1.5.0 or later. You have: %s' % np.__version__)
 
 
-# this is stupid shall be automatic
+# from https://stackoverflow.com/questions/1057431
+modules = glob.glob(join(dirname(__file__), "*.py"))
+__all__ = [basename(f)[:-3] for f in modules if isfile(f)
+           and not f.endswith('__init__.py')]
 
-__all__ = ['cli',  'config',  'control',  'dlpoly',  'field', 'species',  'statis',  'utility']
 __version__ = '0.0.1'
 
-from .dlpoly import *
+try:
+    from .dlpoly import DLPoly
+    print("Supportted DL_POLY version {}".format(DLPoly.__version__))
+except ImportError:
+    raise ImportError('error importing dlpoly')

@@ -4,6 +4,11 @@ File containing methods for loading statistics data from DLPoly
 
 import numpy as np
 
+
+class Statis:
+    __version__ = "0"
+
+
 def read_rdf(filename="RDFDAT"):
     """ Read an RDF file into data """
     with open(filename, 'r') as fileIn:
@@ -43,6 +48,7 @@ def read_rdf(filename="RDFDAT"):
     #     d[nrdf, j, 1] = np.sum(d[0:nrdf-1, j, 1])
     # return nrdf+1, npoints, d, labels
 
+
 def readStatis(filename="STATIS"):
     h1, h2, s = open(filename).read().split('\n', 2)
     d = np.array(s.split(), dtype=float)
@@ -79,5 +85,5 @@ def readStatis(filename="STATIS"):
                   "6-3 exdof"]
 
     for i in range(28, nd):
-        datumNames.append("{0:d}-{1:d} col_{2:d}".format(i//5+1, i%5+1, i+1))
+        datumNames.append("{0:d}-{1:d} col_{2:d}".format(i//5+1, i % 5+1, i+1))
     return n, nd, d, datumNames

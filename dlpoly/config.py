@@ -3,15 +3,16 @@ Module to handle DLPOLY config files
 '''
 
 import numpy as np
-from dlpoly.species import Species
+# from dlpoly.species import Species
 from dlpoly.utility import DLPData
+
 
 class Atom(DLPData):
     ''' Class defining a DLPOLY atom type '''
     def __init__(self):
-        DLPData.__init__(self, {'element': str, 'pos':(float, float, float),
+        DLPData.__init__(self, {'element': str, 'pos': (float, float, float),
                                 'vel': (float, float, float),
-                                'forces': (float, float, float), 'index':int})
+                                'forces': (float, float, float), 'index': int})
         self.element = ''
         self.pos = np.zeros(3)
         self.vel = np.zeros(3)
@@ -21,23 +22,34 @@ class Atom(DLPData):
     def write(self, level):
         ''' Print own data to file w.r.t config print level '''
         if level == 0:
-            return '{:8s}{:10d}\n{:20.10f}{:20.10f}{:20.10f}'.format(self.element, self.index, *self.pos)
+            return ('{:8s}{:10d}\n{:20.10f}'
+                    '{:20.10f}{:20.10f}'.format(self.element,
+                                                self.index, *self.pos))
+
         if level == 1:
             return ('{:8s}{:10d}\n'
                     '{:20.10f}{:20.10f}{:20.10f}\n'
-                    '{:20.10f}{:20.10f}{:20.10f}').format(self.element, self.index, *self.pos, *self.vel)
-        if level == 2:
-            return ('{:8s}{:10d}\n'
-                    '{:20.10f}{:20.10f}{:20.10f}\n'
-                    '{:20.10f}{:20.10f}{:20.10f}\n'
-                    '{:20.10f}{:20.10f}{:20.10f}').format(self.element, self.index, *self.pos, *self.vel, *self.forces)
-
+                    '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
+                                                          self.index,
+                                                          *self.pos, *self.vel)
+            if level == 2:
+                return ('{:8s}{:10d}\n'
+                        '{:20.10f}{:20.10f}{:20.10f}\n'
+                        '{:20.10f}{:20.10f}{:20.10f}\n'
+                        '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
+                                                              self.index,
+                                                              *self.pos,
+                                                              *self.vel,
+                                                              *self.forces)
 
     def __str__(self):
         return ('{:8s}{:10d}\n'
                 '{:20.10f}{:20.10f}{:20.10f}\n'
                 '{:20.10f}{:20.10f}{:20.10f}\n'
-                '{:20.10f}{:20.10f}{:20.10f}\n').format(self.element, self.index, *self.pos, *self.vel, *self.forces)
+                '{:20.10f}{:20.10f}{:20.10f}\n').format(self.element,
+                                                        self.index,
+                                                        *self.pos, *self.vel,
+                                                        *self.forces)
 
     def read(self, fileHandle, level):
         ''' reads info for one atom '''
@@ -54,10 +66,11 @@ class Atom(DLPData):
                 self.forces = [float(i) for i in fileHandle.readline().split()]
         return self
 
+
 class Config():
     ''' Class defining a DLPOLY config file '''
-    params = {'atoms': list, 'cell':np.ndarray, 'pbc':int,
-              'natoms':int, 'level':int, 'title':str}
+    params = {'atoms': list, 'cell': np.ndarray, 'pbc': int,
+              'natoms': int, 'level': int, 'title': str}
 
     natoms = property(lambda self: len(self.atoms))
 
@@ -75,13 +88,15 @@ class Config():
         self.level = level
         with open(filename, 'w') as outFile:
             outFile.write('{0:72s}\n'.format(title))
-            outFile.write('{0:10d}{1:10d}{2:10d}\n'.format(level, self.pbc, self.natoms))
+            outFile.write('{0:10d}{1:10d}{2:10d}\n'.format(level,
+                                                           self.pbc,
+                                                           self.natoms))
             if self.pbc > 0:
                 for j in range(3):
                     outFile.write('{0:20.10f}{1:20.10f}{2:20.10f}\n'.format(
                         self.cell[j, 0], self.cell[j, 1], self.cell[j, 2]))
-                for atom in self.atoms:
-                    print(atom.write(self.level), file=outFile)
+                    for atom in self.atoms:
+                        print(atom.write(self.level), file=outFile)
 
     def read(self, filename='CONFIG'):
         try:
@@ -110,6 +125,7 @@ class Config():
                 break
             self.atoms.append(atom)
         return self
+
 
 if __name__ == '__main__':
     CONFIG = Config().read()

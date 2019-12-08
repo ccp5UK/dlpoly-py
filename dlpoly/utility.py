@@ -7,6 +7,7 @@ from abc import ABC
 
 COMMENT_CHAR = "#"
 
+
 def peek(iterable):
     """ Test generator without modifying """
     try:
@@ -14,6 +15,7 @@ def peek(iterable):
     except StopIteration:
         return None
     return itertools.chain([first], iterable)
+
 
 def read_line(inFile):
     """ Read a line, stripping comments and blank lines """
@@ -24,8 +26,10 @@ def read_line(inFile):
             raise IOError("Attempted to read line at EOF")
     return line
 
+
 class DLPData(ABC):
     """ Abstract datatype for handling automatic casting and restricted assignment """
+
     def __init__(self, dataTypes):
         self._dataTypes = dataTypes
 
@@ -34,7 +38,7 @@ class DLPData(ABC):
     className = property(lambda self: type(self).__name__)
 
     def __setattr__(self, key, val):
-        if key == "_dataTypes": # Protect datatypes
+        if key == "_dataTypes":  # Protect datatypes
             if not hasattr(self, "dataTypes"):
                 self.__dict__[key] = val
             else:
@@ -71,16 +75,16 @@ class DLPData(ABC):
                         pre, ellided = dType[:loc], dType[loc-1]
                         val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
                                [ellided(item) for item in vals[loc:]])
-    
+
                 else:
                     val = [targetType(item) for item, targetType in zip(vals, dType)]
             except TypeError:
                 print('Type of {} ({}) not valid, must be castable to {}'.format(vals,
                                                                                  [type(x).__name__ for x in vals],
                                                                                  [x.__name__ for x in dType]))
-        elif isinstance(vals, dType): # Already right type
+        elif isinstance(vals, dType):  # Already right type
             val = vals
-        elif dType is bool: # If present true unless explicitly false
+        elif dType is bool:  # If present true unless explicitly false
             val = vals not in (0, False)
 
         else:

@@ -5,6 +5,7 @@ Module to handle DLPOLY control files
 
 from dlpoly.utility import DLPData
 
+
 class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
     def __init__(self, *args):
@@ -23,6 +24,7 @@ class Ignore(DLPData):
                 outStr += f'no {item}\n'
         return outStr
 
+
 class IOParam(DLPData):
     ''' Class defining io parameters '''
     def __init__(self, control='CONTROL', field='FIELD',
@@ -35,9 +37,10 @@ class IOParam(DLPData):
         self.outstats = outstats
 
     def __str__(self):
-        return (f'io field {self.field}\n' # First IO is key
+        return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
                 f'io outstats {self.outstats}')
+
 
 class EnsembleParam:
     ''' Class containing ensemble data '''
@@ -51,10 +54,11 @@ class EnsembleParam:
                  ('npt', 'langevin'): 2, ('npt', 'berendsen'): 2, ('npt', 'hoover'): 2, ('npt', 'mtk'): 2,
                  ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6),
                  ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
+
     def __init__(self, *argsIn):
         if not argsIn:
             argsIn = ("nve")
-        args = list(argsIn)[:] # Make copy
+        args = list(argsIn)[:]  # Make copy
 
         self._ensemble = args.pop(0)
         if self.ensemble != 'nve':
@@ -100,6 +104,7 @@ class EnsembleParam:
         return 'ensemble {} {} {}'.format(self.ensemble,
                                           self.means if self.means else "",
                                           " ".join(map(str, self.args)) if self.args else "")
+
 
 class Control(DLPData):
     ''' Class defining a DLPOLY control file '''
@@ -185,6 +190,7 @@ class Control(DLPData):
                 else:
                     print(key, val, file=outFile)
             print('finish', file=outFile)
+
 
 if __name__ == '__main__':
     CONT = Control('CONTROL')

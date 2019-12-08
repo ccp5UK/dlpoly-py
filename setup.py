@@ -8,6 +8,5 @@ setup(name='dlpoly-py',
       author='Alin M Elena;Jacob Wilkins',
       author_email='...',
       url='gitlab.com/drFaustroll/dlpoly-py',
-      packages = ['dlpoly'],
-      license = 'BSD-3'
-     )
+      packages=['dlpoly'],
+      license='BSD-3')

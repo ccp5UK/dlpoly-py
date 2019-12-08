@@ -7,10 +7,14 @@ import os.path
 from dlpoly.control import Control
 from dlpoly.config import Config
 from dlpoly.field import Field
+from dlpoly.statis import Statis
 from dlpoly.cli import get_command_args
+
 
 class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
+    __version__ = "4.10"  # which version of dlpoly supports
+
     def __init__(self, control=None, config=None, field=None, statis=None):
         if control is not None:
             self.controlFile = control
@@ -36,7 +40,6 @@ class DLPoly:
             self.control = Control(source)
         else:
             print("Unable to find file: {}".format(source))
-
 
     def load_field(self, source=None):
         """ Load field file into class """
@@ -70,10 +73,6 @@ class DLPoly:
         """ Path to control file """
         return self.control.io.control
 
-    @controlFile.setter
-    def controlFile(self, control):
-        self.control.io.control = control
-
     @property
     def fieldFile(self):
         """ Path to field file """
@@ -101,13 +100,16 @@ class DLPoly:
     def statisFile(self, statis):
         self.control.io.outstats = statis
 
-
-    def run(self, executable="DLPOLY.Z", modules=(), numProcs=1, mpi='mpirun -n'):
+    def run(self, executable="DLPOLY.Z", modules=(),
+            numProcs=1, mpi='mpirun -n'):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
         if numProcs > 1:
-            runCommand = "{0:s} {1:d} {2:s} {3:s}".format(mpi, numProcs, executable, self.controlFile)
+            runCommand = "{0:s} {1:d} {2:s} {3:s}".format(mpi,
+                                                          numProcs,
+                                                          executable,
+                                                          self.controlFile)
         else:
             runCommand = "{0:s} {1:s}".format(executable, self.controlFile)
 
@@ -121,6 +123,8 @@ class DLPoly:
             cmd = [runCommand]
         subprocess.call(cmd, shell=True)
 
+
 if __name__ == "__main__":
     argList = get_command_args()
-    DLPoly(control=argList.control, config=argList.config, field=argList.field, statis=argList.statis)
+    DLPoly(control=argList.control, config=argList.config,
+           field=argList.field, statis=argList.statis)

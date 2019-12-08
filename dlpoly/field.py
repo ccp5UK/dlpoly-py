@@ -7,6 +7,7 @@ from abc import ABC
 from dlpoly.species import Species
 from dlpoly.utility import read_line, peek
 
+
 class Interaction(ABC):
     ''' Abstract base class for managing atomic interactions '''
     def __init__(self):
@@ -27,9 +28,11 @@ class Interaction(ABC):
 
     potClasses = property(lambda self: [potClass for potClass in self.nAtoms.keys()])
 
+
 class Bond(Interaction):
     ''' Class containing information regarding bonds in molecules '''
     nAtoms = {'atoms': 1, 'bonds': 2, 'constraints': 2, 'angles': 3, 'dihedrals': 4, 'inversions': 4, 'rigid': -1}
+
     def __init__(self, potClass=None, params=None):
         Interaction.__init__(self)
         self.potClass = potClass
@@ -41,6 +44,7 @@ class Bond(Interaction):
 
     def __str__(self):
         return '{} {} {}'.format(self.potType, ' '.join(self.atoms), ' '.join(self.params))
+
 
 class Potential(Interaction):
     ''' Class containing information regarding potentials '''
@@ -58,6 +62,7 @@ class Potential(Interaction):
 
     def __str__(self):
         return '{} {} {}'.format(' '.join(self.atoms), self.potType, ' '.join(self.params))
+
 
 class PotHaver(ABC):
     ''' Abstract base class defining an object which contains potentials or bonds '''
@@ -168,8 +173,10 @@ class Molecule(PotHaver):
             self.species[name] = Species(name, len(self.species), charge, weight, frozen, repeats)
             atom += repeats
 
+
 class Field(PotHaver):
     ''' Class containing field data '''
+
     def __init__(self, source=None):
         PotHaver.__init__(self)
         self.header = ''
@@ -213,7 +220,6 @@ class Field(PotHaver):
     def _read_tersoff(self, fieldFile, nPots):
         ''' Read a tersoff set (different to standard block) '''
 
-
     def read(self, fieldFile='FIELD'):
         ''' Read field file into data '''
         with open(fieldFile, 'r') as inFile:
@@ -245,6 +251,7 @@ class Field(PotHaver):
                 for pot in pots:
                     print(pot, file=outFile)
             print('close', file=outFile)
+
 
 if __name__ == '__main__':
     FLD = Field('FIELD')
