@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from  dlpoly import *
+import dlpoly as dlp
 
 
-d = DLPoly(control = 'CONTROL')
+d = dlp.DLPoly(control="CONTROL")
