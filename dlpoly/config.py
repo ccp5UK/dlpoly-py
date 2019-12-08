@@ -47,7 +47,7 @@ class Atom(DLPData):
         element, index = line.split()
         self.element = element
         self.index = int(index)
-        self.pos = [float(i) for i in fh.readline().split()]
+        self.pos = [float(i) for i in fileHandle.readline().split()]
         if level > 0:
             self.vel = [float(i) for i in fileHandle.readline().split()]
             if level > 1:
