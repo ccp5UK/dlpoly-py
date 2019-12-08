@@ -125,6 +125,8 @@ class Config():
             if not atom:
                 break
             self.atoms.append(atom)
+
+        fileIn.close()
         return self
 
 
