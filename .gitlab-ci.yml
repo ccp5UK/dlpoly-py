@@ -14,18 +14,18 @@ flake8:
     - flake8 --max-line-length=120 dlpoly/*.py
     - flake8 --max-line-length=120 tests/test_*.py
 
-pylint:
-  stage: static
-  allow_failure: true
-  script:
-    - pylint -d C0301 dlpoly/*.py      
-    - pylint -d C0301 examples/*.py
+# pylint:
+#  stage: static
+#  allow_failure: true
+#  script:
+#    - pylint -d C0301 dlpoly/*.py      
+#    - pylint -d C0301 examples/*.py
 
-mypy:
-  stage: static
-  allow_failure: true
-  script:
-  - for i in dlpoly/*.py; do python -m mypy $i; done
+# mypy:
+#  stage: static
+#  allow_failure: true
+#  script:
+#  - for i in dlpoly/*.py; do python -m mypy $i; done
 
 tests:
   stage: test
@@ -33,3 +33,7 @@ tests:
     - python ./setup.py build  
     - python ./setup.py install 
     - python -m unittest discover -s tests -p 'test_*.py'
+    - coverage report -m
+    - coverage-badge
+
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'  
