@@ -1,16 +1,34 @@
-This is a title                                                         
-temperature     300.0000
-pressure       0.0000
-steps         200
-equilibration steps         100
-scale            5
-timestep     0.001000
-cutoff      10.0000
-no elec
-ensemble nve
-print every           10
-stats every           10
+8xGRAMICIDIN A WITH WATER SOLVATING (99120 ATOMS)
+# Test case supplied by Lewis Whitehead, University of Southampton
+
+#no strict
+
+temperature              300
+press                    0.001
+
+ensemble npt ber 0.5 1.0
+
+restart scale
+
+variable timestep        0.001 ps
+
+steps                    20
+equilibration            20
 collect
-job time 10000000
-close time 1000
+
+scale                      3
+cap                     1000
+
+cut                      8.0 angstroms
+rvdw                     8.0 angstroms
+ewald precision          1.e-6
+
+print every 5  steps
+stats every 5 steps
+
+shake                  0.000001
+
+job time               7200 seconds
+close time             100
+
 finish
