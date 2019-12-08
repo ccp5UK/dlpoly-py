@@ -1,5 +1,5 @@
 """
-File containing methods for loading statistics data from DLPoly
+File containing methods for loading statistics data from DL_POLY_4
 """
 
 import numpy as np
