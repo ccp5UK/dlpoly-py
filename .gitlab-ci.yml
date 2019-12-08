@@ -12,7 +12,7 @@ flake8:
   stage: static
   script:
     - flake8 --max-line-length=120 dlpoly/*.py
-    - flake8 --max-line-length=120 examples/*.py
+    - flake8 --max-line-length=120 tests/test_*.py
 
 pylint:
   stage: static
