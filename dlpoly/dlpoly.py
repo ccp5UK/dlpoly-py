@@ -75,7 +75,7 @@ class DLPoly:
     @controlFile.setter
     def controlFile(self, control):
         self.control.io.control = control
-    
+ 
     @property
     def fieldFile(self):
         """ Path to field file """
