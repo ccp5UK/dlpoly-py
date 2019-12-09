@@ -64,7 +64,7 @@ class DLPoly:
         if source is None:
             source = self.statisFile
         if os.path.isfile(source):
-            self.config = Statis(source)
+            self.statis = Statis(source)
         else:
             print("Unable to find file: {}".format(source))
 
@@ -77,6 +77,10 @@ class DLPoly:
     def fieldFile(self):
         """ Path to field file """
         return self.control.io.field
+
+    @controlFile.setter
+    def controlFile(self, control):
+        self.control.io.control = control
 
     @fieldFile.setter
     def fieldFile(self, field):

@@ -2,4 +2,7 @@
 import dlpoly as dlp
 
 
-d = dlp.DLPoly(control="CONTROL")
+d = dlp.DLPoly()
+d.load_control("CONTROL")
+
+d.control.write("test.control")

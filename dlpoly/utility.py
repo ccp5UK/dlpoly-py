@@ -45,6 +45,9 @@ class DLPData(ABC):
                 print("Cannot alter dataTypes")
             return
 
+        if key == "source": # source is not really a keyword
+            return 
+
         if key not in self.dataTypes:
             print("Param {} not allowed in {} definition".format(key, self.className.lower()))
             return
@@ -53,7 +56,6 @@ class DLPData(ABC):
         self.__dict__[key] = val
 
     def __getitem__(self, key):
-        print(key)
         return getattr(self, str(key))
 
     def __setitem__(self, key, val):

@@ -5,60 +5,25 @@ File containing methods for loading statistics data from DL_POLY_4
 import numpy as np
 
 
-class Statis:
+class Statis():
     __version__ = "0"
 
-    def __init__(self):
-        self.ni = 10
-
-
-def read_rdf(filename="RDFDAT"):
-    """ Read an RDF file into data """
-    with open(filename, 'r') as fileIn:
-        # Discard title
-        _ = fileIn.readline()
-        nRDF, nPoints = map(int, fileIn.readline().split())
-
-        data = np.zeros(nRDF+1, nPoints, 2)
-        labels = []
-
-        for sample in range(nRDF):
-            species = fileIn.readline().split()
-            labels.append(species)
-            for point in range(nPoints):
-                r, g_r = fileIn.readline().split()
-                data[sample, point, :] = float(r), float(g_r)
-                data[nRDF, point, :] += data[sample, point, :]
-    return labels, data
-    # try:
-    #     title, header, rdfall = open(filename).read().split('\n', 2)
-    # except IOError:
-    #     return 0, 0, 0, []
-    # nrdf, npoints = map(int, header.split())
-    # b = 2*(npoints+1)
-    # d = np.zeros((nrdf+1, npoints, 2), dtype=float)
-    # labels = []
-    # s = rdfall.split()
-    # for i in range(nrdf):
-    #     x = s[b*i:b*(i+1)]
-    #     y = np.array(x[2:], dtype=float)
-    #     y.shape = npoints, 2
-    #     d[i, :, :] = y
-    #     labels.append(x[0]+" ... "+x[1])
-    # labels.append("all")
-    # for j in range(npoints):
-    #     d[nrdf, j, 0] = np.sum(d[0:nrdf-1, j, 0])
-    #     d[nrdf, j, 1] = np.sum(d[0:nrdf-1, j, 1])
-    # return nrdf+1, npoints, d, labels
-
-
-def readStatis(filename="STATIS"):
-    h1, h2, s = open(filename).read().split('\n', 2)
-    d = np.array(s.split(), dtype=float)
-    nd = int(d[2])
-    n = d.size//(nd+3)
-    d.shape = n, nd+3
-    datumNames = ["1-1 total extended system energy",
+    def __init__(self,source=None):
+        self.rows = 0
+        self.columns = 0
+        self.data = None
+        self.labels = None
+        if source is not None:
+            self.source = source
+            self.read(source)
+    
+    def read(self,filename="STATIS"):
+        h1, h2, s = open(filename).read().split('\n', 2)
+        self.data = np.array(s.split(), dtype=float)
+        self.columns = int(self.data[2])
+        self.rows = self.data.size//(self.columns + 3)
+        self.data.shape = self.rows, self.columns + 3
+        self.labels = ["1-1 total extended system energy",
                   "1-2 system temperature",
                   "1-3 configurational energy",
                   "1-4 short range potential energy",
@@ -87,6 +52,32 @@ def readStatis(filename="STATIS"):
                   "6-2 pressure",
                   "6-3 exdof"]
 
-    for i in range(28, nd):
-        datumNames.append("{0:d}-{1:d} col_{2:d}".format(i//5+1, i % 5+1, i+1))
-    return n, nd, d, datumNames
+        for i in range(28, self.columns):
+            self.labels.append("{0:d}-{1:d} col_{2:d}".format(i//5+1, i % 5+1, i+1))
+        return self
+
+    def flatten(self):
+
+        for i in range(self.columns-3):
+            with open(self.labels[i],'w') as f:
+                for j in range(self.rows):
+                    f.write("{} {}\n".format(self.data[j,1],self.data[j,i+3]))
+
+def read_rdf(filename="RDFDAT"):
+    """ Read an RDF file into data """
+    with open(filename, 'r') as fileIn:
+        # Discard title
+        _ = fileIn.readline()
+        nRDF, nPoints = map(int, fileIn.readline().split())
+
+        data = np.zeros(nRDF+1, nPoints, 2)
+        labels = []
+
+        for sample in range(nRDF):
+            species = fileIn.readline().split()
+            labels.append(species)
+            for point in range(nPoints):
+                r, g_r = fileIn.readline().split()
+                data[sample, point, :] = float(r), float(g_r)
+                data[nRDF, point, :] += data[sample, point, :]
+    return labels, data

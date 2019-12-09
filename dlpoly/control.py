@@ -50,8 +50,10 @@ class EnsembleParam:
                   'nst': ('langevin', 'berendsen', 'hoover', 'mtk')}
     meansArgs = {('nve', None): 0,
                  ('nvt', 'evans'): 0, ('nvt', 'langevin'): 1, ('nvt', 'andersen'): 2,
-                 ('nvt', 'berendsen'): 1, ('nvt', 'hoover'): (1, 2), ('nvt', 'gst'): 2,
-                 ('npt', 'langevin'): 2, ('npt', 'berendsen'): 2, ('npt', 'hoover'): 2, ('npt', 'mtk'): 2,
+                 ('nvt', 'berendsen'): 1, ('nvt', 'ber'): 1,
+                 ('nvt', 'hoover'): (1, 2), ('nvt', 'gst'): 2,
+                 ('npt', 'langevin'): 2, ('npt', 'berendsen'): 2, ('npt', 'ber'): 2,
+                 ('npt', 'hoover'): 2, ('npt', 'mtk'): 2,
                  ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6),
                  ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
 
@@ -108,24 +110,25 @@ class EnsembleParam:
 
 class Control(DLPData):
     ''' Class defining a DLPOLY control file '''
-    def __init__(self, filename=None):
-        DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': float,
+    def __init__(self, source=None):
+        DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': int,
                                 'collect': bool, 'coulomb': bool, 'cutoff': float,
                                 'densvar': float, 'distance': float,
                                 'dump': int, 'ensemble': EnsembleParam, 'epsilon': float,
                                 'equilibration': int, 'ewald': tuple, 'exclude': bool,
                                 'heat_flux': bool, 'integrator': str,
-                                'io': IOParam, 'job': float, 'maxdis': float,
+                                'io': IOParam, 'job': int, 'maxdis': float,
                                 'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
-                                'mxshak': int, 'mxstep': float,
-                                'ignore': Ignore, 'pressure': float, 'print': int, 'print rdf': bool,
+                                'mxshak': int, 'mxstep': float, 'cut': float,
+                                'ignore': Ignore, 'pressure': float,
+                                'press': float, 'print': int, 'print rdf': bool,
                                 'print zden': bool, 'quaternion': float,
                                 'rdf': int, 'regauss': int, 'replay': bool,
                                 'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
-                                'scale': int, 'slab': bool,
+                                'scale': int, 'slab': bool, 'shake': float,
                                 'stack': int, 'stats': int, 'steps': int, 'temperature': float,
                                 'title': str, 'timestep': float,
-                                'variable': float, 'vdw': str, 'zden': int, 'zero': bool,
+                                'variable': bool, 'vdw': str, 'zden': int, 'zero': bool,
                                 'defects': (int, int, float), 'displacements': (int, int, float),
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),
@@ -134,7 +137,7 @@ class Control(DLPData):
                                 'trajectory': (int, int, int)})
         self.temperature = 300.0
         self.title = 'no title'
-        self.io = IOParam(control=filename)
+        self.io = IOParam(control=source)
         self.ignore = Ignore()
         self.ensemble = EnsembleParam('nve')
         self.pressure = 0.0
@@ -146,10 +149,11 @@ class Control(DLPData):
         self.cutoff = 0.0
         self.variable = False
         self.timestep = 0.001
-        if filename:
-            self.read_control(filename)
+        if source is not None:
+            self.source = source
+            self.read(source)
 
-    def read_control(self, filename):
+    def read(self, filename):
         ''' Read a control file '''
         with open(filename, 'r') as inFile:
             self['title'] = inFile.readline()
@@ -171,6 +175,7 @@ class Control(DLPData):
                     if len(args) == 1:
                         args = args[0]
                     self[key] = args
+        return self
 
     def write(self, filename='CONTROL'):
         ''' Write the control out to a file '''
