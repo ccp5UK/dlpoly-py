@@ -1,17 +1,17 @@
 ''' simple dlpoly utilities to play with inputs and outputs '''
 
-import sys
-import numpy as np
 from distutils.version import LooseVersion
 from os.path import dirname, basename, isfile, join
 import glob
+import sys
+import numpy as np
 
 if sys.version_info[0] == 2:
     raise ImportError('dlpoly-py requires Python3. This is Python2.')
 
 if LooseVersion(np.__version__) < '1.5':
     raise ImportError(
-        'dlpoly-py needs NumPy-1.5.0 or later. You have: %s' % np.__version__)
+        'dlpoly-py needs NumPy-1.5.0 or later. You have: {:s}'.format(np.__version__))
 
 
 # from https://stackoverflow.com/questions/1057431
@@ -23,6 +23,6 @@ __version__ = '0.0.1'
 
 try:
     from .dlpoly import DLPoly
-    print("Supportted DL_POLY version {}".format(DLPoly.__version__))
+    print("Supported DL_POLY version {}".format(DLPoly.__version__))
 except ImportError:
     raise ImportError('error importing dlpoly')
