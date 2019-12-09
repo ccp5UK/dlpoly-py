@@ -172,8 +172,7 @@ class Control(DLPData):
                 elif key == 'ensemble':
                     self.ensemble = EnsembleParam(*args)
                 else:
-                    if len(args) == 1 or not isinstance(self.dataTypes[key], tuple):
-                        args = args[0]
+                    dtype = self.dataTypes[key]
                     self[key] = args
         return self
 

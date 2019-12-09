@@ -64,6 +64,23 @@ class DLPData(ABC):
     def _map_types(self, key, vals):
         """ Map argument types to their respective types """
         dType = self._dataTypes[key]
+        if isinstance(vals, (tuple, list)) and not isinstance(dType, tuple):
+            if len(vals) == 1:
+                vals = vals[0]
+            else:
+                for i, arg in enumerate(vals):
+                    try:
+                        dType(arg)
+                        vals = arg[i]
+                        break
+                    except TypeError:
+                        pass
+                else:
+                    raise TypeError('No arg of {} ({}) valid, must be castable to {}'.format(
+                        vals,
+                        [type(x).__name__ for x in vals],
+                        dType.__name__))
+
         if isinstance(dType, tuple):
             try:
                 if ... in dType:
@@ -84,6 +101,7 @@ class DLPData(ABC):
                 print('Type of {} ({}) not valid, must be castable to {}'.format(vals,
                                                                                  [type(x).__name__ for x in vals],
                                                                                  [x.__name__ for x in dType]))
+
         elif isinstance(vals, dType):  # Already right type
             val = vals
         elif dType is bool:  # If present true unless explicitly false
