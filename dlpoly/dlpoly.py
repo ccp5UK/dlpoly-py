@@ -16,21 +16,16 @@ class DLPoly:
     __version__ = "4.10"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None):
+        # Default to having a control
+        self.control = Control()
         if control is not None:
-            self.controlFile = control
-            self.load_control()
-        else:
-            # Default to having a control
-            self.control = Control()
+            self.load_control(control)
         if config is not None:
-            self.configFile = config
-            self.load_config()
+            self.load_config(config)
         if field is not None:
-            self.fieldFile = field
-            self.load_field()
+            self.load_field(field)
         if statis is not None:
-            self.statisFile = statis
-            self.load_statis()
+            self.load_statis(statis)
 
     def load_control(self, source=None):
         """ Load control file into class """
@@ -38,6 +33,7 @@ class DLPoly:
             source = self.controlFile
         if os.path.isfile(source):
             self.control = Control(source)
+            self.controlFile = source
         else:
             print("Unable to find file: {}".format(source))
 
@@ -47,6 +43,7 @@ class DLPoly:
             source = self.fieldFile
         if os.path.isfile(source):
             self.field = Field(source)
+            self.fieldFile = source
         else:
             print("Unable to find file: {}".format(source))
 
@@ -56,6 +53,7 @@ class DLPoly:
             source = self.configFile
         if os.path.isfile(source):
             self.config = Config(source)
+            self.configFile = source
         else:
             print("Unable to find file: {}".format(source))
 
@@ -65,6 +63,7 @@ class DLPoly:
             source = self.statisFile
         if os.path.isfile(source):
             self.config = Statis(source)
+            self.statisFile = source
         else:
             print("Unable to find file: {}".format(source))
 
@@ -73,6 +72,10 @@ class DLPoly:
         """ Path to control file """
         return self.control.io.control
 
+    @controlFile.setter
+    def controlFile(self, control):
+        self.control.io.control = control
+    
     @property
     def fieldFile(self):
         """ Path to field file """
