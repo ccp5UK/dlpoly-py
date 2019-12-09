@@ -39,7 +39,7 @@ class Analysis(DLPData):
         self.dihedrals = (0, 0)
         self.inversions = (0, 0)
 
-    def parse(args):
+    def parse(self, args):
         setattr(self, args[0], args[1:])
 
     def __str__(self):
