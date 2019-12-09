@@ -10,12 +10,13 @@ class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
     def __init__(self, *args):
         DLPData.__init__(self, {'elec': bool, 'index': bool, 'strict': bool,
-                                'topology': bool, 'vdw': bool})
+                                'topology': bool, 'vdw': bool, 'vafaveraging':bool})
         self.elec = False
         self.index = False
         self.strict = False
         self.topology = False
         self.vdw = False
+        self.vafaveraging = False
 
     def __str__(self):
         outStr = ''
@@ -24,6 +25,84 @@ class Ignore(DLPData):
                 outStr += f'no {item}\n'
         return outStr
 
+class Analysis(DLPData):
+    ''' Class defining properties of analysis '''
+    def __init__(self, *args):
+        DLPData.__init__(self, {'all': (int, int, float),
+                                'bonds': (int, int, float),
+                                'angles': (int, int),
+                                'dihedrals': (int, int),
+                                'inversions': (int, int)})
+        self.all = (0, 0, 0)
+        self.bonds = (0, 0)
+        self.angles = (0, 0)
+        self.dihedrals = (0, 0)
+        self.inversions = (0, 0)
+
+    def parse(args):
+        setattr(self, args[0], args[1:])
+
+    def __str__(self):
+        if any(self.all > 0):
+            return 'analyse all every {} nbins {} rmax {}'.format(*self.all)
+
+        outstr = ''
+        for analtype in ('bonds', 'angles', 'dihedrals', 'inversions'):
+            args = getattr(self, analtype)
+            if any(args > 0):
+                outstr += ('analyse {} every {} nbins {} rmax {}\n'.format(analtype, *args) if len(args) > 2 else
+                           'analyse {} every {} nbind {}\n'.format(analtype, *args))
+        return outstr
+
+class Print(DLPData):
+    ''' Class definining properties that can be printed '''
+    def __init__(self, *args):
+        DLPData.__init__(self, {'rdf': bool, 'analysis': bool, 'analObj': Analysis, 'printevery': int,
+                                'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
+                                'vafbin': int, 'zdenevery': int})
+        self.analysis = False
+        self.analObj = Analysis()
+        self.rdf = False
+        self.vaf = False
+        self.zden = False
+
+        self.printevery = 0
+        self.rdfevery = 0
+        self.vafevery = 0
+        self.vafbin = 0
+        self.zdenevery = 0
+
+    def parse_print(self, key, args):
+        ''' Parse a split print line and see what it actually says '''
+        if key == 'print':
+            if args[0].isdigit():
+                self.printevery = args[0]
+            else:
+                setattr(self, args[0], True)
+                setattr(self, args[0]+'every', 1)
+        elif key in ('rdf', 'zden', 'stats'):
+            setattr(self, key+'every', args[0])
+        elif key == 'analyse':
+            self.analObj.parse(args)
+        elif key == 'vaf':
+            self.vafevery, self.vafbin = args
+
+    def __str__(self):
+        outStr = ''
+        if self.printevery > 0:
+            outStr += 'print every {}\n'.format(self.printevery)
+        if self.analysis:
+            outStr += 'print analysis\n'
+            outStr += str(self.analObj)
+        for item in ('rdf', 'vaf', 'zden'):
+            toPrint, freq = getattr(self, item), getattr(self, item+'every')
+            if toPrint and freq:
+                outStr += 'print {}\n'.format(item)
+                outStr += '{} every {}\n'.format(item, freq)
+        if self.vaf and self.vafevery:
+            outStr += 'print vaf\n'
+            outStr += 'vaf every {} {}'.format(self.vafevery, self.vafbin)
+        return outStr
 
 class IOParam(DLPData):
     ''' Class defining io parameters '''
@@ -59,7 +138,7 @@ class EnsembleParam:
 
     def __init__(self, *argsIn):
         if not argsIn:
-            argsIn = ("nve")
+            argsIn = ('nve')
         args = list(argsIn)[:]  # Make copy
 
         self._ensemble = args.pop(0)
@@ -104,8 +183,8 @@ class EnsembleParam:
                 self.ensemble, self.means, expect, received))
 
         return 'ensemble {} {} {}'.format(self.ensemble,
-                                          self.means if self.means else "",
-                                          " ".join(map(str, self.args)) if self.args else "")
+                                          self.means if self.means else '',
+                                          ' '.join(map(str, self.args)) if self.args else '')
 
 
 class Control(DLPData):
@@ -121,7 +200,7 @@ class Control(DLPData):
                                 'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
                                 'mxshak': int, 'mxstep': float, 'cut': float,
                                 'ignore': Ignore, 'pressure': float,
-                                'press': float, 'print': int, 'print rdf': bool,
+                                'press': float, 'print': Print, 'print rdf': bool,
                                 'print zden': bool, 'quaternion': float,
                                 'rdf': int, 'regauss': int, 'replay': bool,
                                 'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
@@ -139,19 +218,25 @@ class Control(DLPData):
         self.title = 'no title'
         self.io = IOParam(control=source)
         self.ignore = Ignore()
+        self.print = Print()
         self.ensemble = EnsembleParam('nve')
         self.pressure = 0.0
         self.collect = False
+        self.stats = 1
         self.steps = 10
         self.equilibration = 5
-        self.print = 1
-        self.stats = 1
         self.cutoff = 0.0
         self.variable = False
         self.timestep = 0.001
         if source is not None:
             self.source = source
             self.read(source)
+
+    @staticmethod
+    def _strip_crap(args):
+        return [arg for arg in args if arg not in ('constant', 'every', 'sampling', 'tolerance',
+                                                   'timestep', 'temperature', 'cutoff', 'history',
+                                                   'field', 'steps', 'forces', 'sum', 'time')]
 
     def read(self, filename):
         ''' Read a control file '''
@@ -164,15 +249,17 @@ class Control(DLPData):
                 if not line or line.startswith('#') or line.startswith('l_'):
                     continue
                 key, *args = line.split()
+                args = self._strip_crap(args)
                 key = key.lower()
                 if key == 'io':
                     setattr(self.io, args[0], args[1])
                 elif key == 'no':
                     setattr(self.ignore, args[0], True)
+                elif key in ('analyse', 'print', 'rdf', 'vaf', 'zden'):
+                    self.print.parse_print(key, args)
                 elif key == 'ensemble':
                     self.ensemble = EnsembleParam(*args)
                 else:
-                    dtype = self.dataTypes[key]
                     self[key] = args
         return self
 
@@ -190,7 +277,7 @@ class Control(DLPData):
                 elif isinstance(val, (IOParam, EnsembleParam, Ignore)):
                     print(val, file=outFile)
                 elif isinstance(val, (tuple, list)):
-                    print(key, " ".join(val), file=outFile)
+                    print(key, ' '.join(val), file=outFile)
                 else:
                     print(key, val, file=outFile)
             print('finish', file=outFile)
