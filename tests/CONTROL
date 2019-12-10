@@ -2,7 +2,7 @@
 # Test case supplied by Lewis Whitehead, University of Southampton
 
 #no strict
-
+#io read mpiio 7 5 9 Y
 temperature              300
 press                    0.001
 
