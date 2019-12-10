@@ -92,7 +92,7 @@ class Print(DLPData):
     def __str__(self):
         outStr = ''
         if self.printevery > 0:
-            outStr += 'every {}\n'.format(self.printevery)
+            outStr += ' {}\n'.format(self.printevery)
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
@@ -100,28 +100,47 @@ class Print(DLPData):
             toPrint, freq = getattr(self, item), getattr(self, item+'every')
             if toPrint and freq:
                 outStr += 'print {}\n'.format(item)
-                outStr += '{} every {}\n'.format(item, freq)
+                outStr += '{}  {}\n'.format(item, freq)
         if self.vaf and self.vafevery:
             outStr += 'print vaf\n'
-            outStr += 'vaf every {} {}'.format(self.vafevery, self.vafbin)
+            outStr += 'vaf {} {}'.format(self.vafevery, self.vafbin)
         return outStr
 
 
 class IOParam(DLPData):
     ''' Class defining io parameters '''
     def __init__(self, control='CONTROL', field='FIELD',
-                 config='CONFIG', outstats='STATIS', *args):
+                 config='CONFIG', outstat='STATIS',
+                 output='OUTPUT', history='HISTORY',
+                 historf='HISTORF', revive='REVIVE',
+                 revcon='REVCON', revold='REVOLD', *args):
         DLPData.__init__(self, {'control': str, 'field': str,
-                                'config': str, 'outstats': str})
+                                'config': str, 'outstat': str,
+                                'output': str, 'history': str,
+                                'historf': str, 'revive': str,
+                                'revcon': str, 'revold': str,})
+
         self.control = control
         self.field = field
         self.config = config
-        self.outstats = outstats
+        self.outstat = outstat
+        self.output = output
+        self.history = history
+        self.historf = historf
+        self.revive = revive
+        self.revcon = revcon
+        self.revold = revold
 
     def __str__(self):
         return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
-                f'io outstats {self.outstats}')
+                f'io outstat {self.outstat}\n'
+                f'io output {self.output}\n'
+                f'io history {self.history}\n'
+                f'io historf {self.historf}\n'
+                f'io revive {self.revive}\n'
+                f'io revcon {self.revcon}\n'
+                f'io revold {self.revold}\n')
 
 
 class EnsembleParam:
@@ -223,12 +242,10 @@ class Control(DLPData):
         self.ignore = Ignore()
         self.print = Print()
         self.ensemble = EnsembleParam('nve')
-        self.pressure = 0.0
         self.collect = False
         self.stats = 1
         self.steps = 10
         self.equilibration = 5
-        self.cutoff = 0.0
         self.variable = False
         self.timestep = 0.001
         if source is not None:
@@ -274,7 +291,7 @@ class Control(DLPData):
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
                 if isinstance(val, bool):
-                    if val:
+                    if val and (key != 'variable'):
                         print(key, file=outFile)
                     continue
                 elif isinstance(val, (IOParam, EnsembleParam, Ignore)):
@@ -282,7 +299,10 @@ class Control(DLPData):
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(val), file=outFile)
                 else:
-                    print(key, val, file=outFile)
+                    if key == 'timestep' and self.variable:
+                        print('variable', key, val, file=outFile)
+                    else:
+                        print(key, val, file=outFile)
             print('finish', file=outFile)
 
 
