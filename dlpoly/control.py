@@ -5,6 +5,7 @@ Module to handle DLPOLY control files
 
 from dlpoly.utility import DLPData
 
+
 class FField(DLPData):
     ''' Class defining properties relating to forcefields '''
     def __init__(self, *args):
@@ -234,6 +235,7 @@ class EnsembleParam:
         args = list(argsIn)[:]  # Make copy
 
         self._ensemble = args.pop(0)
+        self._means = None
         if self.ensemble != 'nve':
             self._means = args.pop(0)
         self.args = args

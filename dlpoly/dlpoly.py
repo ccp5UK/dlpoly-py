@@ -18,6 +18,9 @@ class DLPoly:
     def __init__(self, control=None, config=None, field=None, statis=None):
         # Default to having a control
         self.control = Control()
+        self.config = None
+        self.field = None
+        self.statis = None
         if control is not None:
             self.load_control(control)
         if config is not None:
@@ -26,6 +29,13 @@ class DLPoly:
             self.load_field(field)
         if statis is not None:
             self.load_statis(statis)
+
+    def write(self, prefix='', suffix=''):
+        self.control.write(prefix+self.controlFile+suffix)
+        if self.config:
+            self.config.write(prefix+self.configFile+suffix)
+        if self.field:
+            self.field.write(prefix+self.fieldFile+suffix)
 
     def load_control(self, source=None):
         """ Load control file into class """
