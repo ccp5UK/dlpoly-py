@@ -38,7 +38,7 @@ class Bond(Interaction):
         self.potClass = potClass
         # In bonds key comes first...
         self.potType, params = params[0], params[1:]
-        self.atoms, self.params = params[0:Potential.nAtoms[potClass]], params[Potential.nAtoms[potClass]:]
+        self.atoms, self.params = params[0:self.nAtoms[potClass]], params[self.nAtoms[potClass]:]
         # Atoms always in alphabetical/numerical order
         self.atoms = sorted(self.atoms)
 
@@ -54,7 +54,7 @@ class Potential(Interaction):
         Interaction.__init__(self)
         self.potClass = potClass
         # In potentials atoms come first...
-        self.atoms, params = params[0:Potential.nAtoms[potClass]], params[Potential.nAtoms[potClass]:]
+        self.atoms, params = params[0:self.nAtoms[potClass]], params[self.nAtoms[potClass]:]
         self.potType, self.params = params[0], params[1:]
         if params is not None:
             # Atoms always in alphabetical/numerical order
@@ -166,7 +166,7 @@ class Molecule(PotHaver):
         while atom < nAtoms:
             name, weight, charge, *repeatsFrozen = read_line(fieldFile).split()
             if repeatsFrozen:
-                repeats, frozen = repeatsFrozen
+                repeats, frozen, *_ = repeatsFrozen
             else:
                 repeats, frozen = 1, False
             repeats = int(repeats)
