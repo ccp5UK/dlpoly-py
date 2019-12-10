@@ -10,7 +10,7 @@ class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
     def __init__(self, *args):
         DLPData.__init__(self, {'elec': bool, 'index': bool, 'strict': bool,
-                                'topology': bool, 'vdw': bool, 'vafaveraging':bool})
+                                'topology': bool, 'vdw': bool, 'vafaveraging': bool})
         self.elec = False
         self.index = False
         self.strict = False
@@ -24,6 +24,7 @@ class Ignore(DLPData):
             if getattr(self, item):
                 outStr += f'no {item}\n'
         return outStr
+
 
 class Analysis(DLPData):
     ''' Class defining properties of analysis '''
@@ -53,6 +54,7 @@ class Analysis(DLPData):
                 outstr += ('analyse {} every {} nbins {} rmax {}\n'.format(analtype, *args) if len(args) > 2 else
                            'analyse {} every {} nbind {}\n'.format(analtype, *args))
         return outstr
+
 
 class Print(DLPData):
     ''' Class definining properties that can be printed '''
@@ -90,7 +92,7 @@ class Print(DLPData):
     def __str__(self):
         outStr = ''
         if self.printevery > 0:
-            outStr += 'print every {}\n'.format(self.printevery)
+            outStr += 'every {}\n'.format(self.printevery)
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
@@ -103,6 +105,7 @@ class Print(DLPData):
             outStr += 'print vaf\n'
             outStr += 'vaf every {} {}'.format(self.vafevery, self.vafbin)
         return outStr
+
 
 class IOParam(DLPData):
     ''' Class defining io parameters '''
