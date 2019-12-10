@@ -118,7 +118,7 @@ class IOParam(DLPData):
                                 'config': str, 'outstat': str,
                                 'output': str, 'history': str,
                                 'historf': str, 'revive': str,
-                                'revcon': str, 'revold': str,})
+                                'revcon': str, 'revold': str})
 
         self.control = control
         self.field = field
