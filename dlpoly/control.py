@@ -5,6 +5,62 @@ Module to handle DLPOLY control files
 
 from dlpoly.utility import DLPData
 
+class FField(DLPData):
+    ''' Class defining properties relating to forcefields '''
+    def __init__(self, *args):
+        DLPData.__init__(self, {'rvdw': float, 'rcut': float, 'rpad': float,
+                                'elec': bool, 'elecMethod': str, 'metal': bool, 'vdw': bool, 'elecParams': tuple,
+                                'vdwParams': tuple, 'metalStyle': str, 'keysHandled': tuple})
+        self.elec = False
+        self.elecMethod = 'coulomb'
+        self.elecParams = ('',)
+
+        self.metal = False
+        self.metalStyle = 'TAB'
+
+        self.vdw = False
+        self.vdwParams = ('TAB')
+
+        self.rcut = 0.0
+        self.rvdw = 0.0
+        self.rpad = 0.0
+
+    keysHandled = property(lambda: ('reaction', 'shift', 'distance', 'ewald', 'coulomb',
+                                    'rpad', 'delr', 'padding', 'cutoff', 'rcut', 'rvdw',
+                                    'metal', 'vdw'))
+
+    def parse(self, key, vals):
+        ''' Handle key-vals for FField types '''
+        if key in ('reaction', 'shift', 'distance', 'ewald', 'coulomb'):
+            self.elec = True
+            self.elecMethod = key
+            self.elecParams = vals
+        elif key in ('rpad', 'delr', 'padding'):
+            self.rpad = vals
+            if key == 'delr':
+                self.rpad *= 4
+        elif key in ('cutoff', 'rcut'):
+            self.rcut = vals
+        elif key == 'rvdw':
+            self.rvdw = vals
+        elif key == 'metal':
+            self.metal = True
+            self.metalStyle = vals
+        elif key == 'vdw':
+            self.vdw = True
+            self.vdwParams = vals
+
+    def __str__(self):
+        outStr = ''
+        if self.elec:
+            outStr += '{} {}\n'.format(self.elecMethod, ' '.join(self.elecParams))
+        if self.vdw:
+            outStr += 'vdw {}\n'.format(' '.join(self.vdwParams))
+        if self.metal:
+            outStr += 'metal {}\n'.format(' '.join(self.metalStyle))
+        outStr += '{}\n{}\n{}\n'.format(self.rcut, self.rvdw, self.rpad)
+        return outStr
+
 
 class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
@@ -17,6 +73,11 @@ class Ignore(DLPData):
         self.topology = False
         self.vdw = False
         self.vafaveraging = False
+
+    keysHandled = property(lambda: ('no',))
+
+    def parse(self, key, args):
+        setattr(self, args[0], True)
 
     def __str__(self):
         outStr = ''
@@ -61,7 +122,8 @@ class Print(DLPData):
     def __init__(self, *args):
         DLPData.__init__(self, {'rdf': bool, 'analysis': bool, 'analObj': Analysis, 'printevery': int,
                                 'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
-                                'vafbin': int, 'zdenevery': int})
+                                'vafbin': int, 'zdenevery': int, 'keysHandled': tuple})
+
         self.analysis = False
         self.analObj = Analysis()
         self.rdf = False
@@ -74,7 +136,9 @@ class Print(DLPData):
         self.vafbin = 0
         self.zdenevery = 0
 
-    def parse_print(self, key, args):
+    keysHandled = property(lambda: ('print', 'rdf', 'zden', 'stats', 'analyse', 'vaf'))
+
+    def parse(self, key, args):
         ''' Parse a split print line and see what it actually says '''
         if key == 'print':
             if args[0].isdigit():
@@ -130,6 +194,12 @@ class IOParam(DLPData):
         self.revive = revive
         self.revcon = revcon
         self.revold = revold
+
+    keysHandled = property(lambda: ('io',))
+
+    def parse(self, key, args):
+        ''' Parse an IO line '''
+        setattr(self, args[0], args[1])
 
     def __str__(self):
         return (f'io field {self.field}\n'   # First IO is key
@@ -212,24 +282,17 @@ class EnsembleParam:
 class Control(DLPData):
     ''' Class defining a DLPOLY control file '''
     def __init__(self, source=None):
-        DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': int,
-                                'collect': bool, 'coulomb': bool, 'cutoff': float,
-                                'densvar': float, 'distance': float,
-                                'dump': int, 'ensemble': EnsembleParam, 'epsilon': float,
-                                'equilibration': int, 'ewald': tuple, 'exclude': bool,
-                                'heat_flux': bool, 'integrator': str,
-                                'io': IOParam, 'job': int, 'maxdis': float,
+        DLPData.__init__(self, {'binsize': float, 'cap': float, 'close': int, 'collect': bool, 'densvar': float,
+                                'dump': int, 'epsilon': float, 'equilibration': int, 'exclude': bool,
+                                'heat_flux': bool, 'integrator': str, 'job': int, 'maxdis': float,
                                 'metal': bool, 'mindis': float, 'multiple': int, 'mxquat': int,
-                                'mxshak': int, 'mxstep': float, 'cut': float,
-                                'ignore': Ignore, 'pressure': float,
-                                'press': float, 'print': Print, 'print rdf': bool,
-                                'print zden': bool, 'quaternion': float,
-                                'rdf': int, 'regauss': int, 'replay': bool,
-                                'restart': str, 'rlxtol': float, 'rpad': float, 'rvdw': float,
-                                'scale': int, 'slab': bool, 'shake': float,
+                                'mxshak': int, 'mxstep': float, 'pressure': float, 'press': float,
+                                'quaternion': float, 'regauss': int, 'replay': bool, 'restart': str,
+                                'rlxtol': float, 'scale': int, 'slab': bool, 'shake': float,
                                 'stack': int, 'stats': int, 'steps': int, 'temperature': float,
-                                'title': str, 'timestep': float,
-                                'variable': bool, 'vdw': str, 'zden': int, 'zero': bool,
+                                'title': str, 'timestep': float, 'variable': bool, 'zero': bool,
+                                'print': Print, 'ffield': FField, 'ensemble': EnsembleParam, 'ignore': Ignore,
+                                'io': IOParam,
                                 'defects': (int, int, float), 'displacements': (int, int, float),
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),
@@ -241,6 +304,7 @@ class Control(DLPData):
         self.io = IOParam(control=source)
         self.ignore = Ignore()
         self.print = Print()
+        self.ffield = FField()
         self.ensemble = EnsembleParam('nve')
         self.collect = False
         self.stats = 1
@@ -251,6 +315,11 @@ class Control(DLPData):
         if source is not None:
             self.source = source
             self.read(source)
+
+    @property
+    def handlers(self):
+        ''' Return iterable of handlers '''
+        return (self.io, self.ignore, self.print, self.ffield, self.ensemble)
 
     @staticmethod
     def _strip_crap(args):
@@ -271,16 +340,17 @@ class Control(DLPData):
                 key, *args = line.split()
                 args = self._strip_crap(args)
                 key = key.lower()
-                if key == 'io':
-                    setattr(self.io, args[0], args[1])
-                elif key == 'no':
-                    setattr(self.ignore, args[0], True)
-                elif key in ('analyse', 'print', 'rdf', 'vaf', 'zden'):
-                    self.print.parse_print(key, args)
-                elif key == 'ensemble':
-                    self.ensemble = EnsembleParam(*args)
+                print(line)
+                for handler in self.handlers:
+                    if key in handler.keysHandled:
+                        print(type(handler).__name__)
+                        handler.parse(key, args)
+                        break
                 else:
-                    self[key] = args
+                    if key == 'ensemble':
+                        self.ensemble = EnsembleParam(*args)
+                    else:
+                        self[key] = args
         return self
 
     def write(self, filename='CONTROL'):
@@ -294,7 +364,7 @@ class Control(DLPData):
                     if val and (key != 'variable'):
                         print(key, file=outFile)
                     continue
-                elif isinstance(val, (IOParam, EnsembleParam, Ignore)):
+                elif val in self.handlers:
                     print(val, file=outFile)
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(val), file=outFile)
