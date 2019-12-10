@@ -228,9 +228,9 @@ class Field(PotHaver):
             key, self.units = read_line(inFile).split()
             line = read_line(inFile)
             while line.lower() != 'close':
-                key, nVals = line.lower().split()
-                nVals = int(nVals)
-                if key == 'molecules':
+                key, *nVals = line.lower().split()
+                nVals = int(nVals[-1])
+                if key.startswith('molecul'):
                     for _ in range(nVals):
                         self.molecules.append(Molecule().read(inFile))
                 else:
