@@ -8,14 +8,20 @@ import numpy as np
 class Statis():
     __version__ = "0"
 
-    def __init__(self, source=None):
+    def __init__(self, source=None, control=None, config=None):
         self.rows = 0
         self.columns = 0
         self.data = None
-        self.labels = None
         if source is not None:
             self.source = source
             self.read(source)
+
+        self.gen_labels(control, config)
+
+    _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels)%5+1))
+
+    def add_label(self, arg):
+        self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
 
     def read(self, filename="STATIS"):
         h1, h2, s = open(filename).read().split('\n', 2)
@@ -23,38 +29,61 @@ class Statis():
         self.columns = int(self.data[2])
         self.rows = self.data.size//(self.columns + 3)
         self.data.shape = self.rows, self.columns + 3
-        self.labels = ["1-1 total extended system energy",
-                       "1-2 system temperature",
-                       "1-3 configurational energy",
-                       "1-4 short range potential energy",
-                       "1-5 electrostatic energy",
-                       "2-1 chemical bond energy",
-                       "2-2 valence angle and 3-body potential energy",
-                       "2-3 dihedral, inversion, and 4-body potential energy",
-                       "2-4 tethering energy",
-                       "2-5 enthalpy (total energy + PV)",
-                       "3-1 rotational temperature",
-                       "3-2 total virial",
-                       "3-3 short-range virial",
-                       "3-4 electrostatic virial",
-                       "3-5 bond virial",
-                       "4-1 valence angle and 3-body virial",
-                       "4-2 constraint bond virial",
-                       "4-3 tethering virial",
-                       "4-4 volume",
-                       "4-5 core-shell temperature",
-                       "5-1 core-shell potential energy",
-                       "5-2 core-shell virial",
-                       "5-3 MD cell angle α",
-                       "5-4 MD cell angle β",
-                       "5-5 MD cell angle γ",
-                       "6-1 PMF constraint virial",
-                       "6-2 pressure",
-                       "6-3 exdof"]
-
-        for i in range(28, self.columns):
-            self.labels.append("{0:d}-{1:d} col_{2:d}".format(i//5+1, i % 5+1, i+1))
         return self
+
+    def gen_labels(self, control=None, config=None):
+        self.labels = ["1-1 Total Extended System Energy",
+                       "1-2 System Temperature",
+                       "1-3 Configurational Energy",
+                       "1-4 Short Range Potential Energy",
+                       "1-5 Electrostatic Energy",
+                       "2-1 Chemical Bond Energy",
+                       "2-2 Valence Angle And 3-Body Potential Energy",
+                       "2-3 Dihedral, Inversion, And 4-Body Potential Energy",
+                       "2-4 Tethering Energy",
+                       "2-5 Enthalpy (Total Energy + Pv)",
+                       "3-1 Rotational Temperature",
+                       "3-2 Total Virial",
+                       "3-3 Short-Range Virial",
+                       "3-4 Electrostatic Virial",
+                       "3-5 Bond Virial",
+                       "4-1 Valence Angle And 3-Body Virial",
+                       "4-2 Constraint Bond Virial",
+                       "4-3 Tethering Virial",
+                       "4-4 Volume",
+                       "4-5 Core-Shell Temperature",
+                       "5-1 Core-Shell Potential Energy",
+                       "5-2 Core-Shell Virial",
+                       "5-3 Md Cell Angle Α",
+                       "5-4 Md Cell Angle Β",
+                       "5-5 Md Cell Angle Γ",
+                       "6-1 Pmf Constraint Virial",
+                       "6-2 Pressure",
+                       "6-3 External Degree Of Freedom"]
+
+        if control:
+            if getattr(control, 'l_msd', False) and config: # Never true as yet
+                for i in range(config.natoms):
+                    self.add_label("Mean Squared Displacement")
+                    self.add_label("Velocity . Velocity")
+            for i in range(9):
+                self.add_label("Stress Tensor")
+            if control and control.ensemble.ensemble in ("npt", "nst"):
+                for i in range(9):
+                    self.add_label("Cell Dimensions")
+                self.add_label("Instantaneous PV")
+                if any(key in control.ensemble.args for key in ("area", "tens", "semi", "orth")):
+                    self.add_label("H_Z")
+                    self.add_label("vol/h_z")
+                    if any(key in control.ensemble.args for key in ("tens", "semi")):
+                        self.add_label("Surface Tension") # "-h_z*(stats%strtot(1)-(thermo%press+thermo%stress(1)))*tenunt"
+                        self.add_label("Surface Tension") # "-h_z*(stats%strtot(5)-(thermo%press+thermo%stress(5)))*tenunt"
+
+        # Catch Remainder
+        for i in range(len(self.labels)+1, self.columns):
+            self.add_label("col_{2:d}".format(i+1))
+
+
 
     def flatten(self):
 
