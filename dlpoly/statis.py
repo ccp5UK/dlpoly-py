@@ -86,7 +86,6 @@ class Statis():
 
 
     def flatten(self):
-
         for i in range(self.columns-3):
             with open(self.labels[i], 'w') as f:
                 for j in range(self.rows):
