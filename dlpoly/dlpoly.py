@@ -30,11 +30,12 @@ class DLPoly:
         if statis is not None:
             self.load_statis(statis)
 
-    def write(self, prefix='', suffix=''):
-        self.control.write(prefix+self.controlFile+suffix)
-        if self.config:
+    def write(self, control=True, config=True, field=True, prefix='', suffix=''):
+        if control:
+            self.control.write(prefix+self.controlFile+suffix)
+        if config and self.config:
             self.config.write(prefix+self.configFile+suffix)
-        if self.field:
+        if field and self.field:
             self.field.write(prefix+self.fieldFile+suffix)
 
     def load_control(self, source=None):
