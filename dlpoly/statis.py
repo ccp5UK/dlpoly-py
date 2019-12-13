@@ -18,7 +18,7 @@ class Statis():
 
         self.gen_labels(control, config)
 
-    _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels)%5+1))
+    _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels) % 5+1))
 
     def add_label(self, arg):
         self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
@@ -76,13 +76,14 @@ class Statis():
                     self.add_label("H_Z")
                     self.add_label("vol/h_z")
                     if any(key in control.ensemble.args for key in ("tens", "semi")):
-                        self.add_label("Surface Tension") # "-h_z*(stats%strtot(1)-(thermo%press+thermo%stress(1)))*tenunt"
-                        self.add_label("Surface Tension") # "-h_z*(stats%strtot(5)-(thermo%press+thermo%stress(5)))*tenunt"
+                        # "-h_z*(stats%strtot(1)-(thermo%press+thermo%stress(1)))*tenunt"
+                        self.add_label("Surface Tension")
+                        # "-h_z*(stats%strtot(5)-(thermo%press+thermo%stress(5)))*tenunt"
+                        self.add_label("Surface Tension") 
 
         # Catch Remainder
         for i in range(len(self.labels)+1, self.columns):
             self.add_label("col_{2:d}".format(i+1))
-
 
 
     def flatten(self):
