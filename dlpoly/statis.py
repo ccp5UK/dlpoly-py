@@ -62,7 +62,8 @@ class Statis():
                        "6-3 External Degree Of Freedom"]
 
         if control:
-            if getattr(control, 'l_msd', False) and config: # Never true as yet
+            # Never true as yet
+            if getattr(control, 'l_msd', False) and config:
                 for i in range(config.natoms):
                     self.add_label("Mean Squared Displacement")
                     self.add_label("Velocity . Velocity")
@@ -79,12 +80,11 @@ class Statis():
                         # "-h_z*(stats%strtot(1)-(thermo%press+thermo%stress(1)))*tenunt"
                         self.add_label("Surface Tension")
                         # "-h_z*(stats%strtot(5)-(thermo%press+thermo%stress(5)))*tenunt"
-                        self.add_label("Surface Tension") 
+                        self.add_label("Surface Tension")
 
         # Catch Remainder
         for i in range(len(self.labels)+1, self.columns):
             self.add_label("col_{2:d}".format(i+1))
-
 
     def flatten(self):
         for i in range(self.columns-3):
