@@ -181,7 +181,7 @@ class Field(PotHaver):
         PotHaver.__init__(self)
         self.header = ''
         self.units = 'internal'
-        self.molecules = []
+        self.molecules = {}
         if source is not None:
             self.source = source
             self.read(self.source)
@@ -204,7 +204,9 @@ class Field(PotHaver):
     nExterns = property(lambda self: len(self.externs))
 
     activePots = property(lambda self: (name for name in Potential.nAtoms if self.get_num_pot_by_class(name)))
-    species = property(lambda self: {spec.element: spec for mol in self.molecules for spec in mol.species.values()})
+    species = property(lambda self: {spec.element: spec
+                                     for mol in self.molecules.values()
+                                     for spec in mol.species.values()})
     potSpecies = property(lambda self: {spec for specPairs in self.pots for spec in specPairs})
 
     def _read_block(self, fieldFile, potClass, nPots):
@@ -220,6 +222,12 @@ class Field(PotHaver):
     def _read_tersoff(self, fieldFile, nPots):
         ''' Read a tersoff set (different to standard block) '''
 
+    def add_molecule(self, molecule):
+        ''' Add molecule to self '''
+        if molecule.name not in self.molecules:
+            self.molecules[molecule.name] = molecule
+        self.molecules[molecule.name].nMols += 1
+
     def read(self, fieldFile='FIELD'):
         ''' Read field file into data '''
         with open(fieldFile, 'r') as inFile:
@@ -232,7 +240,8 @@ class Field(PotHaver):
                 nVals = int(nVals[-1])
                 if key.startswith('molecul'):
                     for _ in range(nVals):
-                        self.molecules.append(Molecule().read(inFile))
+                        mol = Molecule().read(inFile)
+                        self.molecules[mol.name] = mol
                 else:
                     self._read_block(inFile, key, nVals)
                 line = read_line(inFile)
@@ -243,7 +252,7 @@ class Field(PotHaver):
             print(self.header, file=outFile)
             print('units {}'.format(self.units), file=outFile)
             print('molecules {}'.format(self.nMolecules), file=outFile)
-            for molecule in self.molecules:
+            for molecule in self.molecules.values():
                 molecule.write(outFile)
             for potClass in self.activePots:
                 pots = list(self.get_pot_by_class(potClass))

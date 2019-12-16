@@ -2,6 +2,7 @@
 Module to handle DLPOLY config files
 '''
 
+import copy
 import numpy as np
 # from dlpoly.species import Species
 from dlpoly.utility import DLPData
@@ -9,15 +10,15 @@ from dlpoly.utility import DLPData
 
 class Atom(DLPData):
     ''' Class defining a DLPOLY atom type '''
-    def __init__(self):
+    def __init__(self, element='', pos=None, vel=None, forces=None, index=1):
         DLPData.__init__(self, {'element': str, 'pos': (float, float, float),
                                 'vel': (float, float, float),
                                 'forces': (float, float, float), 'index': int})
-        self.element = ''
-        self.pos = np.zeros(3)
-        self.vel = np.zeros(3)
-        self.forces = np.zeros(3)
-        self.index = 1
+        self.element = element
+        self.pos = np.zeros(3) if pos is None else pos
+        self.vel = np.zeros(3) if vel is None else vel
+        self.forces = np.zeros(3) if forces is None else forces
+        self.index = index
 
     def write(self, level):
         ''' Print own data to file w.r.t config print level '''
@@ -99,7 +100,18 @@ class Config():
             for atom in self.atoms:
                 print(atom.write(self.level), file=outFile)
 
+    def add_atoms(self, other):
+        ''' Add two Configs together to make one bigger config '''
+        if not isinstance(other, Config):
+            raise TypeError('Cannot add non-config to config')
+        lastIndex = self.natoms
+        self.atoms += [copy.copy(atom) for atom in other.atoms]
+        # Shift new atoms' indices to reflect place in new config
+        for i in range(lastIndex, self.natoms):
+            self.atoms[i].index += lastIndex
+        
     def read(self, filename='CONFIG'):
+        ''' Read file into Config '''
         try:
             fileIn = open(filename, 'r')
         except IOError:

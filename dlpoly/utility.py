@@ -20,10 +20,12 @@ def peek(iterable):
 def read_line(inFile):
     """ Read a line, stripping comments and blank lines """
     line = None
-    while not line:
-        line = inFile.readline().split(COMMENT_CHAR)[0].strip()
-        if line is None:
-            raise IOError("Attempted to read line at EOF")
+    for line in inFile:
+        line = line.split(COMMENT_CHAR)[0].strip()
+        if line:
+            break
+    else:
+        line = None
     return line
 
 
