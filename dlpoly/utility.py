@@ -1,36 +1,52 @@
-"""
+'''
 Module containing utility functions supporting the DLPOLY Python Workflow
-"""
+'''
 
+import math
 import itertools
+import numpy as np
 from abc import ABC
 
-COMMENT_CHAR = "#"
+COMMENT_CHAR = '#'
 
 
 def peek(iterable):
-    """ Test generator without modifying """
+    ''' Test generator without modifying '''
     try:
         first = next(iterable)
     except StopIteration:
         return None
     return itertools.chain([first], iterable)
 
-
+def parse_line(line):
+    ''' Handle comment chars and whitespace '''
+    return line.split(COMMENT_CHAR)[0].strip()
+    
 def read_line(inFile):
-    """ Read a line, stripping comments and blank lines """
+    ''' Read a line, stripping comments and blank lines '''
     line = None
     for line in inFile:
-        line = line.split(COMMENT_CHAR)[0].strip()
+        line = parse_line(line)
         if line:
             break
     else:
         line = None
     return line
 
+def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units='rad'):
+    ''' Build a rotation matrix in degrees or radians '''
+    if units == 'deg':
+        alpha, beta, gamma = map(lambda x: x*math.pi/180, (alpha, beta, gamma))
+    salp, sbet, sgam = map(np.sin, (alpha, beta, gamma))
+    calp, cbet, cgam = map(np.cos, (alpha, beta, gamma))
+    matrix = np.asarray([[cbet*cgam, cgam*salp*sbet - calp*sgam, calp*cgam*sbet + salp*sgam],
+                         [cbet*sgam, calp*cgam+salp*sbet*sgam, calp*sbet*sgam-cgam*salp],
+                         [-1.*sbet, cbet*salp, calp*cbet]], dtype=float)
+    return matrix
+
 
 class DLPData(ABC):
-    """ Abstract datatype for handling automatic casting and restricted assignment """
+    ''' Abstract datatype for handling automatic casting and restricted assignment '''
 
     def __init__(self, dataTypes):
         self._dataTypes = dataTypes
@@ -40,18 +56,18 @@ class DLPData(ABC):
     className = property(lambda self: type(self).__name__)
 
     def __setattr__(self, key, val):
-        if key == "_dataTypes":  # Protect datatypes
-            if not hasattr(self, "dataTypes"):
+        if key == '_dataTypes':  # Protect datatypes
+            if not hasattr(self, 'dataTypes'):
                 self.__dict__[key] = val
             else:
-                print("Cannot alter dataTypes")
+                print('Cannot alter dataTypes')
             return
 
-        if key == "source":  # source is not really a keyword
+        if key == 'source':  # source is not really a keyword
             return
 
         if key not in self.dataTypes:
-            print("Param {} not allowed in {} definition".format(key, self.className.lower()))
+            print('Param {} not allowed in {} definition'.format(key, self.className.lower()))
             return
 
         val = self._map_types(key, val)
@@ -64,7 +80,7 @@ class DLPData(ABC):
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
-        """ Map argument types to their respective types """
+        ''' Map argument types to their respective types '''
         dType = self._dataTypes[key]
         if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)):
             if not vals:

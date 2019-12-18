@@ -5,7 +5,7 @@ import numpy as np
 
 from dlpoly.config import Atom
 from dlpoly.field import Molecule
-from dlpoly.utility import read_line
+from dlpoly.utility import read_line, build_3d_rotation_matrix
 
 class CFG(Molecule):
     ''' Load a partial configuration '''
@@ -17,13 +17,44 @@ class CFG(Molecule):
             self.read(source)
             self._centre_mol()
 
+    atomSpecies = property(lambda self: [self.species[atom.element] for atom in self.atoms])
+    atomPos = property(lambda self: [atom.pos for atom in self.atoms])
+
+    def translate(self, translation):
+        ''' Move all atoms by translation '''
+        for atom in self.atoms:
+            atom.pos += translation
+
+    def stretch(self, stretch):
+        ''' Stretch all atoms by translation '''
+        for atom in self.atoms:
+            atom.pos *= stretch
+
+    def rotate(self, rotation):
+        ''' Perform rotation on the atoms in cell '''
+        alpha, beta, gamma = rotation
+        rot = build_3d_rotation_matrix(alpha, beta, gamma, 'deg')
+        self.apply_matrix_transform(rot)
+
+    def apply_matrix_transform(self, transform: np.ndarray):
+        ''' Apply a matrix transform to own atoms '''
+        for atom in self.atoms:
+            atom.pos = np.matmul(transform, atom.pos)
+
+    def _centre_com(self):
+        ''' Centre CoM about 0, 0, 0 '''
+        centreOfMass = 0.
+        for atom in self.atoms:
+            centreOfMass += self.species[atom.element].mass * atom.pos
+        centreOfMass /= np.sum(spec.mass for spec in self.atomSpecies)
+        self.translate(-centreOfMass)
+
     def _centre_mol(self):
-        ''' Centre molecule about 0, 0, 0 '''
-        tmpArr = np.asarray([atom.pos for atom in self.atoms])
+        ''' Centre molecule's centroid about 0, 0, 0 '''
+        tmpArr = np.asarray(self.atomPos)
         maxPos, minPos = np.max(tmpArr, axis=0), np.min(tmpArr, axis=0)
         shift = (minPos + maxPos) / 2
-        for atom in self.atoms:
-            atom.pos -= shift
+        self.translate(-shift)
 
     def _read_pos(self, source, nElem):
         ''' Read in an atoms block '''

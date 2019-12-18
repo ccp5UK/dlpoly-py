@@ -33,15 +33,15 @@ class Atom(DLPData):
                     '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
                                                           self.index,
                                                           *self.pos, *self.vel)
-            if level == 2:
-                return ('{:8s}{:10d}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
-                                                              self.index,
-                                                              *self.pos,
-                                                              *self.vel,
-                                                              *self.forces)
+        if level == 2:
+            return ('{:8s}{:10d}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
+                                                          self.index,
+                                                          *self.pos,
+                                                          *self.vel,
+                                                          *self.forces)
 
     def __str__(self):
         return ('{:8s}{:10d}\n'
@@ -78,7 +78,7 @@ class Config():
     def __init__(self, source=None):
         self.title = ''
         self.level = 0
-        self.atoms = None
+        self.atoms = []
         self.pbc = 0
         self.cell = np.zeros((3, 3))
 
@@ -102,14 +102,15 @@ class Config():
 
     def add_atoms(self, other):
         ''' Add two Configs together to make one bigger config '''
-        if not isinstance(other, Config):
-            raise TypeError('Cannot add non-config to config')
         lastIndex = self.natoms
-        self.atoms += [copy.copy(atom) for atom in other.atoms]
+        if isinstance(other, Config):
+            self.atoms += [copy.copy(atom) for atom in other.atoms]
+        elif isinstance(other, (list, tuple)):
+            self.atoms += [copy.copy(atom) for atom in other]
         # Shift new atoms' indices to reflect place in new config
         for i in range(lastIndex, self.natoms):
             self.atoms[i].index += lastIndex
-        
+
     def read(self, filename='CONFIG'):
         ''' Read file into Config '''
         try:

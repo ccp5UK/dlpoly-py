@@ -10,6 +10,7 @@ def main():
     for source in argList.sources:
         with open(source, 'r') as sourceFile:
             system = build(sourceFile)
-        
+            system.config.write(argList.output.strip() + '.config')
+            system.field.write(argList.output.strip() + '.field')
 if __name__ == "__main__":
     main()
