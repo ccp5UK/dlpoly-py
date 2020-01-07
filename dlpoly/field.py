@@ -226,7 +226,8 @@ class Field(PotHaver):
         ''' Add molecule to self '''
         if molecule.name not in self.molecules:
             self.molecules[molecule.name] = molecule
-        self.molecules[molecule.name].nMols += 1
+        else:
+            self.molecules[molecule.name].nMols += 1
 
     def read(self, fieldFile='FIELD'):
         ''' Read field file into data '''

@@ -13,7 +13,8 @@ class Atom(DLPData):
     def __init__(self, element='', pos=None, vel=None, forces=None, index=1):
         DLPData.__init__(self, {'element': str, 'pos': (float, float, float),
                                 'vel': (float, float, float),
-                                'forces': (float, float, float), 'index': int})
+                                'forces': (float, float, float), 'index': int,
+                                'molecule': (str, int)})
         self.element = element
         self.pos = np.zeros(3) if pos is None else pos
         self.vel = np.zeros(3) if vel is None else vel

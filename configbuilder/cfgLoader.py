@@ -20,6 +20,12 @@ class CFG(Molecule):
     atomSpecies = property(lambda self: [self.species[atom.element] for atom in self.atoms])
     atomPos = property(lambda self: [atom.pos for atom in self.atoms])
 
+    @property
+    def bounds(self):
+        ''' Find the limiting boundaries of the molecule '''
+        return np.asarray([np.min(np.asarray(self.atomPos), axis=0),
+                             np.max(np.asarray(self.atomPos), axis=0)]).reshape(2, 3)
+
     def translate(self, translation):
         ''' Move all atoms by translation '''
         for atom in self.atoms:

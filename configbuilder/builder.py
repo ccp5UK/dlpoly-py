@@ -11,7 +11,7 @@ from dlpoly.utility import parse_line, read_line
 from .cfgLoader import CFG
 
 class System:
-    keywords = ('cell', 'include', 'vdw')
+    keywords = ('cell', 'include', 'potential')
     def __init__(self):
         self.config = Config()
         self.config.level = 0
@@ -21,6 +21,7 @@ class System:
         self.defined = {key: False for key in System.keywords}
 
     def handle_structure(self, source):
+        """ Read a structure block and add each element to the system """
         lastConfig = None
         while True:
             line = read_line(source)
@@ -32,24 +33,27 @@ class System:
 
             keyword, *args = line.split()
             keyword = keyword.lower()
-            print(keyword)
+
             if keyword == 'include':
                 filename, *args = args
                 if filename not in self.CFGs:
                     self.CFGs[filename] = CFG(filename)
 
-                newConfig = copy.copy(self.CFGs[filename])
-                self._add_config(newConfig, args)
-                lastConfig = newConfig
+                lastConfig = self._add_config(self.CFGs[filename], args)
 
             elif keyword == 'repeat':
                 nRepeat, *args = args
                 for i in range(int(nRepeat)):
-                    newConfig = copy.copy(lastConfig)
-                    self._add_config(newConfig, args[:])
-                    lastConfig = newConfig
+                    lastConfig = self._add_config(lastConfig, args[:])
+        print(self.field.molecules['Water molecule'].nMols)
 
-    def _add_config(self, newConfig, args):
+    def _add_config(self, inConfig, args):
+        """ Add a config to the current system
+        Returns: Last Config
+        """
+        newConfig = copy.copy(inConfig)
+        print(newConfig.atomPos)
+        print(newConfig.bounds)
         self.field.add_molecule(newConfig)
 
         while args:
@@ -68,13 +72,48 @@ class System:
             else:
                 raise IOError('Unrecognised keyword {} in {}'.format(keyword, 'include'))
 
+
+        if 'replace' in args:
+            newConfig.clear(newConfig)
+
         self.config.add_atoms(newConfig.atoms)
+        return newConfig
+
+    def _clear_config(self, config, radius=1.):
+        """ Clear the space occupied by a molecule
+        determined by deleting any molecules in a cylindrical radius around defined internal bonding
+        Config : Configuration to check space of
+        Radius : Radius in Angstroms of cylinders
+        """
+
+        radiusSq = radius**2
+        
+        # Calculate current list of potential conflicts
+        potentialConflicts = [atom for atom in self.config.atoms
+                              if any(atom.pos > config.bounds[0]-radius and
+                                     atom.pos < config.bounds[1]+radius)]
+        
+        for constraintClass in ("bonds", "constraints", "rigid"):
+            for pot in config.get_pot_by_class(constraintClass):
+                atomi, atomj = config.atoms[pot.atoms[0]], config.atoms[pot.atoms[1]]
+                rij = atomj.pos - atomi.pos
+                modRijSq = np.dot(rij, rij)
+
+                for trialAtom in potentialConflicts:
+                    riPt = trialAtom.pos - atomi.pos
+                    dot = np.dot(riPt, rij)
+                    if (0.0 < dot < modRijSq and
+                        np.dot(riPt, riPt) - dot**2/modRijSq < radiusSq) :
+                        # delete molecule!
+
+
 
 
     def handle_cell(self, line):
+        """ Read a cell line and set corresponding pbcs """
         key, *args = line.split()
         if self.defined['cell']:
-            raise ValueError('{} multiply defined in {}'.format(key.capitalize(), source))
+            raise ValueError('{} multiply defined in {}'.format(key.capitalize(), line))
         self.config.cell = np.zeros((3, 3))
         if len(args) == 1: # Fill diagonal
             for i in range(3):
@@ -89,18 +128,18 @@ class System:
             self.config.pbc = 3
         else:
             raise IOError('Cannot handle block {} {}')
-        
-    def handle_vdw_block(self, source):
-        for line in source:
-            if line.lower() == 'end vdw':
-                break
-            for i in range(int(args[0])):
-                line = read_line(source)
 
-                potClass, nPots = line.split()
-                self.field._read_block(source, potClass, nPots)
+    def handle_potential_block(self, source):
+        """ Read a potential block into the field """
+        for line in source:
+            if line.lower() == 'end potential':
+                break
+            line = parse_line(line)
+            potClass, nPots = line.split()
+            nPots = int(nPots)
+            self.field._read_block(source, potClass, nPots)
         else:
-            raise IOError('Unended vdw block')
+            raise IOError('Unended potential block')
 
 
 def build(source):
@@ -115,7 +154,7 @@ def build(source):
             system.handle_structure(source)
         elif key == 'cell':
             system.handle_cell(line)
-        elif key == 'vdw':
-            system.handle_vdw_block(source)
-    
+        elif key == 'potential':
+            system.handle_potential_block(source)
+
     return system
