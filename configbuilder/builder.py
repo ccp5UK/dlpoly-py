@@ -21,7 +21,7 @@ class System:
         self.defined = {key: False for key in System.keywords}
 
     def handle_structure(self, source):
-        """ Read a structure block and add each element to the system """
+        ''' Read a structure block and add each element to the system '''
         lastConfig = None
         while True:
             line = read_line(source)
@@ -41,6 +41,15 @@ class System:
 
                 lastConfig = self._add_config(self.CFGs[filename], args)
 
+            elif keyword == 'lattice':
+                if self.config.level == 0:
+                    raise ValueError('Cannot generate lattice with no cell specified')
+
+                shape, *args = args
+
+                if shape in ('cubic'):
+                     spacing, *args = args
+
             elif keyword == 'repeat':
                 nRepeat, *args = args
                 for i in range(int(nRepeat)):
@@ -48,13 +57,14 @@ class System:
         print(self.field.molecules['Water molecule'].nMols)
 
     def _add_config(self, inConfig, args):
-        """ Add a config to the current system
+        ''' Add a config to the current system
         Returns: Last Config
-        """
+        '''
         newConfig = copy.copy(inConfig)
-        print(newConfig.atomPos)
-        print(newConfig.bounds)
-        self.field.add_molecule(newConfig)
+
+        currMol = self.field.add_molecule(newConfig)
+        for atom in newConfig.atoms:
+            atom.molecule = currMol
 
         while args:
             keyword = args.pop(0).lower()
@@ -74,26 +84,37 @@ class System:
 
 
         if 'replace' in args:
-            newConfig.clear(newConfig)
+            newConfig.clear_config(newConfig)
 
         self.config.add_atoms(newConfig.atoms)
         return newConfig
 
+    def _del_config(self, delMol):
+        ''' Delete a configuration from system '''
+        molName, molID = delMol
+        fieldMol = self.field.molecules[molName]
+        fieldMol.nMols -= 1
+        if not fieldMol.nMols:
+            del self.field.molecules[molName]
+
+        self.config.atoms = [atom for atom in self.config.atoms
+                             if atom.molecule != delMol]
+
     def _clear_config(self, config, radius=1.):
-        """ Clear the space occupied by a molecule
+        ''' Clear the space occupied by a molecule
         determined by deleting any molecules in a cylindrical radius around defined internal bonding
         Config : Configuration to check space of
         Radius : Radius in Angstroms of cylinders
-        """
+        '''
 
         radiusSq = radius**2
-        
+
         # Calculate current list of potential conflicts
         potentialConflicts = [atom for atom in self.config.atoms
                               if any(atom.pos > config.bounds[0]-radius and
                                      atom.pos < config.bounds[1]+radius)]
-        
-        for constraintClass in ("bonds", "constraints", "rigid"):
+
+        for constraintClass in ('bonds', 'constraints', 'rigid'):
             for pot in config.get_pot_by_class(constraintClass):
                 atomi, atomj = config.atoms[pot.atoms[0]], config.atoms[pot.atoms[1]]
                 rij = atomj.pos - atomi.pos
@@ -102,15 +123,14 @@ class System:
                 for trialAtom in potentialConflicts:
                     riPt = trialAtom.pos - atomi.pos
                     dot = np.dot(riPt, rij)
-                    if (0.0 < dot < modRijSq and
-                        np.dot(riPt, riPt) - dot**2/modRijSq < radiusSq) :
+                    if 0.0 < dot < modRijSq and np.dot(riPt, riPt) - dot**2/modRijSq < radiusSq:
                         # delete molecule!
-
+                        self._del_config(trialAtom.molecule)
 
 
 
     def handle_cell(self, line):
-        """ Read a cell line and set corresponding pbcs """
+        ''' Read a cell line and set corresponding pbcs '''
         key, *args = line.split()
         if self.defined['cell']:
             raise ValueError('{} multiply defined in {}'.format(key.capitalize(), line))
@@ -127,10 +147,10 @@ class System:
             self.config.cell = np.asarray(args).reshape((3, 3))
             self.config.pbc = 3
         else:
-            raise IOError('Cannot handle block {} {}')
+            raise IOError('Cannot handle cell line: {}'.format(line))
 
     def handle_potential_block(self, source):
-        """ Read a potential block into the field """
+        ''' Read a potential block into the field '''
         for line in source:
             if line.lower() == 'end potential':
                 break

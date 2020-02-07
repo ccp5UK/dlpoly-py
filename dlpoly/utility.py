@@ -82,16 +82,15 @@ class DLPData(ABC):
     def _map_types(self, key, vals):
         ''' Map argument types to their respective types '''
         dType = self._dataTypes[key]
-        if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)):
+        if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)) and dType is not tuple:
             if not vals:
                 pass
             elif len(vals) == 1:
                 vals = vals[0]
             else:
-                for i, arg in enumerate(vals):
+                for arg in vals:
                     try:
-                        dType(arg)
-                        vals = arg[i]
+                        vals = arg
                         break
                     except TypeError:
                         pass

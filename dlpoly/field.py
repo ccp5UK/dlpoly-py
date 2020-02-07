@@ -229,6 +229,8 @@ class Field(PotHaver):
         else:
             self.molecules[molecule.name].nMols += 1
 
+        return molecule.name, self.molecules[molecule.name].nMols
+
     def read(self, fieldFile='FIELD'):
         ''' Read field file into data '''
         with open(fieldFile, 'r') as inFile:

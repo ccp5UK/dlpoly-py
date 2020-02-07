@@ -29,6 +29,6 @@ stats every 5 steps
 shake                  0.000001
 
 job time               7200 seconds
-close time             100
+close time             100 seconds
 
 finish

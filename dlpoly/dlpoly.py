@@ -4,6 +4,8 @@ Module containing main DLPOLY class
 
 import subprocess
 import os.path
+import os
+import shutil
 from dlpoly.control import Control
 from dlpoly.config import Config
 from dlpoly.field import Field
@@ -15,12 +17,14 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "4.10"  # which version of dlpoly supports
 
-    def __init__(self, control=None, config=None, field=None, statis=None):
+    def __init__(self, control=None, config=None, field=None, statis=None, workdir=None):
         # Default to having a control
         self.control = Control()
         self.config = None
         self.field = None
         self.statis = None
+        self.workdir = workdir
+        
         if control is not None:
             self.load_control(control)
         if config is not None:
@@ -29,6 +33,26 @@ class DLPoly:
             self.load_field(field)
         if statis is not None:
             self.load_statis(statis)
+
+    def redir_output(self, direc=None):
+        """ Redirect output to direc and update self for later parsing """
+        if direc is None:
+            direc = self.workdir
+        self.control.io.outstat = os.path.join(direc, self.control.io.outstat)
+        self.control.io.history = os.path.join(direc, self.control.io.history)
+        self.control.io.historf = os.path.join(direc, self.control.io.historf)
+        self.control.io.output = os.path.join(direc, self.control.io.output)
+        self.control.io.revive = os.path.join(direc, self.control.io.revive)
+        self.control.io.revcon = os.path.join(direc, self.control.io.revcon)
+        self.control.io.revold = os.path.join(direc, self.control.io.revold)
+        
+    def copy_input(self, direc=None):
+        if direc is None:
+            direc = self.workdir
+        shutil.copy(self.fieldFile, direc)
+        shutil.copy(self.configFile, direc)
+        self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
+        self.configFile = os.path.join(direc, os.path.basename(self.configFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         if control:
@@ -123,13 +147,26 @@ class DLPoly:
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
+
+
+        try:
+            os.mkdir(self.workdir)
+        except FileExistsError:
+            print("Folder {} exists, over-writing.".format(self.workdir))
+
+        prefix = self.workdir+"/"
+        controlFile = prefix+os.path.basename(self.controlFile)
+        self.copy_input()
+        self.redir_output()
+        self.control.write(controlFile)
+
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} {3:s}".format(mpi,
                                                           numProcs,
                                                           executable,
-                                                          self.controlFile)
+                                                          controlFile)
         else:
-            runCommand = "{0:s} {1:s}".format(executable, self.controlFile)
+            runCommand = "{0:s} {1:s}".format(executable, controlFile)
 
         if modules:
             loadMods = "module purge && module load " + modules
@@ -139,10 +176,16 @@ class DLPoly:
                 cmd = ['sh ./env.sh']
         else:
             cmd = [runCommand]
+
         subprocess.call(cmd, shell=True)
 
 
-if __name__ == "__main__":
+def main():
     argList = get_command_args()
-    DLPoly(control=argList.control, config=argList.config,
-           field=argList.field, statis=argList.statis)
+    dlPoly = DLPoly(control=argList.control, config=argList.config,
+                    field=argList.field, statis=argList.statis,
+                    workdir=argList.workdir)
+    dlPoly.run(executable=argList.dlp)
+
+if __name__ == "__main__":
+    main()
