@@ -2,6 +2,7 @@
 Module to handle DLPOLY config files
 '''
 
+import copy
 import numpy as np
 # from dlpoly.species import Species
 from dlpoly.utility import DLPData
@@ -9,15 +10,16 @@ from dlpoly.utility import DLPData
 
 class Atom(DLPData):
     ''' Class defining a DLPOLY atom type '''
-    def __init__(self):
+    def __init__(self, element='', pos=None, vel=None, forces=None, index=1):
         DLPData.__init__(self, {'element': str, 'pos': (float, float, float),
                                 'vel': (float, float, float),
-                                'forces': (float, float, float), 'index': int})
-        self.element = ''
-        self.pos = np.zeros(3)
-        self.vel = np.zeros(3)
-        self.forces = np.zeros(3)
-        self.index = 1
+                                'forces': (float, float, float), 'index': int,
+                                'molecule': (str, int)})
+        self.element = element
+        self.pos = np.zeros(3) if pos is None else pos
+        self.vel = np.zeros(3) if vel is None else vel
+        self.forces = np.zeros(3) if forces is None else forces
+        self.index = index
 
     def write(self, level):
         ''' Print own data to file w.r.t config print level '''
@@ -32,15 +34,15 @@ class Atom(DLPData):
                     '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
                                                           self.index,
                                                           *self.pos, *self.vel)
-            if level == 2:
-                return ('{:8s}{:10d}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}\n'
-                        '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
-                                                              self.index,
-                                                              *self.pos,
-                                                              *self.vel,
-                                                              *self.forces)
+        if level == 2:
+            return ('{:8s}{:10d}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}\n'
+                    '{:20.10f}{:20.10f}{:20.10f}').format(self.element,
+                                                          self.index,
+                                                          *self.pos,
+                                                          *self.vel,
+                                                          *self.forces)
 
     def __str__(self):
         return ('{:8s}{:10d}\n'
@@ -77,7 +79,7 @@ class Config():
     def __init__(self, source=None):
         self.title = ''
         self.level = 0
-        self.atoms = None
+        self.atoms = []
         self.pbc = 0
         self.cell = np.zeros((3, 3))
 
@@ -99,7 +101,19 @@ class Config():
             for atom in self.atoms:
                 print(atom.write(self.level), file=outFile)
 
+    def add_atoms(self, other):
+        ''' Add two Configs together to make one bigger config '''
+        lastIndex = self.natoms
+        if isinstance(other, Config):
+            self.atoms += [copy.copy(atom) for atom in other.atoms]
+        elif isinstance(other, (list, tuple)):
+            self.atoms += [copy.copy(atom) for atom in other]
+        # Shift new atoms' indices to reflect place in new config
+        for i in range(lastIndex, self.natoms):
+            self.atoms[i].index += lastIndex
+
     def read(self, filename='CONFIG'):
+        ''' Read file into Config '''
         try:
             fileIn = open(filename, 'r')
         except IOError:

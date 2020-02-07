@@ -26,9 +26,9 @@ class FField(DLPData):
         self.rvdw = 0.0
         self.rpad = 0.0
 
-    keysHandled = property(lambda: ('reaction', 'shift', 'distance', 'ewald', 'coulomb',
-                                    'rpad', 'delr', 'padding', 'cutoff', 'rcut', 'rvdw',
-                                    'metal', 'vdw'))
+    keysHandled = property(lambda self: ('reaction', 'shift', 'distance', 'ewald', 'coulomb',
+                                         'rpad', 'delr', 'padding', 'cutoff', 'rcut', 'cut', 'rvdw',
+                                         'metal', 'vdw'))
 
     def parse(self, key, vals):
         ''' Handle key-vals for FField types '''
@@ -40,7 +40,7 @@ class FField(DLPData):
             self.rpad = vals
             if key == 'delr':
                 self.rpad *= 4
-        elif key in ('cutoff', 'rcut'):
+        elif key in ('cutoff', 'rcut', 'cut'):
             self.rcut = vals
         elif key == 'rvdw':
             self.rvdw = vals
@@ -59,7 +59,7 @@ class FField(DLPData):
             outStr += 'vdw {}\n'.format(' '.join(self.vdwParams))
         if self.metal:
             outStr += 'metal {}\n'.format(' '.join(self.metalStyle))
-        outStr += '{}\n{}\n{}\n'.format(self.rcut, self.rvdw, self.rpad)
+        outStr += 'rcut {}\nrvdw {}\nrpad {}\n'.format(self.rcut, self.rvdw, self.rpad)
         return outStr
 
 
@@ -75,7 +75,7 @@ class Ignore(DLPData):
         self.vdw = False
         self.vafaveraging = False
 
-    keysHandled = property(lambda: ('no',))
+    keysHandled = property(lambda self: ('no',))
 
     def parse(self, key, args):
         setattr(self, args[0], True)
@@ -106,15 +106,15 @@ class Analysis(DLPData):
         setattr(self, args[0], args[1:])
 
     def __str__(self):
-        if any(self.all > 0):
-            return 'analyse all every {} nbins {} rmax {}'.format(*self.all)
+        # if any(self.all > 0):
+        #     return 'analyse all every {} nbins {} rmax {}'.format(*self.all)
 
         outstr = ''
-        for analtype in ('bonds', 'angles', 'dihedrals', 'inversions'):
-            args = getattr(self, analtype)
-            if any(args > 0):
-                outstr += ('analyse {} every {} nbins {} rmax {}\n'.format(analtype, *args) if len(args) > 2 else
-                           'analyse {} every {} nbind {}\n'.format(analtype, *args))
+        # for analtype in ('bonds', 'angles', 'dihedrals', 'inversions'):
+        #     args = getattr(self, analtype)
+        #     if any(args > 0):
+        #         outstr += ('analyse {} every {} nbins {} rmax {}\n'.format(analtype, *args) if len(args) > 2 else
+        #                    'analyse {} every {} nbind {}\n'.format(analtype, *args))
         return outstr
 
 
@@ -123,7 +123,7 @@ class Print(DLPData):
     def __init__(self, *args):
         DLPData.__init__(self, {'rdf': bool, 'analysis': bool, 'analObj': Analysis, 'printevery': int,
                                 'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
-                                'vafbin': int, 'zdenevery': int, 'keysHandled': tuple})
+                                'vafbin': int, 'statsevery': int, 'zdenevery': int, 'keysHandled': tuple})
 
         self.analysis = False
         self.analObj = Analysis()
@@ -137,7 +137,7 @@ class Print(DLPData):
         self.vafbin = 0
         self.zdenevery = 0
 
-    keysHandled = property(lambda: ('print', 'rdf', 'zden', 'stats', 'analyse', 'vaf'))
+    keysHandled = property(lambda self: ('print', 'rdf', 'zden', 'stats', 'analyse', 'vaf'))
 
     def parse(self, key, args):
         ''' Parse a split print line and see what it actually says '''
@@ -157,7 +157,7 @@ class Print(DLPData):
     def __str__(self):
         outStr = ''
         if self.printevery > 0:
-            outStr += ' {}\n'.format(self.printevery)
+            outStr += 'print {}\n'.format(self.printevery)
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
@@ -175,7 +175,7 @@ class Print(DLPData):
 class IOParam(DLPData):
     ''' Class defining io parameters '''
     def __init__(self, control='CONTROL', field='FIELD',
-                 config='CONFIG', outstat='STATIS',
+                 config='CONFIG', statis='STATIS',
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
                  revcon='REVCON', revold='REVOLD', *args):
@@ -188,7 +188,7 @@ class IOParam(DLPData):
         self.control = control
         self.field = field
         self.config = config
-        self.outstat = outstat
+        self.outstat = statis
         self.output = output
         self.history = history
         self.historf = historf
@@ -196,7 +196,7 @@ class IOParam(DLPData):
         self.revcon = revcon
         self.revold = revold
 
-    keysHandled = property(lambda: ('io',))
+    keysHandled = property(lambda self: ('io',))
 
     def parse(self, key, args):
         ''' Parse an IO line '''
@@ -205,7 +205,7 @@ class IOParam(DLPData):
     def __str__(self):
         return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
-                f'io outstat {self.outstat}\n'
+                f'io statis {self.outstat}\n'
                 f'io output {self.output}\n'
                 f'io history {self.history}\n'
                 f'io historf {self.historf}\n'
@@ -229,6 +229,8 @@ class EnsembleParam:
                  ('nst', 'langevin'): range(2, 6), ('nst', 'berendsen'): range(2, 6),
                  ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
 
+    keysHandled = property(lambda self: ('ensemble',))
+    
     def __init__(self, *argsIn):
         if not argsIn:
             argsIn = ('nve')
@@ -245,6 +247,9 @@ class EnsembleParam:
         ''' The thermodynamic ensemble '''
         return self._ensemble
 
+    def parse(self, _, args):
+        self = EnsembleParam(*args)
+    
     @ensemble.setter
     def ensemble(self, ensemble):
         ''' Set ensemble and check if valid '''
@@ -276,9 +281,9 @@ class EnsembleParam:
             raise IndexError('Wrong number of args in ensemble {} {}. Expected {}, received {}.'.format(
                 self.ensemble, self.means, expect, received))
 
-        return 'ensemble {} {} {}'.format(self.ensemble,
-                                          self.means if self.means else '',
-                                          ' '.join(map(str, self.args)) if self.args else '')
+        return '{} {} {}'.format(self.ensemble,
+                                 self.means if self.means else '',
+                                 ' '.join(map(str, self.args)) if self.args else '')
 
 
 class Control(DLPData):
@@ -321,7 +326,7 @@ class Control(DLPData):
     @property
     def handlers(self):
         ''' Return iterable of handlers '''
-        return (self.io, self.ignore, self.print, self.ffield, self.ensemble)
+        return (self.io, self.ignore, self.print, self.ffield)
 
     @staticmethod
     def _strip_crap(args):
@@ -342,10 +347,8 @@ class Control(DLPData):
                 key, *args = line.split()
                 args = self._strip_crap(args)
                 key = key.lower()
-                print(line)
                 for handler in self.handlers:
                     if key in handler.keysHandled:
-                        print(type(handler).__name__)
                         handler.parse(key, args)
                         break
                 else:
@@ -353,6 +356,7 @@ class Control(DLPData):
                         self.ensemble = EnsembleParam(*args)
                     else:
                         self[key] = args
+
         return self
 
     def write(self, filename='CONTROL'):
@@ -362,7 +366,9 @@ class Control(DLPData):
             for key, val in self.__dict__.items():
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
-                if isinstance(val, bool):
+                if key in ('job', 'close'):
+                    print('{} time {}'.format(key, val), file=outFile)
+                elif isinstance(val, bool):
                     if val and (key != 'variable'):
                         print(key, file=outFile)
                     continue
