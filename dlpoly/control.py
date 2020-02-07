@@ -33,6 +33,7 @@ class FField(DLPData):
     def parse(self, key, vals):
         ''' Handle key-vals for FField types '''
         if key in ('reaction', 'shift', 'distance', 'ewald', 'coulomb'):
+            vals = [val for val in vals if val != "field"]
             self.elec = True
             self.elecMethod = key
             self.elecParams = vals
@@ -198,7 +199,7 @@ class IOParam(DLPData):
 
     keysHandled = property(lambda self: ('io',))
 
-    def parse(self, _, args):
+    def parse(self, key, args):
         ''' Parse an IO line '''
         setattr(self, args[0], args[1])
 
@@ -332,7 +333,7 @@ class Control(DLPData):
     def _strip_crap(args):
         return [arg for arg in args if arg not in ('constant', 'every', 'sampling', 'tolerance',
                                                    'timestep', 'temperature', 'cutoff', 'history',
-                                                   'field', 'steps', 'forces', 'sum', 'time')]
+                                                   'steps', 'forces', 'sum', 'time')]
 
     def read(self, filename):
         ''' Read a control file '''
@@ -375,7 +376,7 @@ class Control(DLPData):
                 elif val in self.handlers:
                     print(val, file=outFile)
                 elif isinstance(val, (tuple, list)):
-                    print(key, ' '.join(val), file=outFile)
+                    print(key, ' '.join(map(str,val)), file=outFile)
                 else:
                     if key == 'timestep' and self.variable:
                         print('variable', key, val, file=outFile)

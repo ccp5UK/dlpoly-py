@@ -4,7 +4,7 @@ pressure 0.0
 steps 300
 equilibration 0
 #traj 10000 10 1
-seed 2019
+seed 2019 2020
 timestep   0.001
 ensemble nve
 cutoff   12
@@ -14,7 +14,6 @@ io field Ar.field
 io config Ar.config
 print 1
 stats 1
-currents
 #l_scr
 job time  10000000
 close time  100
