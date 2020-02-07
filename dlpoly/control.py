@@ -178,7 +178,7 @@ class IOParam(DLPData):
                  config='CONFIG', statis='STATIS',
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
-                 revcon='REVCON', revold='REVOLD', *args):
+                 revcon='REVCON', revold='REVOLD'):
         DLPData.__init__(self, {'control': str, 'field': str,
                                 'config': str, 'outstat': str,
                                 'output': str, 'history': str,
@@ -198,7 +198,7 @@ class IOParam(DLPData):
 
     keysHandled = property(lambda self: ('io',))
 
-    def parse(self, key, args):
+    def parse(self, _, args):
         ''' Parse an IO line '''
         setattr(self, args[0], args[1])
 
@@ -230,7 +230,7 @@ class EnsembleParam:
                  ('nst', 'hoover'): range(2, 6), ('nst', 'mtk'): range(2, 6)}
 
     keysHandled = property(lambda self: ('ensemble',))
-    
+
     def __init__(self, *argsIn):
         if not argsIn:
             argsIn = ('nve')
@@ -249,7 +249,7 @@ class EnsembleParam:
 
     def parse(self, _, args):
         self = EnsembleParam(*args)
-    
+
     @ensemble.setter
     def ensemble(self, ensemble):
         ''' Set ensemble and check if valid '''
