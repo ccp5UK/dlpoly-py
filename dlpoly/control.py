@@ -305,7 +305,7 @@ class Control(DLPData):
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),
                                 'nfold': (int, int, int), 'optimise': (str, float),
-                                'pseudo': (str, float, float), 'seed': (int, int),
+                                'pseudo': (str, float, float), 'seed': (int, ... ),
                                 'trajectory': (int, int, int)})
         self.temperature = 300.0
         self.title = 'no title'

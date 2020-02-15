@@ -24,7 +24,7 @@ class DLPoly:
         self.field = None
         self.statis = None
         self.workdir = workdir
-        
+
         if control is not None:
             self.load_control(control)
         if config is not None:
@@ -45,7 +45,7 @@ class DLPoly:
         self.control.io.revive = os.path.join(direc, self.control.io.revive)
         self.control.io.revcon = os.path.join(direc, self.control.io.revcon)
         self.control.io.revold = os.path.join(direc, self.control.io.revold)
-        
+
     def copy_input(self, direc=None):
         if direc is None:
             direc = self.workdir
@@ -143,7 +143,7 @@ class DLPoly:
         self.control.io.outstats = statis
 
     def run(self, executable="DLPOLY.Z", modules=(),
-            numProcs=1, mpi='mpirun -n'):
+            numProcs=1, mpi='mpirun -n',outputFile="OUTPUt"):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -161,12 +161,13 @@ class DLPoly:
         self.control.write(controlFile)
 
         if numProcs > 1:
-            runCommand = "{0:s} {1:d} {2:s} {3:s}".format(mpi,
+            runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
                                                           numProcs,
                                                           executable,
-                                                          controlFile)
+                                                          controlFile,
+                                                          outputFile)
         else:
-            runCommand = "{0:s} {1:s}".format(executable, controlFile)
+            runCommand = "{0:s} -c {1:s} -o {2:s}".format(executable, controlFile, outputFile)
 
         if modules:
             loadMods = "module purge && module load " + modules
