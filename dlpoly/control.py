@@ -305,7 +305,7 @@ class Control(DLPData):
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),
                                 'nfold': (int, int, int), 'optimise': (str, float),
-                                'pseudo': (str, float, float), 'seed': (int, ... ),
+                                'pseudo': (str, float, float), 'seed': (int, ...),
                                 'trajectory': (int, int, int)})
         self.temperature = 300.0
         self.title = 'no title'
@@ -376,7 +376,7 @@ class Control(DLPData):
                 elif val in self.handlers:
                     print(val, file=outFile)
                 elif isinstance(val, (tuple, list)):
-                    print(key, ' '.join(map(str,val)), file=outFile)
+                    print(key, ' '.join(map(str, val)), file=outFile)
                 else:
                     if key == 'timestep' and self.variable:
                         print('variable', key, val, file=outFile)

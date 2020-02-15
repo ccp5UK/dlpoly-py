@@ -143,11 +143,9 @@ class DLPoly:
         self.control.io.outstats = statis
 
     def run(self, executable="DLPOLY.Z", modules=(),
-            numProcs=1, mpi='mpirun -n',outputFile="OUTPUt"):
+            numProcs=1, mpi='mpirun -n', outputFile="OUTPUt"):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
-
-
 
         try:
             os.mkdir(self.workdir)
@@ -162,10 +160,10 @@ class DLPoly:
 
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
-                                                          numProcs,
-                                                          executable,
-                                                          controlFile,
-                                                          outputFile)
+                                                                      numProcs,
+                                                                      executable,
+                                                                      controlFile,
+                                                                      outputFile)
         else:
             runCommand = "{0:s} -c {1:s} -o {2:s}".format(executable, controlFile, outputFile)
 
@@ -187,6 +185,7 @@ def main():
                     field=argList.field, statis=argList.statis,
                     workdir=argList.workdir)
     dlPoly.run(executable=argList.dlp)
+
 
 if __name__ == "__main__":
     main()

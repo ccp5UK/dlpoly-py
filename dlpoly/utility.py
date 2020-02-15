@@ -18,10 +18,12 @@ def peek(iterable):
         return None
     return itertools.chain([first], iterable)
 
+
 def parse_line(line):
     ''' Handle comment chars and whitespace '''
     return line.split(COMMENT_CHAR)[0].strip()
-    
+
+
 def read_line(inFile):
     ''' Read a line, stripping comments and blank lines '''
     line = None
@@ -32,6 +34,7 @@ def read_line(inFile):
     else:
         line = None
     return line
+
 
 def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units='rad'):
     ''' Build a rotation matrix in degrees or radians '''
