@@ -248,9 +248,6 @@ class EnsembleParam:
         ''' The thermodynamic ensemble '''
         return self._ensemble
 
-    def parse(self, _, args):
-        self = EnsembleParam(*args)
-
     @ensemble.setter
     def ensemble(self, ensemble):
         ''' Set ensemble and check if valid '''
