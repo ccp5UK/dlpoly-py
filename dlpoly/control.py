@@ -207,7 +207,6 @@ class IOParam(DLPData):
         return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
                 f'io statis {self.outstat}\n'
-                f'io output {self.output}\n'
                 f'io history {self.history}\n'
                 f'io historf {self.historf}\n'
                 f'io revive {self.revive}\n'

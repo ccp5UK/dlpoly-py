@@ -143,7 +143,7 @@ class DLPoly:
         self.control.io.outstats = statis
 
     def run(self, executable="DLPOLY.Z", modules=(),
-            numProcs=1, mpi='mpirun -n', outputFile="OUTPUt"):
+            numProcs=1, mpi='mpirun -n', outputFile="OUTPUT"):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -175,7 +175,7 @@ class DLPoly:
                 cmd = ['sh ./env.sh']
         else:
             cmd = [runCommand]
-
+        print(cmd)
         subprocess.call(cmd, shell=True)
 
 
