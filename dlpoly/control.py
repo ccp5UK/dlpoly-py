@@ -328,7 +328,7 @@ class Control(DLPData):
     @staticmethod
     def _strip_crap(args):
         return [arg for arg in args if arg not in ('constant', 'every', 'sampling', 'tolerance',
-                                                   'timestep', 'temperature', 'cutoff', 'history',
+                                                   'timestep', 'temperature', 'cutoff',
                                                    'steps', 'forces', 'sum', 'time')]
 
     def read(self, filename):
