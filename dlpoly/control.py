@@ -187,6 +187,12 @@ class IOParam(DLPData):
                                 'revcon': str, 'revold': str})
 
         self.control = control
+        # Get control's path
+        control_truepath = os.path.dirname(os.path.abspath(control))
+        # Make other paths relative to control (i.e. load them correctly)
+        field, config, outstat, output, history, historf, revive, revcon, revold = \
+            map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
+                (field, config, outstat, output, history, historf, revive, revcon, revold))
         self.field = field
         self.config = config
         self.outstat = statis
