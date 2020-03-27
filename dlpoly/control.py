@@ -3,6 +3,7 @@
 Module to handle DLPOLY control files
 '''
 
+import os.path
 from dlpoly.utility import DLPData
 
 

@@ -38,15 +38,18 @@ class DLPoly:
         """ Redirect output to direc and update self for later parsing """
         if direc is None:
             direc = self.workdir
-        self.control.io.outstat = os.path.join(direc, self.control.io.outstat)
-        self.control.io.history = os.path.join(direc, self.control.io.history)
-        self.control.io.historf = os.path.join(direc, self.control.io.historf)
-        self.control.io.output = os.path.join(direc, self.control.io.output)
-        self.control.io.revive = os.path.join(direc, self.control.io.revive)
-        self.control.io.revcon = os.path.join(direc, self.control.io.revcon)
-        self.control.io.revold = os.path.join(direc, self.control.io.revold)
+
+        # Set the path to be: direc/filename, stripping off all unnecessary pathing
+        self.control.io.outstat = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.outstat)))
+        self.control.io.history = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.history)))
+        self.control.io.historf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.historf)))
+        self.control.io.output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.output)))
+        self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
+        self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
+        self.control.io.revold = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revold)))
 
     def copy_input(self, direc=None):
+        """ Copy input field and config to the working location """
         if direc is None:
             direc = self.workdir
         shutil.copy(self.fieldFile, direc)
@@ -55,6 +58,7 @@ class DLPoly:
         self.configFile = os.path.join(direc, os.path.basename(self.configFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
+        """ Write each of the components to file """
         if control:
             self.control.write(prefix+self.controlFile+suffix)
         if config and self.config:
@@ -180,6 +184,7 @@ class DLPoly:
 
 
 def main():
+    """ Run the main program """
     argList = get_command_args()
     dlPoly = DLPoly(control=argList.control, config=argList.config,
                     field=argList.field, statis=argList.statis,
