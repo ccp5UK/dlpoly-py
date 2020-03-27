@@ -177,7 +177,7 @@ class Print(DLPData):
 class IOParam(DLPData):
     ''' Class defining io parameters '''
     def __init__(self, control='CONTROL', field='FIELD',
-                 config='CONFIG', statis='STATIS',
+                 config='CONFIG', outstat='STATIS',
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
                  revcon='REVCON', revold='REVOLD'):
@@ -189,14 +189,15 @@ class IOParam(DLPData):
 
         self.control = control
         # Get control's path
-        control_truepath = os.path.dirname(os.path.abspath(control))
-        # Make other paths relative to control (i.e. load them correctly)
-        field, config, outstat, output, history, historf, revive, revcon, revold = \
-            map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
-                (field, config, outstat, output, history, historf, revive, revcon, revold))
+        if control is not None:
+            control_truepath = os.path.dirname(os.path.abspath(control))
+            # Make other paths relative to control (i.e. load them correctly)
+            field, config, outstat, output, history, historf, revive, revcon, revold = \
+                map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
+                    (field, config, outstat, output, history, historf, revive, revcon, revold))
         self.field = field
         self.config = config
-        self.outstat = statis
+        self.outstat = outstat
         self.output = output
         self.history = history
         self.historf = historf
