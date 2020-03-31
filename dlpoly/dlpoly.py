@@ -17,7 +17,7 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "4.10"  # which version of dlpoly supports
 
-    def __init__(self, control=None, config=None, field=None, statis=None, workdir=None):
+    def __init__(self, control=None, config=None, field=None, statis=None, output=None, workdir=None):
         # Default to having a control
         self.control = Control()
         self.config = None
@@ -33,6 +33,9 @@ class DLPoly:
             self.load_field(field)
         if statis is not None:
             self.load_statis(statis)
+
+        # Override output
+        self.control.io.output = output
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -147,7 +150,7 @@ class DLPoly:
         self.control.io.outstats = statis
 
     def run(self, executable="DLPOLY.Z", modules=(),
-            numProcs=1, mpi='mpirun -n', outputFile="OUTPUT"):
+            numProcs=1, mpi='mpirun -n', outputFile=None):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -161,6 +164,9 @@ class DLPoly:
         self.copy_input()
         self.redir_output()
         self.control.write(controlFile)
+
+        if outputFile is None:
+            outputFile = self.control.io.output
 
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
