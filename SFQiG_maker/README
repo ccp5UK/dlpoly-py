@@ -1,0 +1,6 @@
+Codes generate the total G(r) (form Martin Dove's definition) and the structure form factor Qi(Q).
+
+First rdf_maker.sh must be run
+Then
+python make_Gr.py
+python make_Qi.py 
