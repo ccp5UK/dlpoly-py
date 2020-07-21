@@ -4,6 +4,7 @@ File containing methods for loading rdf data from DL_POLY_4
 
 import numpy as np
 
+
 class rdf():
     __version__ = "0"
 
@@ -16,7 +17,7 @@ class rdf():
             self.source = source
             self.read(source)
 
-    def read(self,source="RDFDAT"):
+    def read(self, source="RDFDAT"):
       """ Read an RDF file into data """
       with open(source, 'r') as fileIn:
         # Discard title
