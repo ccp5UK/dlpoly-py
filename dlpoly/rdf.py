@@ -18,18 +18,18 @@ class rdf():
             self.read(source)
 
     def read(self, source="RDFDAT"):
-      """ Read an RDF file into data """
-      with open(source, 'r') as fileIn:
-        # Discard title
-        _ = fileIn.readline()
-        self.nRDF, self.nPoints = map(int, fileIn.readline().split())
+        """ Read an RDF file into data """
+        with open(source, 'r') as fileIn:
+            # Discard title
+            _ = fileIn.readline()
+            self.nRDF, self.nPoints = map(int, fileIn.readline().split())
 
-        self.data = np.zeros((self.nRDF, self.nPoints, 2))
-        self.labels = []
+            self.data = np.zeros((self.nRDF, self.nPoints, 2))
+            self.labels = []
 
-        for sample in range(self.nRDF):
-            species = fileIn.readline().split()
-            self.labels.append(species)
-            for point in range(self.nPoints):
-                r, g_r = fileIn.readline().split()
-                self.data[sample, point, :] = float(r), float(g_r)
+            for sample in range(self.nRDF):
+                species = fileIn.readline().split()
+                self.labels.append(species)
+                for point in range(self.nPoints):
+                    r, g_r = fileIn.readline().split()
+                    self.data[sample, point, :] = float(r), float(g_r)
