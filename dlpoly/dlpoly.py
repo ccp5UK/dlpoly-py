@@ -10,6 +10,7 @@ from dlpoly.control import Control
 from dlpoly.config import Config
 from dlpoly.field import Field
 from dlpoly.statis import Statis
+from dlpoly.rdf import  rdf
 from dlpoly.cli import get_command_args
 
 
@@ -17,12 +18,13 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "4.10"  # which version of dlpoly supports
 
-    def __init__(self, control=None, config=None, field=None, statis=None, output=None, workdir=None):
+    def __init__(self, control=None, config=None, field=None, statis=None, output=None, rdf=None, workdir=None):
         # Default to having a control
         self.control = Control()
         self.config = None
         self.field = None
         self.statis = None
+        self.rdf = None
         self.workdir = workdir
 
         if control is not None:
@@ -33,6 +35,8 @@ class DLPoly:
             self.load_field(field)
         if statis is not None:
             self.load_statis(statis)
+        if rdf is not None:
+            self.load_rdf(rdf)
 
         # Override output
         self.control.io.output = output
@@ -104,8 +108,18 @@ class DLPoly:
         if source is None:
             source = self.statisFile
         if os.path.isfile(source):
-            self.config = Statis(source)
+            self.statis = Statis(source)
             self.statisFile = source
+        else:
+            print("Unable to find file: {}".format(source))
+
+    def load_rdf(self, source=None):
+        """ Load statis file into class """
+        if source is None:
+            source = self.rdfFile
+        if os.path.isfile(source):
+            self.rdf = rdf(source)
+            self.rdfFile = source
         else:
             print("Unable to find file: {}".format(source))
 
@@ -145,9 +159,14 @@ class DLPoly:
         """ Path to statis file """
         return self.control.io.outstats
 
-    @statisFile.setter
-    def statisFile(self, statis):
-        self.control.io.outstats = statis
+    @property
+    def rdfFile(self):
+        """ Path to rdf file """
+        return self.control.io.rdfFile
+
+    @rdfFile.setter
+    def rdfFile(self, rdf):
+        self.control.io.rdfFile = rdf
 
     def run(self, executable="DLPOLY.Z", modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):

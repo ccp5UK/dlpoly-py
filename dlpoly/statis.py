@@ -84,7 +84,7 @@ class Statis():
 
         # Catch Remainder
         for i in range(len(self.labels)+1, self.columns):
-            self.add_label("col_{2:d}".format(i+1))
+            self.add_label("col_{0:d}".format(i+1))
 
     def flatten(self):
         for i in range(self.columns-3):
