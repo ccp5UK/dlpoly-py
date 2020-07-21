@@ -14,6 +14,7 @@ class Interaction(ABC):
         self._potClass = None
 
     nAtoms = {}
+
     @property
     def potClass(self):
         ''' The type of potential '''
@@ -145,7 +146,7 @@ class Molecule(PotHaver):
 
         for potClass in self.activeBonds:
             pots = self.get_pot_by_class(potClass)
-            print('{} {}'.format(potClass, len(list(pots)), file=outFile))
+            print('{} {}'.format(potClass, len(list(pots))), file=outFile)
             for pot in pots:
                 print(pot, file=outFile)
         print('finish', file=outFile)
