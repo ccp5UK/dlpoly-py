@@ -25,9 +25,11 @@ class StatisTest(unittest.TestCase):
         self.assertListEqual(list(self.statis.data[1, 0:2]),
                              [5, 1.750000E-03],
                              'incorrect cell time/step')
+
     def test_statis_temperature(self):
-        self.assertEqual(self.statis.data[2,4], 3.000000E+02 ,
+        self.assertEqual(self.statis.data[2, 4], 3.000000E+02,
                          'incorrect temperature')
+
 
 def suite():
     suite = unittest.TestSuite()

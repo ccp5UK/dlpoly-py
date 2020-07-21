@@ -29,6 +29,7 @@ class Statis():
         self.columns = int(self.data[2])
         self.rows = self.data.size//(self.columns + 3)
         self.data.shape = self.rows, self.columns + 3
+        self.columns += 3
         return self
 
     def gen_labels(self, control=None, config=None):
