@@ -10,7 +10,7 @@ from dlpoly.control import Control
 from dlpoly.config import Config
 from dlpoly.field import Field
 from dlpoly.statis import Statis
-from dlpoly.rdf import  rdf
+from dlpoly.rdf import rdf
 from dlpoly.cli import get_command_args
 
 
