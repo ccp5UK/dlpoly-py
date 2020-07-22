@@ -61,7 +61,16 @@ class Statis():
                        "5-5 Md Cell Angle Γ",
                        "6-1 Pmf Constraint Virial",
                        "6-2 Pressure",
-                       "6-3 External Degree Of Freedom"]
+                       "6-3 External Degree Of Freedom",
+                       "6-4 stress xx",
+                       "6-5 stress xy",
+                       "7-1 stress xz",
+                       "7-2 stress yx",
+                       "7-3 stress yy",
+                       "7-4 stress yz",
+                       "7-5 stress zx",
+                       "8-1 stress zy",
+                       "8-2 stress zz"]
 
         if control:
             # Never true as yet
@@ -69,8 +78,6 @@ class Statis():
                 for i in range(config.natoms):
                     self.add_label("Mean Squared Displacement")
                     self.add_label("Velocity . Velocity")
-            for i in range(9):
-                self.add_label("Stress Tensor")
             if control and control.ensemble.ensemble in ("npt", "nst"):
                 for i in range(9):
                     self.add_label("Cell Dimensions")
