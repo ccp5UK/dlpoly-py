@@ -24,12 +24,13 @@ class Statis():
         self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
 
     def read(self, filename="STATIS"):
-        h1, h2, s = open(filename).read().split('\n', 2)
-        self.data = np.array(s.split(), dtype=float)
-        self.columns = int(self.data[2])
-        self.rows = self.data.size//(self.columns + 3)
-        self.data.shape = self.rows, self.columns + 3
-        self.columns += 3
+        with open(filename,'r') as f:
+            h1, h2, s = f.read().split('\n', 2)
+            self.data = np.array(s.split(), dtype=float)
+            self.columns = int(self.data[2])
+            self.rows = self.data.size//(self.columns + 3)
+            self.data.shape = self.rows, self.columns + 3
+            self.columns += 3
         return self
 
     def gen_labels(self, control=None, config=None):
@@ -92,23 +93,3 @@ class Statis():
             with open(self.labels[i], 'w') as f:
                 for j in range(self.rows):
                     f.write("{} {}\n".format(self.data[j, 1], self.data[j, i+3]))
-
-
-def read_rdf(filename="RDFDAT"):
-    """ Read an RDF file into data """
-    with open(filename, 'r') as fileIn:
-        # Discard title
-        _ = fileIn.readline()
-        nRDF, nPoints = map(int, fileIn.readline().split())
-
-        data = np.zeros(nRDF+1, nPoints, 2)
-        labels = []
-
-        for sample in range(nRDF):
-            species = fileIn.readline().split()
-            labels.append(species)
-            for point in range(nPoints):
-                r, g_r = fileIn.readline().split()
-                data[sample, point, :] = float(r), float(g_r)
-                data[nRDF, point, :] += data[sample, point, :]
-    return labels, data
