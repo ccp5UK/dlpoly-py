@@ -18,6 +18,10 @@ class ControlTest(unittest.TestCase):
                          'incorrect number of steps')
         self.assertEqual(self.control.equilibration, 10,
                          'incorrect number of equilibratio steps')
+        self.assertEqual(self.control.timestep, 0.001,
+                         'incorrect timestep step')
+        self.assertEqual(self.control.variable, True,
+                         'incorrect variable step')
 
     def test_control_tp(self):
         self.assertEqual(self.control.temperature, 300.0,
@@ -34,12 +38,32 @@ class ControlTest(unittest.TestCase):
                              ['0.5', '1.0'],
                              'incorrect ensemble')
 
+    def test_control_prints(self):
+        self.assertEqual(self.control.print.statsevery, 5,
+                         'incorrect stats frequency')
+        self.assertEqual(self.control.print.printevery, 5,
+                         'incorrect print frequency')
+        self.assertEqual(self.control.print.rdf, True,
+                         'incorrect rdf')
+        self.assertEqual(self.control.collect, True,
+                         'incorrect collect setting')
+
+    def test_control_equil(self):
+        self.assertEqual(self.control.cap, 1000.0,
+                         'incorrect cap')
+        self.assertEqual(self.control.scale, 3,
+                         'incorrect scale')
+        self.assertEqual(self.control.shake, 0.000001,
+                         'incorrect shake')
+
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(ControlTest('test_control_steps'))
     suite.addTest(ControlTest('test_control_tp'))
     suite.addTest(ControlTest('test_control_ens'))
+    suite.addTest(ControlTest('test_control_prints'))
+    suite.addTest(ControlTest('test_control_equil'))
     return suite
 
 
