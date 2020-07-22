@@ -66,7 +66,7 @@ class StatisTest(unittest.TestCase):
                          'incorrect volume')
 
     def test_statis_stress(self):
-        self.assertListEqual(list(self.statis.data[4, 50:59]),
+        self.assertListEqual(list(self.statis.data[4, 31:40]),
                              [float(i) for i in '''8.060310E+00 -2.636976E+00
                               -1.941572E+00 -2.636976E+00  2.316919E+01
                               4.915622E-01 -1.941572E+00  4.915622E-01
