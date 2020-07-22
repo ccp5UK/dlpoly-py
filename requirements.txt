@@ -2,5 +2,7 @@ numpy >= 1.5.0
 pylint
 flake8
 mypy
+coverage
+coverage-badge
 pytest
 pytest-cov
