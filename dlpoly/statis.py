@@ -24,7 +24,7 @@ class Statis():
         self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
 
     def read(self, filename="STATIS"):
-        with open(filename,'r') as f:
+        with open(filename, 'r') as f:
             h1, h2, s = f.read().split('\n', 2)
             self.data = np.array(s.split(), dtype=float)
             self.columns = int(self.data[2])
