@@ -23,5 +23,6 @@ __version__ = '0.0.1'
 
 try:
     from .dlpoly import DLPoly
+    print("Supported DL_POLY version {}".format(DLPoly.__version__))
 except ImportError:
     raise ImportError('error importing dlpoly')
