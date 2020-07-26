@@ -9,9 +9,13 @@ timestep   0.001
 ensemble nve
 cutoff   12
 no elec
+msdtmp 10 10
 #ewald precision 0.00001
 io field Ar.field
 io config Ar.config
+rdf 10
+print rdf
+
 print 1
 stats 1
 #l_scr

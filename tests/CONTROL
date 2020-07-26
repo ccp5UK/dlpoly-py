@@ -13,7 +13,9 @@ variable timestep        0.001 ps
 steps                    20
 equilibration            10
 collect
-
+#io statis statis.yml
+#yml_statis 
+#yml_rdf
 scale                      3
 cap                     1000
 
@@ -22,6 +24,7 @@ rvdw                     8.0 angstroms
 ewald precision          1.e-6
 rdf 5
 print rdf
+msdtmp 10 5
 print every 5  steps
 stats every 5 steps
 shake                  0.000001

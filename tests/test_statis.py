@@ -14,7 +14,7 @@ class StatisTest(unittest.TestCase):
         cls.statis = Statis(source="tests/STATIS")
 
     def test_statis_ncolumns(self):
-        self.assertEqual(self.statis.columns, 69,
+        self.assertEqual(self.statis.columns, 68,
                          'incorrect number of columns')
 
     def test_statis_nrows(self):

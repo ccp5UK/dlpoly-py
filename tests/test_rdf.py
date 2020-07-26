@@ -27,8 +27,10 @@ class RDFTest(unittest.TestCase):
 
     def test_rdf_point(self):
         self.assertListEqual(self.rdf.data[2, 12, :].tolist(),
-                             [6.250000E-01, 3.725672E+01],
+                             [3.725672E+01, 2.343750E-03],
                              'incorrect point')
+        self.assertEqual(self.rdf.x[12], 6.250000E-01,
+                         'incorrect grid point')
 
 
 def suite():

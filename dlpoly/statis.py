@@ -3,6 +3,7 @@ File containing methods for loading statistics data from DL_POLY_4
 """
 
 import numpy as np
+from ruamel.yaml import YAML
 
 
 class Statis():
@@ -12,11 +13,12 @@ class Statis():
         self.rows = 0
         self.columns = 0
         self.data = None
+        self.is_yaml = False
         if source is not None:
             self.source = source
             self.read(source)
-
-        self.gen_labels(control, config)
+        if not self.is_yaml:
+            self.gen_labels(control, config)
 
     _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels) % 5+1))
 
@@ -25,12 +27,27 @@ class Statis():
 
     def read(self, filename="STATIS"):
         with open(filename, 'r') as f:
-            h1, h2, s = f.read().split('\n', 2)
-            self.data = np.array(s.split(), dtype=float)
-            self.columns = int(self.data[2])
-            self.rows = self.data.size//(self.columns + 3)
-            self.data.shape = self.rows, self.columns + 3
-            self.columns += 3
+            a = f.readline().split()[0]
+            if a == "%YAML":
+                self.is_yaml = True
+        if self.is_yaml:
+            y = YAML()
+            d = None
+            with open(filename, 'rb') as f:
+                d = y.load(f)
+            self.labels = d['labels'][0]
+            self.data = np.array(d['timesteps'])
+            self.columns = len(self.labels)
+            self.rows = len(self.data)
+        else:
+            with open(filename, 'r') as f:
+                h1, h2, s = f.read().split('\n', 2)
+                self.data = np.array(s.split(), dtype=float)
+                self.columns = int(self.data[2])
+                self.rows = self.data.size//(self.columns + 3)
+                self.data.shape = self.rows, self.columns + 3
+                np.delete(self.data, 2, axis=1)
+                self.columns += 2
         return self
 
     def gen_labels(self, control=None, config=None):
@@ -86,14 +103,13 @@ class Statis():
                     self.add_label("H_Z")
                     self.add_label("vol/h_z")
                     if any(key in control.ensemble.args for key in ("tens", "semi")):
-                        # "-h_z*(stats%strtot(1)-(thermo%press+thermo%stress(1)))*tenunt"
-                        self.add_label("Surface Tension")
-                        # "-h_z*(stats%strtot(5)-(thermo%press+thermo%stress(5)))*tenunt"
-                        self.add_label("Surface Tension")
+                        self.add_label("gamma_x")
+                        self.add_label("gamma_y")
 
         # Catch Remainder
-        for i in range(len(self.labels)+1, self.columns):
-            self.add_label("col_{0:d}".format(i+1))
+        for i in range(len(self.labels)+1, self.columns+1):
+            self.add_label("col_{0:d}".format(i))
+        self.labels = ['iter', 'time', 'vars'] + self.labels
 
     def flatten(self):
         for i in range(self.columns-3):
