@@ -18,10 +18,12 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "4.10"  # which version of dlpoly supports
 
-    def __init__(self, control=None, config=None, field=None, statis=None, output=None, rdf=None, workdir=None):
+    def __init__(self, control=None, config=None, field=None, statis=None, output=None,
+                 destconfig=None, rdf=None, workdir=None):
         # Default to having a control
         self.control = Control()
         self.config = None
+        self.destconfig = destconfig
         self.field = None
         self.statis = None
         self.rdf = None
@@ -61,9 +63,13 @@ class DLPoly:
         if direc is None:
             direc = self.workdir
         shutil.copy(self.fieldFile, direc)
-        shutil.copy(self.configFile, direc)
+        if self.destconfig is None:
+            shutil.copy(self.configFile, direc)
+            self.configFile = os.path.join(direc, os.path.basename(self.configFile))
+        else:
+            shutil.copy(self.configFile, os.path.join(direc,self.destconfig))
+            self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
-        self.configFile = os.path.join(direc, os.path.basename(self.configFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
