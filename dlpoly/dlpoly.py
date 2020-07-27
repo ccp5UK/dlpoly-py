@@ -67,7 +67,7 @@ class DLPoly:
             shutil.copy(self.configFile, direc)
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
         else:
-            shutil.copy(self.configFile, os.path.join(direc,self.destconfig))
+            shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
 
