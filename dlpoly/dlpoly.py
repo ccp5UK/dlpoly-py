@@ -57,6 +57,8 @@ class DLPoly:
         self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
         self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
         self.control.io.revold = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revold)))
+        self.control.io.rdf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.rdf)))
+        self.control.io.msd = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.msd)))
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """

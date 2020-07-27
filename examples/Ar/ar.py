@@ -2,7 +2,7 @@
 
 from dlpoly import DLPoly
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-yaml/bin/DLPOLY.Z"
+dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-issue571/bin/DLPOLY.Z"
 
 dlPoly = DLPoly(control="Ar.control", config="Ar.config",
                 field="Ar.field", workdir="argon")

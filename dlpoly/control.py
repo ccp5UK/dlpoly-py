@@ -180,21 +180,24 @@ class IOParam(DLPData):
                  config='CONFIG', statis='STATIS',
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
-                 revcon='REVCON', revold='REVOLD'):
+                 revcon='REVCON', revold='REVOLD',
+                 rdf='RDFDAT', msd='MSDTMP'):
         DLPData.__init__(self, {'control': str, 'field': str,
                                 'config': str, 'statis': str,
                                 'output': str, 'history': str,
                                 'historf': str, 'revive': str,
-                                'revcon': str, 'revold': str})
+                                'revcon': str, 'revold': str,
+                                'rdf': str, 'msd': str})
 
         self.control = control
         # Get control's path
         if control is not None:
             control_truepath = os.path.dirname(os.path.abspath(control))
             # Make other paths relative to control (i.e. load them correctly)
-            field, config, statis, output, history, historf, revive, revcon, revold = \
+            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd = \
                 map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
-                    (field, config, statis, output, history, historf, revive, revcon, revold))
+                    (field, config, statis, output, history, historf, revive, revcon, revold,
+                     rdf, msd))
         self.field = field
         self.config = config
         self.statis = statis
@@ -204,6 +207,8 @@ class IOParam(DLPData):
         self.revive = revive
         self.revcon = revcon
         self.revold = revold
+        self.rdf = rdf
+        self.msd = msd
 
     keysHandled = property(lambda self: ('io',))
 
@@ -219,7 +224,9 @@ class IOParam(DLPData):
                 f'io historf {self.historf}\n'
                 f'io revive {self.revive}\n'
                 f'io revcon {self.revcon}\n'
-                f'io revold {self.revold}\n')
+                f'io revold {self.revold}\n'
+                f'io rdf {self.rdf}\n'
+                f'io msd {self.msd}\n')
 
 
 class EnsembleParam:
