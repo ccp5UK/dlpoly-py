@@ -62,12 +62,21 @@ class DLPoly:
         """ Copy input field and config to the working location """
         if direc is None:
             direc = self.workdir
-        shutil.copy(self.fieldFile, direc)
+        try:
+            shutil.copy(self.fieldFile, direc)
+        except shutil.SameFileError:
+            pass
         if self.destconfig is None:
-            shutil.copy(self.configFile, direc)
+            try:
+                shutil.copy(self.configFile, direc)
+            except shutil.SameFileError:
+                pass
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
         else:
-            shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
+            try:
+                shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
+            except shutil.SameFileError:
+                pass
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
 

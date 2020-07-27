@@ -45,7 +45,7 @@ class rdf():
                 _ = fileIn.readline()
                 self.nRDF, self.nPoints = map(int, fileIn.readline().split())
 
-                self.x = np.zeros(self.nRDF)
+                self.x = np.zeros(self.nPoints)
                 self.data = np.zeros((self.nRDF, self.nPoints, 2))
                 self.labels = []
                 s = True
