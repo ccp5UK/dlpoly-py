@@ -304,7 +304,7 @@ class Control(DLPData):
                                 'stack': int, 'stats': int, 'steps': int, 'temperature': float,
                                 'title': str, 'timestep': float, 'variable': bool, 'zero': bool,
                                 'print': Print, 'ffield': FField, 'ensemble': EnsembleParam, 'ignore': Ignore,
-                                'io': IOParam,'msdtmp': (int,int), 'yml_statis': bool, 'yml_rdf',
+                                'io': IOParam, 'msdtmp': (int, int), 'yml_statis': bool, 'yml_rdf',
                                 'defects': (int, int, float), 'displacements': (int, int, float),
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),
