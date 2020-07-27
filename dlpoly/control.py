@@ -177,12 +177,12 @@ class Print(DLPData):
 class IOParam(DLPData):
     ''' Class defining io parameters '''
     def __init__(self, control='CONTROL', field='FIELD',
-                 config='CONFIG', outstat='STATIS',
+                 config='CONFIG', statis='STATIS',
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
                  revcon='REVCON', revold='REVOLD'):
         DLPData.__init__(self, {'control': str, 'field': str,
-                                'config': str, 'outstat': str,
+                                'config': str, 'statis': str,
                                 'output': str, 'history': str,
                                 'historf': str, 'revive': str,
                                 'revcon': str, 'revold': str})
@@ -192,12 +192,12 @@ class IOParam(DLPData):
         if control is not None:
             control_truepath = os.path.dirname(os.path.abspath(control))
             # Make other paths relative to control (i.e. load them correctly)
-            field, config, outstat, output, history, historf, revive, revcon, revold = \
+            field, config, statis, output, history, historf, revive, revcon, revold = \
                 map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
-                    (field, config, outstat, output, history, historf, revive, revcon, revold))
+                    (field, config, statis, output, history, historf, revive, revcon, revold))
         self.field = field
         self.config = config
-        self.outstat = outstat
+        self.statis = statis
         self.output = output
         self.history = history
         self.historf = historf
@@ -214,7 +214,7 @@ class IOParam(DLPData):
     def __str__(self):
         return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
-                f'io statis {self.outstat}\n'
+                f'io statis {self.statis}\n'
                 f'io history {self.history}\n'
                 f'io historf {self.historf}\n'
                 f'io revive {self.revive}\n'
@@ -304,7 +304,7 @@ class Control(DLPData):
                                 'stack': int, 'stats': int, 'steps': int, 'temperature': float,
                                 'title': str, 'timestep': float, 'variable': bool, 'zero': bool,
                                 'print': Print, 'ffield': FField, 'ensemble': EnsembleParam, 'ignore': Ignore,
-                                'io': IOParam,
+                                'io': IOParam,'msdtmp': (int,int), 'yml_statis': bool, 'yml_rdf',
                                 'defects': (int, int, float), 'displacements': (int, int, float),
                                 'impact': (int, int, float, float, float, float),
                                 'minimise': (str, int, float), 'msdtemp': (int, int),

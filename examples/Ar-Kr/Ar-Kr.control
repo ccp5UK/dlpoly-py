@@ -1,4 +1,4 @@
-DL_POLY: ar
+DL_POLY: ar-kr
 temperature  300
 pressure 0.001
 steps 10000
@@ -12,8 +12,8 @@ cutoff   12
 no elec
 msdtmp 1000 100
 #ewald precision 0.00001
-io field Arb.field
-io config Arbe.config
+io field Ar-Kr.field
+io config Ar-Kr.config
 #io config Arb.config
 io statis statis.yml
 yml_statis

@@ -39,7 +39,8 @@ class DLPoly:
             self.load_rdf(rdf)
 
         # Override output
-        self.control.io.output = output
+        if output is not None:
+            self.control.io.output = output
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -47,7 +48,7 @@ class DLPoly:
             direc = self.workdir
 
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
-        self.control.io.outstat = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.outstat)))
+        self.control.io.statis = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.statis)))
         self.control.io.history = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.history)))
         self.control.io.historf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.historf)))
         self.control.io.output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.output)))
@@ -157,7 +158,7 @@ class DLPoly:
     @property
     def statisFile(self):
         """ Path to statis file """
-        return self.control.io.outstats
+        return self.control.io.statis
 
     @property
     def rdfFile(self):
