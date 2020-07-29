@@ -58,10 +58,15 @@ class DLPData(ABC):
     keys = property(lambda self: [key for key in self.dataTypes])
     className = property(lambda self: type(self).__name__)
 
+    def dump(self):
+        for key in self.keys:
+            print(key, self[key])
+
     def __setattr__(self, key, val):
         if key == '_dataTypes':  # Protect datatypes
-            if not hasattr(self, 'dataTypes'):
-                self.__dict__[key] = val
+
+            if not hasattr(self, '_dataTypes'):
+                self.__dict__[key] = {**val, 'keysHandled': tuple}
             else:
                 print('Cannot alter dataTypes')
             return
@@ -77,9 +82,13 @@ class DLPData(ABC):
         self.__dict__[key] = val
 
     def __getitem__(self, key):
+        """ Fuzzy matching on get/set item """
+        key = check_arg(key, *self.keys)
         return getattr(self, str(key))
 
     def __setitem__(self, key, val):
+        """ Fuzzy matching on get/set item """
+        key = check_arg(key, *self.keys)
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
@@ -137,3 +146,10 @@ class DLPData(ABC):
                 print('Type of {} ({}) not valid, must be castable to {}'.format(vals, type(vals).__name__,
                                                                                  dType.__name__))
         return val
+
+
+def check_arg(key, *args):
+    for arg in args:
+        if key.startswith(arg):
+            return arg
+    return False
