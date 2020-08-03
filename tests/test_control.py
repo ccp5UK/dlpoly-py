@@ -14,19 +14,19 @@ class ControlTest(unittest.TestCase):
         cls.control = dlp.DLPoly(control="tests/CONTROL").control
 
     def test_control_steps(self):
-        self.assertEqual(self.control.steps, 20,
+        self.assertEqual(self.control.timing.steps, 20,
                          'incorrect number of steps')
-        self.assertEqual(self.control.equilibration, 10,
-                         'incorrect number of equilibratio steps')
-        self.assertEqual(self.control.timestep, 0.001,
+        self.assertEqual(self.control.timing.equil, 10,
+                         'incorrect number of equilibration steps')
+        self.assertEqual(self.control.timing.timestep, 0.001,
                          'incorrect timestep step')
-        self.assertEqual(self.control.variable, True,
+        self.assertEqual(self.control.timing.variable, True,
                          'incorrect variable step')
 
     def test_control_tp(self):
-        self.assertEqual(self.control.temperature, 300.0,
+        self.assertEqual(self.control.temp, 300.0,
                          'incorrect temperature')
-        self.assertEqual(self.control.press, 0.001,
+        self.assertEqual(self.control.pres[0], 0.001,
                          'incorrect pressure')
 
     def test_control_ens(self):
@@ -45,7 +45,7 @@ class ControlTest(unittest.TestCase):
                          'incorrect print frequency')
         self.assertEqual(self.control.print.rdf, True,
                          'incorrect rdf')
-        self.assertEqual(self.control.collect, True,
+        self.assertEqual(self.control.timing.collect, True,
                          'incorrect collect setting')
 
     def test_control_equil(self):

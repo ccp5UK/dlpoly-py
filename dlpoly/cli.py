@@ -8,8 +8,9 @@ import argparse as arg
 # SmartFormatter taken from StackOverflow
 class SmartFormatter(arg.HelpFormatter):
     """ Class to allow raw formatting only on certain lines """
+
     def _split_lines(self, text, width):
-        if text.startswith('R|'):
+        if text.startswith("R|"):
             return text[2:].splitlines()
         # this is the RawTextHelpFormatter._split_lines
         return arg.HelpFormatter._split_lines(self, text, width)
@@ -18,6 +19,7 @@ class SmartFormatter(arg.HelpFormatter):
 # DictKeyPair taken from StackOverflow
 class StoreDictKeyPair(arg.Action):
     """ Class to convert a=b into dictionary key, value pair """
+
     def __call__(self, parser, namespace, values, optionString=None):
         newDict = {}
         for keyVal in values.split(","):
@@ -26,14 +28,21 @@ class StoreDictKeyPair(arg.Action):
         setattr(namespace, self.dest, newDict)
 
 
-_PARSER = arg.ArgumentParser(description='Parser for the DLPOLY file parser',
-                             add_help=True, formatter_class=SmartFormatter)
+_PARSER = arg.ArgumentParser(
+    description="Parser for the DLPOLY file parser",
+    add_help=True,
+    formatter_class=SmartFormatter,
+)
 _PARSER.add_argument("-s", "--statis", help="Statis file to load", type=str)
 _PARSER.add_argument("-c", "--control", help="Control file to load", type=str)
 _PARSER.add_argument("-f", "--field", help="Field file to load", type=str)
 _PARSER.add_argument("-C", "--config", help="Config file to load", type=str)
-_PARSER.add_argument("-w", "--workdir", help="Work directory in which to run", type=str, default="myRun")
-_PARSER.add_argument("-e", "--dlp", help="Name of DLP execuable to run", default="DLPOLY.Z")
+_PARSER.add_argument(
+    "-w", "--workdir", help="Work directory in which to run", type=str, default="myRun"
+)
+_PARSER.add_argument(
+    "-e", "--dlp", help="Name of DLP execuable to run", default="DLPOLY.Z"
+)
 
 
 def get_command_args():

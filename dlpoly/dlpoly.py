@@ -6,13 +6,12 @@ import subprocess
 import os.path
 import os
 import shutil
-from dlpoly.control import Control
-from dlpoly.config import Config
-from dlpoly.field import Field
-from dlpoly.statis import Statis
-from dlpoly.rdf import rdf
-from dlpoly.cli import get_command_args
-from dlpoly.utility import copy_file
+from .control import Control
+from .config import Config
+from .field import Field
+from .statis import Statis
+from .rdf import rdf
+from .cli import get_command_args
 
 
 class DLPoly:
@@ -58,23 +57,37 @@ class DLPoly:
         self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
         self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
         self.control.io.revold = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revold)))
-        self.control.io.rdf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.rdf)))
-        self.control.io.msd = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.msd)))
+
+        if self.control.print.rdf and not self.control.io.rdf:
+            self.control.io.rdf = 'RDFDAT'
+        if self.control.io.rdf:
+            self.control.io.rdf = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.rdf)))
+
+        if self.control.msdtemp and not self.control.io.msd:
+            self.control.io.msd = 'RDFDAT'
+        if self.control.io.msd:
+            self.control.io.msd = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.msd)))
 
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
         if direc is None:
             direc = self.workdir
-        copy_file(self.fieldFile, direc)
-        copy_file(self.vdwFile, direc)
-        copy_file(self.eamFile, direc)
+        try:
+            shutil.copy(self.fieldFile, direc)
+        except shutil.SameFileError:
+            pass
+
         if self.destconfig is None:
             copy_file(self.configFile, direc)
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
+
         else:
             copy_file(self.configFile, os.path.join(direc, self.destconfig))
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
+
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
         self.vdwFile = os.path.join(direc, os.path.basename(self.vdwFile))
         self.eamFile = os.path.join(direc, os.path.basename(self.eamFile))
@@ -82,7 +95,7 @@ class DLPoly:
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
         if control:
-            self.control.write(prefix+self.controlFile+suffix)
+            self.control.write_old(prefix+self.controlFile+suffix)
         if config and self.config:
             self.config.write(prefix+self.configFile+suffix)
         if field and self.field:
@@ -201,6 +214,10 @@ class DLPoly:
     def rdfFile(self, rdf):
         self.control.io.rdfFile = rdf
 
+    @statisFile.setter
+    def statisFile(self, statis):
+        self.control.io.statis = statis
+
     def run(self, executable="DLPOLY.Z", modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):
         """ this is very primitive one allowing the checking
@@ -217,9 +234,11 @@ class DLPoly:
         self.redir_output()
         self.control.write(controlFile)
 
+        print("BEEP", self.control.io)
+        print("HI", outputFile)
         if outputFile is None:
             outputFile = self.control.io.output
-
+            print("HO", outputFile)
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
                                                                       numProcs,
