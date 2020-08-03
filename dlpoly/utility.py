@@ -11,7 +11,7 @@ import shutil
 COMMENT_CHAR = '#'
 
 
-def copy_file(inpf,od):
+def copy_file(inpf, od):
     """ copy a file in a folder, avoiding same file error"""
     try:
         shutil.copy(inpf, od)

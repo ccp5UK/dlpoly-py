@@ -12,6 +12,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
+from .utility import copy_file
 
 
 class DLPoly:
@@ -64,12 +65,11 @@ class DLPoly:
             self.control.io.rdf = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.rdf)))
 
-        if self.control.msdtemp and not self.control.io.msd:
-            self.control.io.msd = 'RDFDAT'
+        if self.control.msdtmp and not self.control.io.msd:
+            self.control.io.msd = 'MSDTMP'
         if self.control.io.msd:
             self.control.io.msd = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.msd)))
-
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
@@ -89,8 +89,6 @@ class DLPoly:
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
 
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
-        self.vdwFile = os.path.join(direc, os.path.basename(self.vdwFile))
-        self.eamFile = os.path.join(direc, os.path.basename(self.eamFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
