@@ -211,25 +211,32 @@ class IOParam(DLPData):
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
                  revcon='REVCON', revold='REVOLD',
-                 rdf='RDFDAT', msd='MSDTMP'):
+                 rdf='RDFDAT', msd='MSDTMP',
+                 tabvdw='TABLE', tabbnd='TABBND',
+                 tabang='TABANG', tabdih='TABDIH',
+                 tabinv='TABINV', tabeam='TABEAM'):
+
         DLPData.__init__(self, {'control': str, 'field': str,
                                 'config': str, 'statis': str,
                                 'output': str, 'history': str,
                                 'historf': str, 'revive': str,
                                 'revcon': str, 'revold': str,
-                                'rdf': str, 'msd': str})
+                                'rdf': str, 'msd': str,
+                                'tabvdw': str, 'tabbnd': str,
+                                'tabang': str, 'tabdih': str,
+                                'tabinv': str, 'tabeam': str})
 
-        self.control = control
         # Get control's path
         if control is not None:
             control_truepath = os.path.dirname(os.path.abspath(control))
             # Make other paths relative to control (i.e. load them correctly)
-            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd = \
+            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd, \
+                tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam = \
                 map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
                     (field, config, statis, output, history, historf, revive, revcon, revold,
-                     rdf, msd))
-        else:
-            self.control = 'CONTROL'
+                     rdf, msd, tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam))
+
+        self.control = control
         self.field = field
         self.config = config
         self.statis = statis
@@ -239,8 +246,15 @@ class IOParam(DLPData):
         self.revive = revive
         self.revcon = revcon
         self.revold = revold
-        self.rdf = rdf
-        self.msd = msd
+        self.rdf = ""
+        self.msd = ""
+
+        self.tabvdw = tabvdw if os.path.isfile(tabvdw) else ""
+        self.tabbnd = tabbnd if os.path.isfile(tabbnd) else ""
+        self.tabang = tabang if os.path.isfile(tabang) else ""
+        self.tabdih = tabdih if os.path.isfile(tabdih) else ""
+        self.tabinv = tabinv if os.path.isfile(tabinv) else ""
+        self.tabeam = tabeam if os.path.isfile(tabeam) else ""
 
     keysHandled = property(lambda self: ('io',))
 
@@ -249,16 +263,33 @@ class IOParam(DLPData):
         setattr(self, args[0], args[1])
 
     def __str__(self):
-        return (f'io field {self.field}\n'   # First IO is key
-                f'io config {self.config}\n'
-                f'io statis {self.statis}\n'
-                f'io history {self.history}\n'
-                f'io historf {self.historf}\n'
-                f'io revive {self.revive}\n'
-                f'io revcon {self.revcon}\n'
-                f'io revold {self.revold}\n'
-                f'io rdf {self.rdf}\n'
-                f'io msd {self.msd}\n')
+        out = (f'io field {self.field}\n'   # First IO is key
+               f'io config {self.config}\n'
+               f'io statis {self.statis}\n'
+               f'io history {self.history}\n'
+               f'io historf {self.historf}\n'
+               f'io revive {self.revive}\n'
+               f'io revcon {self.revcon}\n'
+               f'io revold {self.revold}\n')
+
+        if self.msd:
+            out += f'io msd {self.msd}\n'
+        if self.rdf:
+            out += f'io rdf {self.rdf}\n'
+        if self.tabvdw:
+            out += f'io tabvdw {self.tabvdw}'
+        if self.tabbnd:
+            out += f'io tabbnd {self.tabbnd}'
+        if self.tabang:
+            out += f'io tabang {self.tabang}'
+        if self.tabdih:
+            out += f'io tabdih {self.tabdih}'
+        if self.tabinv:
+            out += f'io tabinv {self.tabinv}'
+        if self.tabeam:
+            out += f'io tabeam {self.tabeam}'
+
+        return out
 
 
 class EnsembleParam:
@@ -443,7 +474,7 @@ class Control(DLPData):
             self.read(source)
 
     @property
-    def handlers(self):
+    def _handlers(self):
         ''' Return iterable of handlers '''
         return (self.io, self.ignore, self.print, self.ffield, self.timing, self.ana)
 
@@ -466,7 +497,8 @@ class Control(DLPData):
                 key, *args = line.split()
                 args = self._strip_crap(args)
                 key = key.lower()
-                for handler in self.handlers:
+
+                for handler in self._handlers:
                     keyhand = check_arg(key, *handler.keysHandled)
                     if keyhand:
                         handler.parse(keyhand, args)
@@ -493,7 +525,7 @@ class Control(DLPData):
                     if val and (key != 'variable'):
                         print(key, file=outFile)
                     continue
-                elif val in self.handlers:
+                elif val in self._handlers:
                     print(val, file=outFile)
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(map(str, val)), file=outFile)

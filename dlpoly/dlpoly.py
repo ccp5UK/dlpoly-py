@@ -57,8 +57,18 @@ class DLPoly:
         self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
         self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
         self.control.io.revold = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revold)))
-        self.control.io.rdf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.rdf)))
-        self.control.io.msd = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.msd)))
+
+        if self.control.print.rdf and not self.control.io.rdf:
+            self.control.io.rdf = 'RDFDAT'
+        if self.control.io.rdf:
+            self.control.io.rdf = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.rdf)))
+
+        if self.control.msdtemp and not self.control.io.msd:
+            self.control.io.msd = 'RDFDAT'
+        if self.control.io.msd:
+            self.control.io.msd = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.msd)))
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
@@ -68,18 +78,21 @@ class DLPoly:
             shutil.copy(self.fieldFile, direc)
         except shutil.SameFileError:
             pass
+
         if self.destconfig is None:
             try:
                 shutil.copy(self.configFile, direc)
             except shutil.SameFileError:
                 pass
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
+
         else:
             try:
                 shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
             except shutil.SameFileError:
                 pass
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
+
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
