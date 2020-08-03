@@ -6,8 +6,17 @@ import math
 import itertools
 import numpy as np
 from abc import ABC
+import shutil
 
 COMMENT_CHAR = '#'
+
+
+def copy_file(inpf,od):
+    """ copy a file in a folder, avoiding same file error"""
+    try:
+        shutil.copy(inpf, od)
+    except shutil.SameFileError:
+        pass
 
 
 def peek(iterable):

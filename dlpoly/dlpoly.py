@@ -12,6 +12,7 @@ from dlpoly.field import Field
 from dlpoly.statis import Statis
 from dlpoly.rdf import rdf
 from dlpoly.cli import get_command_args
+from dlpoly.utility import copy_file
 
 
 class DLPoly:
@@ -60,27 +61,23 @@ class DLPoly:
         self.control.io.rdf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.rdf)))
         self.control.io.msd = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.msd)))
 
+
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
         if direc is None:
             direc = self.workdir
-        try:
-            shutil.copy(self.fieldFile, direc)
-        except shutil.SameFileError:
-            pass
+        copy_file(self.fieldFile, direc)
+        copy_file(self.vdwFile, direc)
+        copy_file(self.eamFile, direc)
         if self.destconfig is None:
-            try:
-                shutil.copy(self.configFile, direc)
-            except shutil.SameFileError:
-                pass
+            copy_file(self.configFile, direc)
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
         else:
-            try:
-                shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
-            except shutil.SameFileError:
-                pass
+            copy_file(self.configFile, os.path.join(direc, self.destconfig))
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
+        self.vdwFile = os.path.join(direc, os.path.basename(self.vdwFile))
+        self.eamFile = os.path.join(direc, os.path.basename(self.eamFile))
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
@@ -155,6 +152,16 @@ class DLPoly:
         """ Path to field file """
         return self.control.io.field
 
+    @property
+    def vdwFile(self):
+        """ Path to TABLE for vdw file """
+        return self.control.io.vdw
+
+    @property
+    def eamFile(self):
+        """ Path to TABEAM for eam file """
+        return self.control.io.eam
+
     @controlFile.setter
     def controlFile(self, control):
         self.control.io.control = control
@@ -162,6 +169,14 @@ class DLPoly:
     @fieldFile.setter
     def fieldFile(self, field):
         self.control.io.field = field
+
+    @vdwFile.setter
+    def vdwFile(self, vdw):
+        self.control.io.vdw = vdw
+
+    @eamFile.setter
+    def eamFile(self, eam):
+        self.control.io.eam = eam
 
     @property
     def configFile(self):

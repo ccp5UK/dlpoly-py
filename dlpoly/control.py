@@ -181,23 +181,30 @@ class IOParam(DLPData):
                  output='OUTPUT', history='HISTORY',
                  historf='HISTORF', revive='REVIVE',
                  revcon='REVCON', revold='REVOLD',
-                 rdf='RDFDAT', msd='MSDTMP'):
+                 rdf='RDFDAT', msd='MSDTMP',
+                 tabang="TABANG", tabbnd="TABBND",
+                 tabdih="TABDIH",tabinv="TABINV",
+                 vdw="TABLE",eam="TABEAM"):
         DLPData.__init__(self, {'control': str, 'field': str,
                                 'config': str, 'statis': str,
                                 'output': str, 'history': str,
                                 'historf': str, 'revive': str,
                                 'revcon': str, 'revold': str,
-                                'rdf': str, 'msd': str})
+                                'rdf': str, 'msd': str,
+                                'tabbnd': str, 'tabang': str,
+                                'tabdih': str, 'tabinv': str,
+                                'vdw': str, 'eam': str})
 
         self.control = control
         # Get control's path
         if control is not None:
             control_truepath = os.path.dirname(os.path.abspath(control))
             # Make other paths relative to control (i.e. load them correctly)
-            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd = \
+            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd, \
+            tabbnd, tabang, tabdih, tabinv, vdw, eam = \
                 map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
                     (field, config, statis, output, history, historf, revive, revcon, revold,
-                     rdf, msd))
+                     rdf, msd, tabbnd, tabang, tabdih, tabinv, vdw, eam))
         self.field = field
         self.config = config
         self.statis = statis
@@ -209,6 +216,12 @@ class IOParam(DLPData):
         self.revold = revold
         self.rdf = rdf
         self.msd = msd
+        self.tabbnd = tabbnd
+        self.tabang = tabang
+        self.tabdih = tabdih
+        self.tabinv = tabinv
+        self.vdw = vdw
+        self.eam = eam
 
     keysHandled = property(lambda self: ('io',))
 
@@ -219,6 +232,12 @@ class IOParam(DLPData):
     def __str__(self):
         return (f'io field {self.field}\n'   # First IO is key
                 f'io config {self.config}\n'
+                f'io vdw {self.vdw}\n'
+                f'io eam {self.eam}\n'
+                f'io tabbnd {self.tabbnd}\n'
+                f'io tabang {self.tabang}\n'
+                f'io tabdih {self.tabdih}\n'
+                f'io tabinv {self.tabinv}\n'
                 f'io statis {self.statis}\n'
                 f'io history {self.history}\n'
                 f'io historf {self.historf}\n'
