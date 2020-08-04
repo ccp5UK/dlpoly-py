@@ -180,7 +180,7 @@ class Print(DLPData):
                 setattr(self, args[0], True)
                 setattr(self, args[0]+'every', 1)
         elif check_arg(key, 'rdf', 'zden', 'stats'):
-            print(args)
+
             setattr(self, check_arg(key, 'rdf', 'zden', 'stats')+'every', args[0])
         elif check_arg(key, 'ana'):
             self.analObj.parse(args)
