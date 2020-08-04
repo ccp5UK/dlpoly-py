@@ -6,26 +6,25 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-def showrdf():
-    m = rdf("RDFDAT")
+def showrdf(loc):
+    m = rdf(loc)
     for i in range(len(m.labels)):
         plt.plot(m.x, m.data[i,:,0],label = "-".join(m.labels[i]))
     plt.xlabel("r [Å])")
     plt.ylabel("gofr [a.u.])")
     plt.legend()
-    plt.show()
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-yaml/bin/DLPOLY.Z"
+dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-issue571/bin/DLPOLY.Z"
 
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
-                field="FIELD", workdir="w")
-dlPoly.control.rdf = 10
+                field="FIELD", workdir="w40")
 dlPoly.run(executable=dlp,numProcs = 1)
+showrdf("w40/RDFDAT")
 
-showrdf()
-
-dlPoly.control.rdf = 10
-dlPoly.control.print = 100
-dlPoly.control.pressure = 20
+dlPoly = DLPoly(control="CONTROL", config="CONFIG",
+                field="FIELD", workdir="w20")
+dlPoly.control.pressure = 12
+dlPoly.control.temperature = 500
 dlPoly.run(executable=dlp,numProcs = 1)
-showrdf()
+showrdf("w20/RDFDAT")
+plt.show()

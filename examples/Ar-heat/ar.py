@@ -14,4 +14,3 @@ for T in range(200,601,50):
                 field="Ar.field", workdir="argon-T{}".format(T))
     dlPoly.control.temperature = T
     dlPoly.run(executable=dlp,numProcs = 4)
-spe

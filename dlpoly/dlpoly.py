@@ -12,6 +12,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
+from .utility import copy_file
 
 
 class DLPoly:
@@ -64,8 +65,8 @@ class DLPoly:
             self.control.io.rdf = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.rdf)))
 
-        if self.control.msdtemp and not self.control.io.msd:
-            self.control.io.msd = 'RDFDAT'
+        if hasattr(self.control, 'msdtmp') and not self.control.io.msd:
+            self.control.io.msd = 'MSDTMP'
         if self.control.io.msd:
             self.control.io.msd = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.msd)))
@@ -80,17 +81,11 @@ class DLPoly:
             pass
 
         if self.destconfig is None:
-            try:
-                shutil.copy(self.configFile, direc)
-            except shutil.SameFileError:
-                pass
+            copy_file(self.configFile, direc)
             self.configFile = os.path.join(direc, os.path.basename(self.configFile))
 
         else:
-            try:
-                shutil.copy(self.configFile, os.path.join(direc, self.destconfig))
-            except shutil.SameFileError:
-                pass
+            copy_file(self.configFile, os.path.join(direc, self.destconfig))
             self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
 
         self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
@@ -168,6 +163,16 @@ class DLPoly:
         """ Path to field file """
         return self.control.io.field
 
+    @property
+    def vdwFile(self):
+        """ Path to TABLE for vdw file """
+        return self.control.io.vdw
+
+    @property
+    def eamFile(self):
+        """ Path to TABEAM for eam file """
+        return self.control.io.eam
+
     @controlFile.setter
     def controlFile(self, control):
         self.control.io.control = control
@@ -175,6 +180,14 @@ class DLPoly:
     @fieldFile.setter
     def fieldFile(self, field):
         self.control.io.field = field
+
+    @vdwFile.setter
+    def vdwFile(self, vdw):
+        self.control.io.vdw = vdw
+
+    @eamFile.setter
+    def eamFile(self, eam):
+        self.control.io.eam = eam
 
     @property
     def configFile(self):

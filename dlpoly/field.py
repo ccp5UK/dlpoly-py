@@ -153,7 +153,7 @@ class Molecule(PotHaver):
 
     def _read_block(self, fieldFile, potClass, nPots):
         ''' Read a potentials block '''
-        if potClass == 'atoms':
+        if potClass.lower() == 'atoms':
             self._read_atoms(fieldFile, nPots)
             return
 
