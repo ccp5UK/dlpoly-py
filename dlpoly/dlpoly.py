@@ -65,7 +65,7 @@ class DLPoly:
             self.control.io.rdf = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.rdf)))
 
-        if self.control.msdtmp and not self.control.io.msd:
+        if hasattr(self.control, 'msdtmp') and not self.control.io.msd:
             self.control.io.msd = 'MSDTMP'
         if self.control.io.msd:
             self.control.io.msd = os.path.abspath(
