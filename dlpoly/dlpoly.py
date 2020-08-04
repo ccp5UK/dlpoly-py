@@ -232,11 +232,8 @@ class DLPoly:
         self.redir_output()
         self.control.write(controlFile)
 
-        print("BEEP", self.control.io)
-        print("HI", outputFile)
         if outputFile is None:
             outputFile = self.control.io.output
-            print("HO", outputFile)
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
                                                                       numProcs,
