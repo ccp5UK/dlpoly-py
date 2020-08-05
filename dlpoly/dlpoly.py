@@ -71,6 +71,11 @@ class DLPoly:
             self.control.io.msd = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io.msd)))
 
+    @staticmethod
+    def _update_file(direc, file):
+        copy_file(file, direc)
+        return os.path.join(direc, os.path.basename(file))
+
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
         if direc is None:
@@ -81,14 +86,25 @@ class DLPoly:
             pass
 
         if self.destconfig is None:
-            copy_file(self.configFile, direc)
-            self.configFile = os.path.join(direc, os.path.basename(self.configFile))
+            self.configFile = self._update_file(direc, self.configFile)
 
         else:
-            copy_file(self.configFile, os.path.join(direc, self.destconfig))
-            self.configFile = os.path.join(direc, os.path.basename(self.destconfig))
+            self.configFile = self._update_file(direc, self.destconfig)
 
-        self.fieldFile = os.path.join(direc, os.path.basename(self.fieldFile))
+        self.fieldFile = self._update_file(direc, self.fieldFile)
+
+        if self.vdwFile:
+            self.vdwFile = self._update_file(direc, self.vdwFile)
+        if self.eamFile:
+            self.eamFile = self._update_file(direc, self.eamFile)
+        if self.control.io.tabbnd:
+            self.control.io.tabbnd = self._update_file(direc, self.control.io.tabbnd)
+        if self.control.io.tabang:
+            self.control.io.tabang = self._update_file(direc, self.control.io.tabang)
+        if self.control.io.tabdih:
+            self.control.io.tabdih = self._update_file(direc, self.control.io.tabdih)
+        if self.control.io.tabinv:
+            self.control.io.tabinv = self._update_file(direc, self.control.io.tabinv)
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
@@ -166,12 +182,12 @@ class DLPoly:
     @property
     def vdwFile(self):
         """ Path to TABLE for vdw file """
-        return self.control.io.vdw
+        return self.control.io.tabvdw
 
     @property
     def eamFile(self):
         """ Path to TABEAM for eam file """
-        return self.control.io.eam
+        return self.control.io.tabeam
 
     @controlFile.setter
     def controlFile(self, control):
@@ -183,11 +199,11 @@ class DLPoly:
 
     @vdwFile.setter
     def vdwFile(self, vdw):
-        self.control.io.vdw = vdw
+        self.control.io.tabvdw = vdw
 
     @eamFile.setter
     def eamFile(self, eam):
-        self.control.io.eam = eam
+        self.control.io.tabeam = eam
 
     @property
     def configFile(self):
