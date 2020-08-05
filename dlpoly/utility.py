@@ -64,7 +64,7 @@ class DLPData(ABC):
         self._dataTypes = dataTypes
 
     dataTypes = property(lambda self: self._dataTypes)
-    keys = property(lambda self: [key for key in self.dataTypes])
+    keys = property(lambda self: [key for key in self.dataTypes if key != 'keysHandled'])
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
