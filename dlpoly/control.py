@@ -513,7 +513,7 @@ class Control(DLPData):
 
         return self
 
-    def write_old(self, filename='CONTROL'):
+    def write(self, filename='CONTROL'):
         ''' Write the control out to a file '''
         with open(filename, 'w') as outFile:
             print(self.title, file=outFile)
@@ -537,7 +537,7 @@ class Control(DLPData):
                         print(key, val, file=outFile)
             print('finish', file=outFile)
 
-    def write(self, filename='CONTROL'):
+    def write_new(self, filename='CONTROL'):
 
         def output(key, *vals):
             print(key, *(f' {val}' for val in vals), file=outFile)
