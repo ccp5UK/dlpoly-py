@@ -199,6 +199,8 @@ class Print(DLPData):
         outStr = ''
         if self.printevery > 0:
             outStr += f'print every {self.printevery}\n'
+        if self.statsevery > 0:
+            outStr += f'stats {self.statsevery}\n'
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
