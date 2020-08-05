@@ -52,12 +52,25 @@ class DLPoly:
 
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
         self.control.io.statis = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.statis)))
-        self.control.io.history = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.history)))
-        self.control.io.historf = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.historf)))
         self.control.io.output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.output)))
         self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
         self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
-        self.control.io.revold = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revold)))
+
+        if hasattr(self.control, 'traj') and not self.control.io.history:
+            self.control.io.history = 'HISTORY'
+        if self.control.io.history:
+            self.control.io.history = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.history)))
+
+        if self.control.io.historf:
+            self.control.io.historf = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.historf)))
+
+        if hasattr(self.control, 'restart') and not self.control.io.revold:
+            self.control.io.revold = 'REVOLD'
+        if self.control.io.revold:
+            self.control.io.revold = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io.revold)))
 
         if self.control.print.rdf and not self.control.io.rdf:
             self.control.io.rdf = 'RDFDAT'

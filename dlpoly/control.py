@@ -252,11 +252,11 @@ class IOParam(DLPData):
         self.config = config
         self.statis = statis
         self.output = output
-        self.history = history
-        self.historf = historf
+        self.history = ""
+        self.historf = ""
         self.revive = revive
         self.revcon = revcon
-        self.revold = revold
+        self.revold = ""
         self.rdf = ""
         self.msd = ""
 
@@ -277,28 +277,31 @@ class IOParam(DLPData):
         out = (f'io field {self.field}\n'   # First IO is key
                f'io config {self.config}\n'
                f'io statis {self.statis}\n'
-               f'io history {self.history}\n'
-               f'io historf {self.historf}\n'
                f'io revive {self.revive}\n'
-               f'io revcon {self.revcon}\n'
-               f'io revold {self.revold}\n')
+               f'io revcon {self.revcon}\n')
 
+        if self.revold:
+            out += f'io revold {self.revold}\n'
+        if self.history:
+            out += f'io history {self.history}\n'
+        if self.historf:
+            out += f'io historf {self.historf}\n'
         if self.msd:
             out += f'io msd {self.msd}\n'
         if self.rdf:
             out += f'io rdf {self.rdf}\n'
         if self.tabvdw:
-            out += f'io tabvdw {self.tabvdw}'
+            out += f'io tabvdw {self.tabvdw}\n'
         if self.tabbnd:
-            out += f'io tabbnd {self.tabbnd}'
+            out += f'io tabbnd {self.tabbnd}\n'
         if self.tabang:
-            out += f'io tabang {self.tabang}'
+            out += f'io tabang {self.tabang}\n'
         if self.tabdih:
-            out += f'io tabdih {self.tabdih}'
+            out += f'io tabdih {self.tabdih}\n'
         if self.tabinv:
-            out += f'io tabinv {self.tabinv}'
+            out += f'io tabinv {self.tabinv}\n'
         if self.tabeam:
-            out += f'io tabeam {self.tabeam}'
+            out += f'io tabeam {self.tabeam}\n'
 
         return out
 
