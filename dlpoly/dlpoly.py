@@ -251,8 +251,9 @@ class DLPoly:
                 cmd = ['sh ./env.sh']
         else:
             cmd = [runCommand]
-        print(cmd)
-        subprocess.call(cmd, shell=True)
+
+        errorCode = subprocess.call(cmd, shell=True)
+        return errorCode
 
 
 def main():

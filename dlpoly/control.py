@@ -178,9 +178,9 @@ class Print(DLPData):
                 self.printevery = args[0]
             else:
                 setattr(self, args[0], True)
-                setattr(self, args[0]+'every', 1)
+                if not hasattr(self, args[0]+'every'):
+                    setattr(self, args[0]+'every', 1)
         elif check_arg(key, 'rdf', 'zden', 'stats'):
-
             setattr(self, check_arg(key, 'rdf', 'zden', 'stats')+'every', args[0])
         elif check_arg(key, 'ana'):
             self.analObj.parse(args)
