@@ -431,12 +431,13 @@ class TimingParam(DLPData):
                 self.variable = True
                 self.timestep = args
             elif key == 'variable':
-                self.variable = True
+                self.variable = args
             else:
                 self.timestep = word1
 
     def __str__(self):
-        return ""
+        outStr = ''
+        return outStr
 
 
 class Control(DLPData):
@@ -528,8 +529,23 @@ class Control(DLPData):
             for key, val in self.__dict__.items():
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
-                if key in ('job', 'close'):
-                    print('{} time {}'.format(key, val), file=outFile)
+                if key == 'timing':
+                    for keyt, valt in self.timing.__dict__.items():
+                        if keyt in ('job', 'close'):
+                            print('{} time {}'.format(keyt, valt), file=outFile)
+                        elif keyt == 'timestep':
+                            if self.timing.variable:
+                                print('variable', keyt, valt, file=outFile)
+                            else:
+                                print(keyt, valt, file=outFile)
+                        elif keyt == 'variable':
+                            continue
+                        elif keyt in ('dump', 'mindis', 'maxdix', 'mxstep') and valt > 0:
+                            print(keyt, valt, file=outFile)
+                        elif keyt == 'collect' and valt:
+                            print(keyt, file=outFile)
+                        elif keyt in ('steps', 'equil'):
+                            print(keyt, valt, file=outFile)
                 elif isinstance(val, bool):
                     if val and (key != 'variable'):
                         print(key, file=outFile)
@@ -539,10 +555,7 @@ class Control(DLPData):
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(map(str, val)), file=outFile)
                 else:
-                    if key == 'timestep' and self.timing.variable:
-                        print('variable', key, val, file=outFile)
-                    else:
-                        print(key, val, file=outFile)
+                    print(key, val, file=outFile)
             print('finish', file=outFile)
 
     def write_new(self, filename='CONTROL'):
