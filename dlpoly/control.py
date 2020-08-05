@@ -9,10 +9,11 @@ from .utility import DLPData, check_arg
 
 class FField(DLPData):
     ''' Class defining properties relating to forcefields '''
-    def __init__(self, *args):
+    def __init__(self, *_):
         DLPData.__init__(self, {'rvdw': float, 'rcut': float, 'rpad': float,
-                                'elec': bool, 'elecMethod': str, 'metal': bool, 'vdw': bool, 'ewald_vdw': bool,
-                                'elecParams': tuple, 'vdwParams': dict, 'metalStyle': str})
+                                'elec': bool, 'elecMethod': str, 'metal': bool, 'vdw': bool, 'ewaldVdw': bool,
+                                'elecParams': tuple, 'vdwParams': dict, 'metalStyle': str,
+                                'polarMethod': str, 'polarTHole': int})
         self.elec = False
         self.elecMethod = 'coul'
         self.elecParams = ('',)
@@ -26,6 +27,11 @@ class FField(DLPData):
         self.rcut = 0.0
         self.rvdw = 0.0
         self.rpad = 0.0
+
+        self.ewaldVdw = False
+
+        self.polarMethod = ""
+        self.polarTHole = 0
 
     keysHandled = property(lambda self: ('reaction', 'shift', 'distance', 'ewald', 'coulomb',
                                          'rpad', 'delr', 'padding', 'cutoff', 'rcut', 'cut', 'rvdw',
@@ -68,12 +74,12 @@ class FField(DLPData):
                 val = vals.pop()
                 if check_arg(val, 'scheme', 'type', 'dump', 'factor'):
                     continue
-                elif check_arg(val, 'charmm'):
+                if check_arg(val, 'charmm'):
                     self.polarMethod = 'charmm'
                 elif check_arg(val, 'thole'):
                     self.polarTHole = val.pop()
         elif key == 'ewald_vdw':
-            self.ewald_vdw = True
+            self.ewaldVdw = True
 
     def __str__(self):
         outStr = ''
@@ -91,7 +97,7 @@ class FField(DLPData):
 
 class Ignore(DLPData):
     ''' Class definining properties that can be ignored '''
-    def __init__(self, *args):
+    def __init__(self, *_):
         DLPData.__init__(self, {'elec': bool, 'ind': bool, 'str': bool,
                                 'top': bool, 'vdw': bool, 'vafav': bool,
                                 'vom': bool, 'link': bool})
@@ -106,7 +112,8 @@ class Ignore(DLPData):
 
     keysHandled = property(lambda self: ('no',))
 
-    def parse(self, key, args):
+    def parse(self, _key, args):
+        ''' Parse disable/ignores '''
         setattr(self, args[0], True)
 
     def __str__(self):
@@ -119,7 +126,7 @@ class Ignore(DLPData):
 
 class Analysis(DLPData):
     ''' Class defining properties of analysis '''
-    def __init__(self, *args):
+    def __init__(self, *_):
         DLPData.__init__(self, {'all': (int, int, float),
                                 'bon': (int, int, float),
                                 'ang': (int, int),
@@ -134,6 +141,7 @@ class Analysis(DLPData):
     keysHandled = property(lambda self: ('ana',))
 
     def parse(self, args):
+        ''' Parse analysis line '''
         setattr(self, check_arg(args[0], self.keys), args[1:])
 
     def __str__(self):
@@ -151,7 +159,7 @@ class Analysis(DLPData):
 
 class Print(DLPData):
     ''' Class definining properties that can be printed '''
-    def __init__(self, *args):
+    def __init__(self, *_):
         DLPData.__init__(self, {'rdf': bool, 'analysis': bool, 'analObj': Analysis, 'printevery': int,
                                 'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
                                 'vafbin': int, 'statsevery': int, 'zdenevery': int})
@@ -190,18 +198,18 @@ class Print(DLPData):
     def __str__(self):
         outStr = ''
         if self.printevery > 0:
-            outStr += 'print {}\n'.format(self.printevery)
+            outStr += f'print every {self.printevery}\n'
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
         for item in ('rdf', 'vaf', 'zden'):
             toPrint, freq = getattr(self, item), getattr(self, item+'every')
             if toPrint and freq:
-                outStr += 'print {}\n'.format(item)
-                outStr += '{}  {}\n'.format(item, freq)
+                outStr += f'print {item}\n'
+                outStr += f'{item}  {freq}\n'
         if self.vaf and self.vafevery:
             outStr += 'print vaf\n'
-            outStr += 'vaf {} {}'.format(self.vafevery, self.vafbin)
+            outStr += f'vaf {self.vafevery} {self.vafbin}'
         return outStr
 
 
@@ -229,11 +237,11 @@ class IOParam(DLPData):
 
         # Get control's path
         if control is not None:
-            control_truepath = os.path.dirname(os.path.abspath(control))
+            controlTruepath = os.path.dirname(os.path.abspath(control))
             # Make other paths relative to control (i.e. load them correctly)
             field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd, \
                 tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam = \
-                map(lambda path: os.path.abspath(os.path.join(control_truepath, path)),
+                map(lambda path: os.path.abspath(os.path.join(controlTruepath, path)),
                     (field, config, statis, output, history, historf, revive, revcon, revold,
                      rdf, msd, tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam))
 
@@ -259,7 +267,7 @@ class IOParam(DLPData):
 
     keysHandled = property(lambda self: ('io',))
 
-    def parse(self, key, args):
+    def parse(self, _key, args):
         ''' Parse an IO line '''
         setattr(self, args[0], args[1])
 
@@ -428,7 +436,7 @@ class TimingParam(DLPData):
                 self.timestep = word1
 
     def __str__(self):
-        return("")
+        return ""
 
 
 class Control(DLPData):
@@ -440,11 +448,10 @@ class Control(DLPData):
                                 'binsize': float, 'cap': float,
                                 'densvar': float, 'eps': float, 'exclu': bool,
                                 'heat_flux': bool, 'rdf': int, 'coord': (int, int, int), 'adf': (int, float),
-                                'zden': int, 'vaf': bool, 'msdtmp': (int, int),
-                                'mult': int, 'mxshak': int, 'pres': (float, ...),
+                                'zden': int, 'vaf': bool, 'mult': int, 'mxshak': int, 'pres': (float, ...),
                                 'regaus': int, 'replay': str, 'restart': str,
                                 'rlxtol': float, 'scale': int, 'slab': bool, 'shake': float,
-                                'stack': int, 'temp': float,  'yml_statis': bool, 'yml_rdf': bool,
+                                'stack': int, 'temp': float, 'yml_statis': bool, 'yml_rdf': bool,
                                 'title': str, 'zero': int, 'timing': TimingParam,
                                 'print': Print, 'ffield': FField, 'ensemble': EnsembleParam,
                                 'ignore': Ignore, 'io': IOParam, 'subcell': float,
@@ -458,6 +465,7 @@ class Control(DLPData):
         self.temp = 300.0
         self.title = 'no title'
         self.l_scr = False
+        self.l_tor = False
         self.io = IOParam(control=source)
         self.ignore = Ignore()
         self.print = Print()
@@ -531,13 +539,14 @@ class Control(DLPData):
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(map(str, val)), file=outFile)
                 else:
-                    if key == 'timestep' and self.variable:
+                    if key == 'timestep' and self.timing.variable:
                         print('variable', key, val, file=outFile)
                     else:
                         print(key, val, file=outFile)
             print('finish', file=outFile)
 
     def write_new(self, filename='CONTROL'):
+        ''' Write control in new style '''
 
         def output(key, *vals):
             print(key, *(f' {val}' for val in vals), file=outFile)
@@ -547,7 +556,8 @@ class Control(DLPData):
             for key, val in self.__dict__.items():
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
-                elif key == 'l_scr':
+
+                if key == 'l_scr':
                     output('io_file_output', 'SCREEN')
                 elif key == 'l_print':
                     output('print_level', val)
@@ -718,7 +728,7 @@ class Control(DLPData):
                         output('defects_start', val[0], 'steps')
                         output('defects_interval', val[1], 'steps')
                         output('defects_distance', val[2], 'ang')
-                        if (len(val) > 3):
+                        if len(val) > 3:
                             output('defects_backup', 'ON')
 
                 elif key == 'disp':
