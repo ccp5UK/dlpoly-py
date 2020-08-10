@@ -199,6 +199,8 @@ class Print(DLPData):
         outStr = ''
         if self.printevery > 0:
             outStr += f'print every {self.printevery}\n'
+        if self.statsevery > 0:
+            outStr += f'stats {self.statsevery}\n'
         if self.analysis:
             outStr += 'print analysis\n'
             outStr += str(self.analObj)
@@ -250,11 +252,11 @@ class IOParam(DLPData):
         self.config = config
         self.statis = statis
         self.output = output
-        self.history = history
-        self.historf = historf
+        self.history = ""
+        self.historf = ""
         self.revive = revive
         self.revcon = revcon
-        self.revold = revold
+        self.revold = ""
         self.rdf = ""
         self.msd = ""
 
@@ -275,28 +277,31 @@ class IOParam(DLPData):
         out = (f'io field {self.field}\n'   # First IO is key
                f'io config {self.config}\n'
                f'io statis {self.statis}\n'
-               f'io history {self.history}\n'
-               f'io historf {self.historf}\n'
                f'io revive {self.revive}\n'
-               f'io revcon {self.revcon}\n'
-               f'io revold {self.revold}\n')
+               f'io revcon {self.revcon}\n')
 
+        if self.revold:
+            out += f'io revold {self.revold}\n'
+        if self.history:
+            out += f'io history {self.history}\n'
+        if self.historf:
+            out += f'io historf {self.historf}\n'
         if self.msd:
             out += f'io msd {self.msd}\n'
         if self.rdf:
             out += f'io rdf {self.rdf}\n'
         if self.tabvdw:
-            out += f'io tabvdw {self.tabvdw}'
+            out += f'io tabvdw {self.tabvdw}\n'
         if self.tabbnd:
-            out += f'io tabbnd {self.tabbnd}'
+            out += f'io tabbnd {self.tabbnd}\n'
         if self.tabang:
-            out += f'io tabang {self.tabang}'
+            out += f'io tabang {self.tabang}\n'
         if self.tabdih:
-            out += f'io tabdih {self.tabdih}'
+            out += f'io tabdih {self.tabdih}\n'
         if self.tabinv:
-            out += f'io tabinv {self.tabinv}'
+            out += f'io tabinv {self.tabinv}\n'
         if self.tabeam:
-            out += f'io tabeam {self.tabeam}'
+            out += f'io tabeam {self.tabeam}\n'
 
         return out
 
@@ -431,12 +436,13 @@ class TimingParam(DLPData):
                 self.variable = True
                 self.timestep = args
             elif key == 'variable':
-                self.variable = True
+                self.variable = args
             else:
                 self.timestep = word1
 
     def __str__(self):
-        return ""
+        outStr = ''
+        return outStr
 
 
 class Control(DLPData):
@@ -528,8 +534,23 @@ class Control(DLPData):
             for key, val in self.__dict__.items():
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
-                if key in ('job', 'close'):
-                    print('{} time {}'.format(key, val), file=outFile)
+                if key == 'timing':
+                    for keyt, valt in self.timing.__dict__.items():
+                        if keyt in ('job', 'close'):
+                            print('{} time {}'.format(keyt, valt), file=outFile)
+                        elif keyt == 'timestep':
+                            if self.timing.variable:
+                                print('variable', keyt, valt, file=outFile)
+                            else:
+                                print(keyt, valt, file=outFile)
+                        elif keyt == 'variable':
+                            continue
+                        elif keyt in ('dump', 'mindis', 'maxdix', 'mxstep') and valt > 0:
+                            print(keyt, valt, file=outFile)
+                        elif keyt == 'collect' and valt:
+                            print(keyt, file=outFile)
+                        elif keyt in ('steps', 'equil'):
+                            print(keyt, valt, file=outFile)
                 elif isinstance(val, bool):
                     if val and (key != 'variable'):
                         print(key, file=outFile)
@@ -539,10 +560,7 @@ class Control(DLPData):
                 elif isinstance(val, (tuple, list)):
                     print(key, ' '.join(map(str, val)), file=outFile)
                 else:
-                    if key == 'timestep' and self.timing.variable:
-                        print('variable', key, val, file=outFile)
-                    else:
-                        print(key, val, file=outFile)
+                    print(key, val, file=outFile)
             print('finish', file=outFile)
 
     def write_new(self, filename='CONTROL'):
