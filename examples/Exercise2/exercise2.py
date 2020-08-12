@@ -15,7 +15,7 @@ def showrdf(loc):
     plt.legend()
 
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-check/bin/DLPOLY.Z"
+dlp="DLPOLY.Z"
 
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w40")
