@@ -530,7 +530,8 @@ class Control(DLPData):
     def write(self, filename='CONTROL'):
         ''' Write the control out to a file '''
 
-        output = lambda *args: print(file=outFile, *args)
+        def output(*args):
+            print(file=outFile, *args)
 
         with open(filename, 'w') as outFile:
             output(self.title)
