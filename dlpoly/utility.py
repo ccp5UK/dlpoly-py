@@ -95,9 +95,11 @@ class DLPData(ABC):
         key = check_arg(key, *self.keys)
         return getattr(self, str(key))
 
-    def __setitem__(self, key, val):
+    def __setitem__(self, keyIn, val):
         """ Fuzzy matching on get/set item """
-        key = check_arg(key, *self.keys)
+        key = check_arg(keyIn, *self.keys)
+        if not key:
+            raise KeyError(f'"{keyIn}" is not a member of {type(self).__name__}')
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
