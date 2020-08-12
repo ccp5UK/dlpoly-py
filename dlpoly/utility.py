@@ -122,6 +122,10 @@ class DLPData(ABC):
                         dType.__name__))
 
         if isinstance(dType, tuple):
+
+            if isinstance(vals, (int, float, str)):
+                vals = (vals,)
+
             try:
                 if ... in dType:
                     loc = dType.index(...)
