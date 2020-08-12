@@ -20,3 +20,6 @@ dlp="DLPOLY.Z"
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w40")
 dlPoly.run(executable=dlp,numProcs = 1)
+
+showrdf("w40/RDFDAT")
+plt.show()

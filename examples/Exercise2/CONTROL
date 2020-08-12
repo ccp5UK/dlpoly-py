@@ -19,3 +19,4 @@ ensemble nve
 job time          3600
 close time         100
 finish
+
