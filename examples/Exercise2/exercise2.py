@@ -14,17 +14,12 @@ def showrdf(loc):
     plt.ylabel("gofr [a.u.])")
     plt.legend()
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-mxatms/bin/DLPOLY.Z"
+
+dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-check/bin/DLPOLY.Z"
 
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w40")
 dlPoly.run(executable=dlp,numProcs = 1)
-showrdf("w40/RDFDAT")
 
-dlPoly = DLPoly(control="CONTROL", config="CONFIG",
-                field="FIELD", workdir="w20")
-dlPoly.control['pres'] = 12
-dlPoly.control['temp'] = 500
-dlPoly.run(executable=dlp,numProcs = 1)
-showrdf("w20/RDFDAT")
+showrdf("w40/RDFDAT")
 plt.show()

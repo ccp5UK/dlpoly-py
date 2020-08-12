@@ -2,7 +2,7 @@
 
 from dlpoly import DLPoly
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-issue571/bin/DLPOLY.Z"
+dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-mxatms/bin/DLPOLY.Z"
 
 dlPoly = DLPoly(control="Ar.control", config="Ar.config",
                 field="Ar.field", workdir="argon")
@@ -10,5 +10,5 @@ dlPoly.run(executable=dlp,numProcs = 4)
 
 dlPoly = DLPoly(control="Ar.control", config="argon/REVCON", destconfig="Ar.config",
                 field="Ar.field", workdir="argon-T310")
-dlPoly.control.temperature = 310.0
+dlPoly.control['temp'] = 310.0
 dlPoly.run(executable=dlp,numProcs = 4)
