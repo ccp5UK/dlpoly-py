@@ -511,6 +511,8 @@ class Control(DLPData):
                     continue
                 key, *args = line.split()
                 args = self._strip_crap(args)
+                if not args:
+                    args = ""
                 key = key.lower()
 
                 for handler in self._handlers:
