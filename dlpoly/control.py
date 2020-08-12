@@ -529,15 +529,18 @@ class Control(DLPData):
 
     def write(self, filename='CONTROL'):
         ''' Write the control out to a file '''
+
+        output = lambda *args: print(file=outFile, *args)
+
         with open(filename, 'w') as outFile:
-            print(self.title, file=outFile)
+            output(self.title)
             for key, val in self.__dict__.items():
                 if key in ('title', 'filename') or key.startswith('_'):
                     continue
                 if key == 'timing':
                     for keyt, valt in self.timing.__dict__.items():
                         if keyt in ('job', 'close'):
-                            print('{} time {}'.format(keyt, valt), file=outFile)
+                            output(f'{keyt} time {valt}')
                         elif keyt == 'timestep':
                             if self.timing.variable:
                                 print('variable', keyt, valt, file=outFile)
@@ -546,22 +549,22 @@ class Control(DLPData):
                         elif keyt == 'variable':
                             continue
                         elif keyt in ('dump', 'mindis', 'maxdix', 'mxstep') and valt > 0:
-                            print(keyt, valt, file=outFile)
+                            output(keyt, valt)
                         elif keyt == 'collect' and valt:
-                            print(keyt, file=outFile)
+                            output(keyt)
                         elif keyt in ('steps', 'equil'):
-                            print(keyt, valt, file=outFile)
+                            output(keyt, valt)
                 elif isinstance(val, bool):
                     if val and (key != 'variable'):
-                        print(key, file=outFile)
+                        output(key)
                     continue
                 elif val in self._handlers:
-                    print(val, file=outFile)
+                    output(val)
                 elif isinstance(val, (tuple, list)):
-                    print(key, ' '.join(map(str, val)), file=outFile)
+                    output(key, ' '.join(map(str, val)))
                 else:
-                    print(key, val, file=outFile)
-            print('finish', file=outFile)
+                    output(key, val)
+            output('finish')
 
     def write_new(self, filename='CONTROL'):
         ''' Write control in new style '''
