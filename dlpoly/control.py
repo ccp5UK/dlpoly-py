@@ -100,7 +100,7 @@ class Ignore(DLPData):
     def __init__(self, *_):
         DLPData.__init__(self, {'elec': bool, 'ind': bool, 'str': bool,
                                 'top': bool, 'vdw': bool, 'vafav': bool,
-                                'vom': bool, 'link': bool})
+                                'vom': bool, 'link': bool, 'strict': bool})
         self.elec = False
         self.ind = False
         self.str = False
@@ -109,6 +109,7 @@ class Ignore(DLPData):
         self.vafav = False
         self.vom = False
         self.link = False
+        self.strict = False
 
     keysHandled = property(lambda self: ('no',))
 
@@ -308,12 +309,12 @@ class IOParam(DLPData):
 
 class EnsembleParam:
     ''' Class containing ensemble data '''
-    validMeans = {'nve': (None),
+    validMeans = {'nve': (None), 'pmf': (None),
                   'nvt': ('evans', 'langevin', 'andersen', 'berendsen',
                           'hoover', 'gst', 'ttm', 'dpd'),
                   'npt': ('langevin', 'berendsen', 'hoover', 'mtk'),
                   'nst': ('langevin', 'berendsen', 'hoover', 'mtk')}
-    meansArgs = {('nve', None): 0,
+    meansArgs = {('nve', None): 0, ('pmf', None): 0,
                  ('nvt', 'evans'): 0, ('nvt', 'langevin'): 1, ('nvt', 'andersen'): 2,
                  ('nvt', 'berendsen'): 1, ('nvt', 'berendsen'): 1,
                  ('nvt', 'hoover'): (1, 2), ('nvt', 'gst'): 2,
@@ -329,12 +330,15 @@ class EnsembleParam:
 
     def __init__(self, *argsIn):
         if not argsIn:
-            argsIn = ('nve')
+            if self.ensemble == 'nve':
+                argsIn = ('nve')
+            if self.ensemble == 'pmf':
+                argsIn = ('pmf')
         args = list(argsIn)[:]  # Make copy
 
         self._ensemble = args.pop(0)
         self._means = None
-        if self.ensemble != 'nve':
+        if self.ensemble not in ['nve', 'pmf']:
             test = args.pop(0)
             for abbrev in self.fullName:
                 if test.startswith(abbrev):
@@ -455,7 +459,7 @@ class Control(DLPData):
                                 'densvar': float, 'eps': float, 'exclu': bool,
                                 'heat_flux': bool, 'rdf': int, 'coord': (int, int, int), 'adf': (int, float),
                                 'zden': int, 'vaf': bool, 'mult': int, 'mxshak': int, 'pres': (float, ...),
-                                'regaus': int, 'replay': str, 'restart': str,
+                                'regaus': int, 'replay': str, 'restart': str, 'quaternion': float,
                                 'rlxtol': float, 'scale': int, 'slab': bool, 'shake': float,
                                 'stack': int, 'temp': float, 'yml_statis': bool, 'yml_rdf': bool,
                                 'title': str, 'zero': int, 'timing': TimingParam,
@@ -632,6 +636,8 @@ class Control(DLPData):
                     output('rescale_frequency', val)
                 elif key == 'shake':
                     output('shake_tolerance', val, 'ang')
+                elif key == 'quaternion':
+                    output('quaternion_tolerance', val, 'ang')
                 elif key == 'stack':
                     output('stack_size', val, 'steps')
                 elif key == 'temp':

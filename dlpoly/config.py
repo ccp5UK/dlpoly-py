@@ -59,14 +59,20 @@ class Atom(DLPData):
             "{:20.10f}{:20.10f}{:20.10f}\n"
         ).format(self.element, self.index, *self.pos, *self.vel, *self.forces)
 
-    def read(self, fileHandle, level):
+    def read(self, fileHandle, level, i):
         """ reads info for one atom """
         line = fileHandle.readline()
         if not line:
             return False
-        element, index = line.split()
-        self.element = element
-        self.index = int(index)
+        ei = line.split()
+        if len(ei) == 1:
+            self.element = ei[0]
+            # there is no index in the file, we shall ignore
+            # probably breaking hell loose somewhere else
+            self.index = i
+        if len(ei) == 2:
+            self.element = ei[0]
+            self.index = int(ei[1])
         self.pos = [float(i) for i in fileHandle.readline().split()]
         if level > 0:
             self.vel = [float(i) for i in fileHandle.readline().split()]
@@ -150,8 +156,10 @@ class Config:
                         raise RuntimeError("Error reading cell")
 
         self.atoms = []
+        i = 0
         while True:
-            atom = Atom().read(fileIn, self.level)
+            i += 1
+            atom = Atom().read(fileIn, self.level, i)
             if not atom:
                 break
             self.atoms.append(atom)
