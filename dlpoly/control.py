@@ -459,7 +459,7 @@ class Control(DLPData):
                                 'densvar': float, 'eps': float, 'exclu': bool,
                                 'heat_flux': bool, 'rdf': int, 'coord': (int, int, int), 'adf': (int, float),
                                 'zden': int, 'vaf': bool, 'mult': int, 'mxshak': int, 'pres': (float, ...),
-                                'regaus': int, 'replay': str, 'restart': str,
+                                'regaus': int, 'replay': str, 'restart': str, 'quaternion': float,
                                 'rlxtol': float, 'scale': int, 'slab': bool, 'shake': float,
                                 'stack': int, 'temp': float, 'yml_statis': bool, 'yml_rdf': bool,
                                 'title': str, 'zero': int, 'timing': TimingParam,
@@ -525,7 +525,6 @@ class Control(DLPData):
                         handler.parse(keyhand, args)
                         break
                 else:
-                    print(key,args)
                     if check_arg(key, 'ensemble'):
                         self.ensemble = EnsembleParam(*args)
                     else:
@@ -637,6 +636,8 @@ class Control(DLPData):
                     output('rescale_frequency', val)
                 elif key == 'shake':
                     output('shake_tolerance', val, 'ang')
+                elif key == 'quaternion':
+                    output('quaternion_tolerance', val, 'ang')
                 elif key == 'stack':
                     output('stack_size', val, 'steps')
                 elif key == 'temp':
