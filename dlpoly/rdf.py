@@ -51,6 +51,8 @@ class rdf():
                 s = True
                 for sample in range(self.nRDF):
                     species = fileIn.readline().split()
+                    if len(species) == 0:
+                        break
                     self.labels.append(species)
                     for point in range(self.nPoints):
                         r, g_r, n_r = map(float, fileIn.readline().split())

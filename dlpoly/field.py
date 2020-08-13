@@ -120,6 +120,7 @@ class Molecule(PotHaver):
         PotHaver.__init__(self)
         self.name = ''
         self.nMols = 0
+        self.nAtoms = 0
         self.species = {}
 
     activeBonds = property(lambda self: (name for name in Bond.nAtoms if self.get_num_pot_by_class(name)))
@@ -137,11 +138,23 @@ class Molecule(PotHaver):
             line = read_line(fieldFile)
         return self
 
+    def get_masses(self):
+        masses = []
+        for s in self.species.keys():
+            masses += [self.species[s].mass] * self.species[s].repeats
+        return masses
+
+    def get_charges(self):
+        charges = []
+        for s in self.species.keys():
+            charges += [self.species[s].charge] * self.species[s].repeats
+        return charges
+
     def write(self, outFile):
         ''' Write self to outFile '''
         print(self.name, file=outFile)
         print('nummols {}'.format(self.nMols), file=outFile)
-        print('atoms {}'.format(len(self.species)), file=outFile)
+        print('atoms {}'.format(self.nAtoms), file=outFile)
         for element in self.species.values():
             print(element, file=outFile)
 
@@ -155,6 +168,7 @@ class Molecule(PotHaver):
     def _read_block(self, fieldFile, potClass, nPots):
         ''' Read a potentials block '''
         if potClass.lower() == 'atoms':
+            self.nAtoms = nPots
             self._read_atoms(fieldFile, nPots)
             return
 
@@ -165,6 +179,7 @@ class Molecule(PotHaver):
 
     def _read_atoms(self, fieldFile, nAtoms):
         atom = 0
+        index = 0
         while atom < nAtoms:
             name, weight, charge, *repeatsFrozen = read_line(fieldFile).split()
             if repeatsFrozen:
@@ -172,8 +187,9 @@ class Molecule(PotHaver):
             else:
                 repeats, frozen = 1, False
             repeats = int(repeats)
-            self.species[name] = Species(name, len(self.species), charge, weight, frozen, repeats)
+            self.species[index] = Species(name, len(self.species), charge, weight, frozen, repeats)
             atom += repeats
+            index += 1
 
 
 class Field(PotHaver):
@@ -237,7 +253,7 @@ class Field(PotHaver):
         ''' Read field file into data '''
         with open(fieldFile, 'r') as inFile:
             # Header *must* be first line?
-            self.header = inFile.readline()
+            self.header = inFile.readline().strip()
             key, self.units = read_line(inFile).split()
             line = read_line(inFile)
             while line.lower() != 'close':
