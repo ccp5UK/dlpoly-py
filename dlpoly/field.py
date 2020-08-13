@@ -131,6 +131,7 @@ class Molecule(PotHaver):
         line = read_line(fieldFile)
         while line.lower() != 'finish':
             potClass, nPots = line.split()
+            potClass = potClass.lower()
             nPots = int(nPots)
             self._read_block(fieldFile, potClass, nPots)
             line = read_line(fieldFile)
