@@ -154,7 +154,7 @@ class DLPData(ABC):
             val = vals not in (0, False)
 
         else:
-            print(key, vals)
+            # print(key, vals)
             try:
                 val = self._dataTypes[key](vals)
             except TypeError as err:
