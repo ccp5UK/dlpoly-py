@@ -245,7 +245,7 @@ class DLPoly:
     def statisFile(self, statis):
         self.control.io.statis = statis
 
-    def run(self, executable="DLPOLY.Z", modules=(),
+    def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
@@ -254,6 +254,13 @@ class DLPoly:
             os.mkdir(self.workdir)
         except FileExistsError:
             print("Folder {} exists, over-writing.".format(self.workdir))
+
+        dlpexe = executable
+        if executable is None:
+            try:
+                dlpexe = os.environ["DLP_EXE"]
+            except KeyError:
+                dlpexe = "DLPOLY.Z"
 
         prefix = self.workdir+"/"
         controlFile = prefix+os.path.basename(self.controlFile)
@@ -266,11 +273,11 @@ class DLPoly:
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
                                                                       numProcs,
-                                                                      executable,
+                                                                      dlpexe,
                                                                       controlFile,
                                                                       outputFile)
         else:
-            runCommand = "{0:s} -c {1:s} -o {2:s}".format(executable, controlFile, outputFile)
+            runCommand = "{0:s} -c {1:s} -o {2:s}".format(dlpexe, controlFile, outputFile)
 
         if modules:
             loadMods = "module purge && module load " + modules
