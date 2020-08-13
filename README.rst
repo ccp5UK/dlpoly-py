@@ -28,7 +28,7 @@ install
 usage
 -----
 
-Examples can be found in https://gitlab.com/drFaustroll/dlpoly-py/examples
+Examples can be found in https://gitlab.com/drFaustroll/dlpoly-py/-/tree/devel/examples
 
 sime run using Ar data from above folder.
 
@@ -46,7 +46,8 @@ sime run using Ar data from above folder.
    # change temperature and rerun, from previous termination
    dlPoly = DLPoly(control="Ar.control", config="argon/REVCON", destconfig="Ar.config",
                 field="Ar.field", workdir="argon-T310")
-   dlPoly.control.temperature = 310.0
+   dlPoly.control['temp'] = 310.0
    dlPoly.run(executable=dlp,numProcs = 4)
 
-
+alternatively you can set the environment variable DLP_EXE to point to DL_POLY_4 executable and remove the executable parameter from
+run.
