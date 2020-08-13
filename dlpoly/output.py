@@ -16,10 +16,10 @@ class output():
         self.run_tps = None
         self.average = None
         self.pressure = None
-        self.pressure_tensor = np.zeros((3, 3))
-        self.pressure_tensor_rms = np.zeros((3, 3))
-        self.average_cell = np.zeros((3, 3))
-        self.average_cell_rms = np.zeros((3, 3))
+        self.pressure_tensor = None
+        self.pressure_tensor_rms = None
+        self.average_cell = None
+        self.average_cell_rms = None
         self.diffusion = None
 
         if source is not None:
@@ -106,6 +106,8 @@ class output():
                     continue
                 if a[0] == 'Pressure':
                     dline = f.readline()
+                    self.pressure_tensor = np.zeros((3, 3))
+                    self.pressure_tensor_rms = np.zeros((3, 3))
                     for i in range(3):
                         a = [float(j) for j in f.readline().strip().split()]
                         self.pressure_tensor[i, :] = np.array(a[0:3])
@@ -123,6 +125,8 @@ class output():
                     self.diffusion = {e[0]: (float(e[1]), float(e[2])) for e in h}
                     continue
                 if a[0] == 'Average':
+                    self.average_cell = np.zeros((3, 3))
+                    self.average_cell_rms = np.zeros((3, 3))
                     for i in range(3):
                         a = [float(j) for j in f.readline().strip().split()]
                         self.average_cell[i, :] = np.array(a[0:3])
