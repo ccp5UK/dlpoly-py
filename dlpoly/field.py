@@ -159,8 +159,8 @@ class Molecule(PotHaver):
             print(element, file=outFile)
 
         for potClass in self.activeBonds:
-            pots = self.get_pot_by_class(potClass)
-            print('{} {}'.format(potClass, len(list(pots))), file=outFile)
+            pots = list(self.get_pot_by_class(potClass))
+            print('{} {}'.format(potClass, len(pots)), file=outFile)
             for pot in pots:
                 print(pot, file=outFile)
         print('finish', file=outFile)
@@ -185,7 +185,7 @@ class Molecule(PotHaver):
             if repeatsFrozen:
                 repeats, frozen, *_ = repeatsFrozen
             else:
-                repeats, frozen = 1, False
+                repeats, frozen = 1, 0
             repeats = int(repeats)
             self.species[index] = Species(name, len(self.species), charge, weight, frozen, repeats)
             atom += repeats
@@ -277,7 +277,7 @@ class Field(PotHaver):
                 molecule.write(outFile)
             for potClass in self.activePots:
                 pots = list(self.get_pot_by_class(potClass))
-                print('{} {}'.format(potClass, len(list(pots))), file=outFile)
+                print('{} {}'.format(potClass, len(pots)), file=outFile)
                 for pot in pots:
                     print(pot, file=outFile)
             print('close', file=outFile)

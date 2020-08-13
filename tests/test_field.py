@@ -17,10 +17,17 @@ class FieldTest(unittest.TestCase):
         self.assertEqual(self.field.units, "kcal",
                          'incorrect units')
 
+    def test_field_mol(self):
+        self.assertEqual(self.field.molecules['Gramicidin A'].nMols, 8,
+                         'incorrect number of gramidicin')
+        self.assertEqual(self.field.molecules['Gramicidin A'].nAtoms, 354,
+                         'incorrect number of atoms in gramidicin')
+
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(FieldTest('test_field_units'))
+    suite.addTest(FieldTest('test_field_mol'))
     return suite
 
 
