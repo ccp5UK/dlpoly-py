@@ -100,7 +100,7 @@ class Ignore(DLPData):
     def __init__(self, *_):
         DLPData.__init__(self, {'elec': bool, 'ind': bool, 'str': bool,
                                 'top': bool, 'vdw': bool, 'vafav': bool,
-                                'vom': bool, 'link': bool})
+                                'vom': bool, 'link': bool, 'strict': bool})
         self.elec = False
         self.ind = False
         self.str = False
@@ -109,6 +109,7 @@ class Ignore(DLPData):
         self.vafav = False
         self.vom = False
         self.link = False
+        self.strict = False
 
     keysHandled = property(lambda self: ('no',))
 
@@ -308,12 +309,12 @@ class IOParam(DLPData):
 
 class EnsembleParam:
     ''' Class containing ensemble data '''
-    validMeans = {'nve': (None),
+    validMeans = {'nve': (None), 'pmf': (None),
                   'nvt': ('evans', 'langevin', 'andersen', 'berendsen',
                           'hoover', 'gst', 'ttm', 'dpd'),
                   'npt': ('langevin', 'berendsen', 'hoover', 'mtk'),
                   'nst': ('langevin', 'berendsen', 'hoover', 'mtk')}
-    meansArgs = {('nve', None): 0,
+    meansArgs = {('nve', None): 0, ('pmf', None): 0,
                  ('nvt', 'evans'): 0, ('nvt', 'langevin'): 1, ('nvt', 'andersen'): 2,
                  ('nvt', 'berendsen'): 1, ('nvt', 'berendsen'): 1,
                  ('nvt', 'hoover'): (1, 2), ('nvt', 'gst'): 2,
@@ -329,12 +330,15 @@ class EnsembleParam:
 
     def __init__(self, *argsIn):
         if not argsIn:
-            argsIn = ('nve')
+            if self.ensemble == 'nve':
+                argsIn = ('nve')
+            if self.ensemble == 'pmf':
+                argsIn = ('pmf')
         args = list(argsIn)[:]  # Make copy
 
         self._ensemble = args.pop(0)
         self._means = None
-        if self.ensemble != 'nve':
+        if self.ensemble not in ['nve', 'pmf']:
             test = args.pop(0)
             for abbrev in self.fullName:
                 if test.startswith(abbrev):
@@ -521,6 +525,7 @@ class Control(DLPData):
                         handler.parse(keyhand, args)
                         break
                 else:
+                    print(key,args)
                     if check_arg(key, 'ensemble'):
                         self.ensemble = EnsembleParam(*args)
                     else:
