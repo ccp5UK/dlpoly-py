@@ -52,6 +52,26 @@ sime run using Ar data from above folder.
 alternatively you can set the environment variable DLP_EXE to point to DL_POLY_4 executable and remove the executable parameter from
 run.
 
+.. code:: bash
+
+   export DLP_EXE="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-yaml/bin/DLPOLY.Z"
+
+.. code:: python
+
+   from dlpoly import DLPoly
+
+   dlPoly = DLPoly(control="Ar.control", config="Ar.config",
+                   field="Ar.field", workdir="argon")
+   dlPoly.run(numProcs = 4)
+
+   # change temperature and rerun, from previous termination
+   dlPoly = DLPoly(control="Ar.control", config="argon/REVCON", destconfig="Ar.config",
+                field="Ar.field", workdir="argon-T310")
+   dlPoly.control['temp'] = 310.0
+   dlPoly.run(numProcs = 4)
+
+
+
 authors
 -------
 
