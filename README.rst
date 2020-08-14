@@ -55,8 +55,8 @@ run.
 authors
 -------
 
-Alin M Elena, Daresbury Laboratory, UK
-Jacob Wilkins, University of Oxford, UK
+ - Alin M Elena, Daresbury Laboratory, UK
+ - Jacob Wilkins, University of Oxford, UK
 
 contact
 -------
