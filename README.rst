@@ -51,3 +51,16 @@ sime run using Ar data from above folder.
 
 alternatively you can set the environment variable DLP_EXE to point to DL_POLY_4 executable and remove the executable parameter from
 run.
+
+authors
+-------
+
+Alin M Elena, Daresbury Laboratory, UK
+Jacob Wilkins, University of Oxford, UK
+
+contact
+-------
+
+  - please report issues in the `gitlab tracker <https://gitlab.com/drFaustroll/dlpoly-py/-/issues>`_
+  - available in the `matrix room <https://matrix.to/#/!MsDOMMiBCBkTvqGxOz:matrix.org/$-Tgf2pIJ9CD732cbG5FEawZiRy8CJlexMbgwD25vvBQ?via=matrix.org>`_
+
