@@ -1,5 +1,4 @@
-"""
-Module containing main DLPOLY class
+""" Module containing main DLPOLY class.
 """
 
 import subprocess

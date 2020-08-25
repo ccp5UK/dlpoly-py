@@ -1,5 +1,5 @@
 """
-File containing methods for loading rdf data from DL_POLY_4
+Module containing classes for loading rdf data from DL_POLY_4
 """
 
 import numpy as np
@@ -7,6 +7,7 @@ from ruamel.yaml import YAML
 
 
 class rdf():
+    """ class for reading RDFDAT"""
     __version__ = "0"
 
     def __init__(self, source=None):
