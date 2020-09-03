@@ -60,8 +60,9 @@ def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units='rad'):
 class DLPData(ABC):
     ''' Abstract datatype for handling automatic casting and restricted assignment '''
 
-    def __init__(self, dataTypes):
+    def __init__(self, dataTypes, strict=False):
         self._dataTypes = dataTypes
+        self._strict = strict
 
     dataTypes = property(lambda self: self._dataTypes)
     keys = property(lambda self: [key for key in self.dataTypes if key != 'keysHandled'])
@@ -75,7 +76,7 @@ class DLPData(ABC):
         if key == '_dataTypes':  # Protect datatypes
 
             if not hasattr(self, '_dataTypes'):
-                self.__dict__[key] = {**val, 'keysHandled': tuple}
+                self.__dict__[key] = {**val, 'keysHandled': tuple, '_strict': bool}
             else:
                 print('Cannot alter dataTypes')
             return
@@ -87,6 +88,9 @@ class DLPData(ABC):
             print('Param {} not allowed in {} definition'.format(key, self.className.lower()))
             return
 
+        if key == 'ensemble' and val is None:
+            raise KeyError
+
         val = self._map_types(key, val)
         self.__dict__[key] = val
 
@@ -97,9 +101,12 @@ class DLPData(ABC):
 
     def __setitem__(self, keyIn, val):
         """ Fuzzy matching on get/set item """
-        key = check_arg(keyIn, *self.keys)
-        if not key:
-            raise KeyError(f'"{keyIn}" is not a member of {type(self).__name__}')
+        if not self._strict:
+            key = check_arg(keyIn, *self.keys)
+            if not key:
+                raise KeyError(f'"{keyIn}" is not a member of {type(self).__name__}')
+        else:
+            key = keyIn
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
