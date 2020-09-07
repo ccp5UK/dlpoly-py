@@ -7,7 +7,11 @@ from ruamel.yaml import YAML
 
 
 class rdf():
-    """ class for reading RDFDAT"""
+    """ class for reading RDFDAT
+
+        :param source: Source RDF to read
+
+        """
     __version__ = "0"
 
     def __init__(self, source=None):
@@ -22,7 +26,11 @@ class rdf():
             self.read(source)
 
     def read(self, source="RDFDAT"):
-        """ Read an RDF file into data """
+        """ Read an RDF file into data
+
+        :param source: File to read
+
+        """
         with open(source, 'r') as f:
             a = f.readline().split()[0]
             if a == "%YAML":

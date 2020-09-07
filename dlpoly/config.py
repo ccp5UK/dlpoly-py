@@ -10,7 +10,15 @@ from .utility import DLPData
 
 
 class Atom(DLPData):
-    """ Class defining a DLPOLY atom type """
+    """ Class defining a DLPOLY atom type
+
+     :param element: Label
+     :param pos: Position vector
+     :param vel: Velocity vector
+     :param forces: Net force vector
+     :param index: ID
+
+     """
 
     def __init__(self, element="", pos=None, vel=None, forces=None, index=1):
         DLPData.__init__(
@@ -31,7 +39,11 @@ class Atom(DLPData):
         self.index = index
 
     def write(self, level):
-        """ Print own data to file w.r.t config print level """
+        """ Print own data to file w.r.t config print level
+
+        :param level: Print level ; 1 = Pos, 2 = Vel, 3 = Forces
+
+        """
         if level == 0:
             return "{:8s}{:10d}\n{:20.10f}" "{:20.10f}{:20.10f}".format(
                 self.element, self.index, *self.pos
@@ -50,6 +62,7 @@ class Atom(DLPData):
                 "{:20.10f}{:20.10f}{:20.10f}\n"
                 "{:20.10f}{:20.10f}{:20.10f}"
             ).format(self.element, self.index, *self.pos, *self.vel, *self.forces)
+        raise ValueError(f"Invalid print level {level} in Config.write")
 
     def __str__(self):
         return (
@@ -60,7 +73,13 @@ class Atom(DLPData):
         ).format(self.element, self.index, *self.pos, *self.vel, *self.forces)
 
     def read(self, fileHandle, level, i):
-        """ reads info for one atom """
+        """ Reads info for one atom
+
+        :param fileHandle: File to read
+        :param level: Level to readd
+        :param i: Index
+
+        """
         line = fileHandle.readline()
         if not line:
             return False
@@ -82,7 +101,11 @@ class Atom(DLPData):
 
 
 class Config:
-    """ Class defining a DLPOLY config file """
+    """ Class defining a DLPOLY config file
+
+     :param source: File to read
+
+     """
 
     params = {
         "atoms": list,
@@ -107,6 +130,13 @@ class Config:
             self.read(source)
 
     def write(self, filename="new.config", title=None, level=0):
+        """ Output to file
+
+        :param filename: File to write
+        :param title: Title of run
+        :param level: Print level ; 1 = Pos, 2 = Vel, 3 = Forces
+
+        """
         self.level = level
         with open(filename, "w") as outFile:
             outFile.write("{0:72s}\n".format(self.title if title is None else title))
@@ -124,7 +154,11 @@ class Config:
                 print(atom.write(self.level), file=outFile)
 
     def add_atoms(self, other):
-        """ Add two Configs together to make one bigger config """
+        """ Add two Configs together to make one bigger config
+
+        :param other: Config to add
+
+        """
         lastIndex = self.natoms
         if isinstance(other, Config):
             self.atoms += [copy.copy(atom) for atom in other.atoms]
@@ -135,7 +169,11 @@ class Config:
             self.atoms[i].index += lastIndex
 
     def read(self, filename="CONFIG"):
-        """ Read file into Config """
+        """ Read file into Config
+
+        :param filename: Filt to read
+
+        """
         try:
             fileIn = open(filename, "r")
         except IOError:
