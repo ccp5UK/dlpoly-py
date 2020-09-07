@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 '''
 Module to handle DLPOLY control files
 '''
 
 import os.path
+from .new_control import NewControl
 from .utility import DLPData, check_arg
 
 
@@ -550,9 +550,9 @@ class Control(DLPData):
                             output(f'{keyt} time {valt}')
                         elif keyt == 'timestep':
                             if self.timing.variable:
-                                print('variable', keyt, valt, file=outFile)
+                                output('variable', keyt, valt)
                             else:
-                                print(keyt, valt, file=outFile)
+                                output(keyt, valt)
                         elif keyt == 'variable':
                             continue
                         elif keyt in ('dump', 'mindis', 'maxdix', 'mxstep') and valt > 0:
@@ -573,267 +573,269 @@ class Control(DLPData):
                     output(key, val)
             output('finish')
 
-    def write_new(self, filename='CONTROL'):
+    def to_new(self):
         ''' Write control in new style '''
 
+        newControl = NewControl()
+
         def output(key, *vals):
-            print(key, *(f' {val}' for val in vals), file=outFile)
+            newControl[key] = vals
 
-        with open(filename, 'w') as outFile:
-            output('title', self.title)
-            for key, val in self.__dict__.items():
-                if key in ('title', 'filename') or key.startswith('_'):
-                    continue
+        output('title', self.title)
+        for key, val in self.__dict__.items():
+            if key in ('title', 'filename') or key.startswith('_'):
+                continue
 
-                if key == 'l_scr':
-                    output('io_file_output', 'SCREEN')
-                elif key == 'l_print':
-                    output('print_level', val)
-                elif key == 'l_eng':
-                    output('output_energy', 'ON')
-                elif key == 'l_rout':
-                    output('io_write_ascii_revive', 'ON')
-                elif key == 'l_rin':
-                    output('io_read_ascii_revold', 'ON')
-                elif key == 'l_dis':
-                    output('initial_minimum_separation', val, 'ang')
-                elif key == 'l_tor':
-                    output('io_file_revcon', 'NONE')
-                    output('io_file_revive', 'NONE')
-                elif key == 'unit_test':
-                    output('unit_test', 'ON')
-                elif key == 'binsize':
-                    output('rdf_binsize', val)
-                    output('zden_binsize', val)
-                elif key == 'cap':
-                    output('equilibration_force_cap', val, 'kT/angs')
-                elif key == 'densvar':
-                    output('density_variance', val, '%')
-                elif key == 'eps':
-                    output('coul_dielectric_constant', val)
-                elif key == 'equil':
-                    output('time_equilibration', val, 'steps')
-                elif key == 'exclu':
-                    output('coul_extended_exclusion', 'ON')
-                elif key == 'heat_flux':
-                    output('heat_flux', 'ON')
-                elif key == 'mxshak':
-                    output('shake_max_iter', val)
-                elif key == 'pres':
-                    if isinstance(val, (tuple, list)):
-                        output('pressure_tensor', *val, 'katm')
-                    else:
-                        output('pressure_hydrostatic', val, 'katm')
+            if key == 'l_scr':
+                output('io_file_output', 'SCREEN')
+            elif key == 'l_print':
+                output('print_level', val)
+            elif key == 'l_eng':
+                output('output_energy', 'ON')
+            elif key == 'l_rout':
+                output('io_write_ascii_revive', 'ON')
+            elif key == 'l_rin':
+                output('io_read_ascii_revold', 'ON')
+            elif key == 'l_dis':
+                output('initial_minimum_separation', val, 'ang')
+            elif key == 'l_tor':
+                output('io_file_revcon', 'NONE')
+                output('io_file_revive', 'NONE')
+            elif key == 'unit_test':
+                output('unit_test', 'ON')
+            elif key == 'binsize':
+                output('rdf_binsize', val)
+                output('zden_binsize', val)
+            elif key == 'cap':
+                output('equilibration_force_cap', val, 'kT/angs')
+            elif key == 'densvar':
+                output('density_variance', val, '%')
+            elif key == 'eps':
+                output('coul_dielectric_constant', val)
+            elif key == 'equil':
+                output('time_equilibration', val, 'steps')
+            elif key == 'exclu':
+                output('coul_extended_exclusion', 'ON')
+            elif key == 'heat_flux':
+                output('heat_flux', 'ON')
+            elif key == 'mxshak':
+                output('shake_max_iter', val)
+            elif key == 'pres':
+                if isinstance(val, (tuple, list)) and len(val) == 6:
+                    output('pressure_tensor', *val, 'katm')
+                else:
+                    output('pressure_hydrostatic', val[0], 'katm')
 
-                elif key == 'regauss':
-                    output('regauss_frequency', val, 'steps')
-                elif key == 'restart':
-                    output('restart', val)
-                elif key == 'rlxtol':
-                    output('rlx_tol', val[0])
-                    output('rlx_cgm_step', val[1])
-                elif key == 'scale':
-                    output('rescale_frequency', val)
-                elif key == 'shake':
-                    output('shake_tolerance', val, 'ang')
-                elif key == 'quaternion':
-                    output('quaternion_tolerance', val, 'ang')
-                elif key == 'stack':
-                    output('stack_size', val, 'steps')
-                elif key == 'temp':
-                    output('temperature', val, 'K')
-                elif key == 'zero':
-                    output('reset_temperature_interval', val, 'steps')
-                elif key == 'print':
-                    # DLPData.__init__(self, {'rdf': bool, 'printevery': int,
-                    #                         'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
-                    #                         'vafbin': int, 'statsevery': int, 'zdenevery': int})
+            elif key == 'regauss':
+                output('regauss_frequency', val, 'steps')
+            elif key == 'restart':
+                output('restart', val)
+            elif key == 'rlxtol':
+                output('rlx_tol', val[0])
+                output('rlx_cgm_step', val[1])
+            elif key == 'scale':
+                output('rescale_frequency', val)
+            elif key == 'shake':
+                output('shake_tolerance', val, 'ang')
+            elif key == 'stack':
+                output('stack_size', val, 'steps')
+            elif key == 'temp':
+                output('temperature', val, 'K')
+            elif key == 'zero':
+                output('reset_temperature_interval', val, 'steps')
+            elif key == 'print':
+                # DLPData.__init__(self, {'rdf': bool, 'printevery': int,
+                #                         'vaf': bool, 'zden': bool, 'rdfevery': int, 'vafevery': int,
+                #                         'vafbin': int, 'statsevery': int, 'zdenevery': int})
 
-                    output('print_frequency', val.printevery, 'steps')
-                    output('stats_frequency', val.statsevery, 'steps')
+                output('print_frequency', val.printevery, 'steps')
+                output('stats_frequency', val.statsevery, 'steps')
 
-                    if val.rdf:
-                        output('rdf_calculate', 'ON')
-                        output('rdf_print', 'ON')
-                        output('rdf_frequency', val.rdfevery, 'steps')
+                if val.rdf:
+                    output('rdf_calculate', 'ON')
+                    output('rdf_print', 'ON')
+                    output('rdf_frequency', val.rdfevery, 'steps')
 
-                    if val.vaf:
-                        output('vaf_calculate', 'ON')
-                        output('vaf_print', 'ON')
-                        output('vaf_frequency', val.vafevery, 'steps')
-                        output('vaf_binsize', val.vafbin, 'steps')
+                if val.vaf:
+                    output('vaf_calculate', 'ON')
+                    output('vaf_print', 'ON')
+                    output('vaf_frequency', val.vafevery, 'steps')
+                    output('vaf_binsize', val.vafbin, 'steps')
 
-                    if val.zden:
-                        output('zden_calculate', 'ON')
-                        output('zden_print', 'ON')
-                        output('zden_frequency', val.zdenevery, 'steps')
+                if val.zden:
+                    output('zden_calculate', 'ON')
+                    output('zden_print', 'ON')
+                    output('zden_frequency', val.zdenevery, 'steps')
 
-                elif key == 'ffield':
-                    # if key in ('reaction', 'shift', 'distan', 'ewald', 'coulomb'):
-                    #     vals = [val for val in vals if val != "field"]
-                    #     self.elec = True
-                    #     self.elecMethod = key
-                    #     self.elecParams = vals
+            elif key == 'ffield':
+                # if key in ('reaction', 'shift', 'distan', 'ewald', 'coulomb'):
+                #     vals = [val for val in vals if val != "field"]
+                #     self.elec = True
+                #     self.elecMethod = key
+                #     self.elecParams = vals
 
-                    if val.vdw and not self.ignore.vdw:
-                        if 'direct' in val.vdwParams:
-                            output('vdw_method', 'direct')
-                        if 'mix' in val.vdwParams:
-                            output('vdw_mix_method', val.vdwParams['mix'])
-                        if 'shift' in val.vdwParams:
-                            output('vdw_force_shift', 'ON')
-                        if val.rvdw:
-                            output('vdw_cutoff', val.rvdw, 'ang')
+                if val.vdw and not self.ignore.vdw:
+                    if 'direct' in val.vdwParams:
+                        output('vdw_method', 'direct')
+                    if 'mix' in val.vdwParams:
+                        output('vdw_mix_method', val.vdwParams['mix'])
+                    if 'shift' in val.vdwParams:
+                        output('vdw_force_shift', 'ON')
+                    if val.rvdw:
+                        output('vdw_cutoff', val.rvdw, 'ang')
 
-                    if val.rpad:
-                        output('padding', val.rpad, 'ang')
-                    if val.rcut:
-                        output('cutoff', val.rcut, 'ang')
+                if val.rpad:
+                    output('padding', val.rpad, 'ang')
+                if val.rcut:
+                    output('cutoff', val.rcut, 'ang')
 
-                    if val.elec:
-                        output('coul_method', val.elecMethod)
-                    if val.metalStyle == 'sqrtrho':
-                        output('metal_sqrtrho', 'ON')
-                    elif val.metalStyle == 'direct':
-                        output('metal_direct', 'ON')
+                if val.elec:
+                    output('coul_method', val.elecMethod)
+                if val.metalStyle == 'sqrtrho':
+                    output('metal_sqrtrho', 'ON')
+                elif val.metalStyle == 'direct':
+                    output('metal_direct', 'ON')
 
-                elif key == 'ensemble':
-                    output('ensemble', val.ensemble)
+            elif key == 'ensemble':
+                output('ensemble', val.ensemble)
+                if val.ensemble != 'nve':
                     output('ensemble_method', val.means)
 
-                    if val.ensemble == 'nvt':
-                        if val.means == 'langevin':
-                            output('ensemble_thermostat_friction', val.args[0], 'ps^-1')
-                        elif val.means == 'andersen':
-                            output('ensemble_thermostat_coupling', val.args[0], 'ps')
-                            output('ensemble_thermostat_softness', val.args[1])
-                        elif val.means in ('berendsen', 'hoover'):
-                            output('ensemble_thermostat_coupling', val.args[0], 'ps')
+                if val.ensemble == 'nvt':
+                    if val.means == 'langevin':
+                        output('ensemble_thermostat_friction', val.args[0], 'ps^-1')
+                    elif val.means == 'andersen':
+                        output('ensemble_thermostat_coupling', val.args[0], 'ps')
+                        output('ensemble_thermostat_softness', val.args[1])
+                    elif val.means in ('berendsen', 'hoover'):
+                        output('ensemble_thermostat_coupling', val.args[0], 'ps')
 
-                elif key == 'ignore':
+            elif key == 'ignore':
 
-                    # DLPData.__init__(self, {'elec': bool, 'ind': bool, 'str': bool,
-                    #                         'top': bool, 'vdw': bool, 'vafav': bool,
-                    #                         'vom': bool, 'link': bool})
-                    if val.elec:
-                        output('coul_method', 'OFF')
-                    if val.ind:
-                        output('ignore_config_indices', 'ON')
-                    if val.str:
-                        output('strict_checks', 'OFF')
-                    if val.top:
-                        output('print_topology_info', 'OFF')
-                    if val.vdw:
-                        output('vdw_method', 'OFF')
-                    if val.vafav:
-                        output('vaf_averaging', 'OFF')
-                    if val.vom:
-                        output('fixed_com', 'OFF')
-                    if val.link:
-                        continue
-
-                elif key == 'io':
-                    if not val.output.endswith('OUTPUT') and not self.l_scr:
-                        output('io_file_output', val.output)
-                    if not val.field.endswith('FIELD'):
-                        output('io_file_field', val.field)
-                    if not val.field.endswith('CONFIG'):
-                        output('io_file_config', val.config)
-                    if not val.statis.endswith('STATIS'):
-                        output('io_file_statis', val.statis)
-                    if not val.history.endswith('HISTORY'):
-                        output('io_file_history', val.history)
-                    if not val.historf.endswith('HISTORF'):
-                        output('io_file_historf', val.historf)
-                    if not val.revive.endswith('REVIVE'):
-                        output('io_file_revive', val.revive)
-                    if not val.revcon.endswith('REVCON') and not self.l_tor:
-                        output('io_file_revcon', val.revcon)
-                    if not val.revold.endswith('REVOLD') and not self.l_tor:
-                        output('io_file_revold', val.revold)
-
-                elif key == 'defe':
-                    if val:
-                        output('defects_calculate', 'ON')
-                        output('defects_start', val[0], 'steps')
-                        output('defects_interval', val[1], 'steps')
-                        output('defects_distance', val[2], 'ang')
-                        if len(val) > 3:
-                            output('defects_backup', 'ON')
-
-                elif key == 'disp':
-                    if val:
-                        output('displacements_calculate', 'ON')
-                        output('displacements_start', val[0], 'steps')
-                        output('displacements_interval', val[1], 'steps')
-                        output('displacements_distance', val[2], 'ang')
-
-                elif key == 'impact':
-                    if val:
-                        output('impact_part_index', val[0])
-                        output('impact_time', val[1], 'steps')
-                        output('impact_energy', val[2], 'ke.V')
-                        output('impact_direction', *val[3:], 'ang/ps')
-
-                elif key == 'minim':
-                    if val:
-                        output('minimisation_criterion', val[0])
-                        output('minimisation_tolerance', val[1], 'ang')
-                        output('minimisation_step_length', val[2], 'ang')
-                        output('minimisation_frequency', val[3], 'steps')
-
-                elif key == 'optim':
-                    if val:
-                        output('minimisation_criterion', val[0])
-                        output('minimisation_tolerance', val[1], 'ang')
-                        output('minimisation_step_length', val[2], 'ang')
-                        output('minimisation_frequency', val[3], 'steps')
-
-                elif key == 'msdtmp':
-                    if val:
-                        output('msd_calculate', 'ON')
-                        output('msd_start', val[0])
-                        output('msd_frequence', val[1])
-
-                elif key == 'nfold':
+                # DLPData.__init__(self, {'elec': bool, 'ind': bool, 'str': bool,
+                #                         'top': bool, 'vdw': bool, 'vafav': bool,
+                #                         'vom': bool, 'link': bool})
+                if val.elec:
+                    output('coul_method', 'OFF')
+                if val.ind:
+                    output('ignore_config_indices', 'ON')
+                if val.str:
+                    output('strict_checks', 'OFF')
+                if val.top:
+                    output('print_topology_info', 'OFF')
+                if val.vdw:
+                    output('vdw_method', 'OFF')
+                if val.vafav:
+                    output('vaf_averaging', 'OFF')
+                if val.vom:
+                    output('fixed_com', 'OFF')
+                if val.link:
                     continue
 
-                elif key == 'pseudo':
-                    if val:
-                        output('pseudo_thermostat_method', 'ON')
-                        output('pseudo_thermostat_width', val[0], 'ang')
-                        output('pseudo_thermostat_temperature', val[1], 'K')
+            elif key == 'io':
+                if not val.output.endswith('OUTPUT') and not self.l_scr:
+                    output('io_file_output', val.output)
+                if not val.field.endswith('FIELD'):
+                    output('io_file_field', val.field)
+                if not val.field.endswith('CONFIG'):
+                    output('io_file_config', val.config)
+                if not val.statis.endswith('STATIS'):
+                    output('io_file_statis', val.statis)
+                if not val.history.endswith('HISTORY'):
+                    output('io_file_history', val.history)
+                if not val.historf.endswith('HISTORF'):
+                    output('io_file_historf', val.historf)
+                if not val.revive.endswith('REVIVE'):
+                    output('io_file_revive', val.revive)
+                if not val.revcon.endswith('REVCON') and not self.l_tor:
+                    output('io_file_revcon', val.revcon)
+                if not val.revold.endswith('REVOLD') and not self.l_tor:
+                    output('io_file_revold', val.revold)
 
-                elif key == 'seed':
-                    output('random_seed', *val)
-                elif key == 'traj':
-                    if val:
-                        output('traj_calculate', 'ON')
-                        output('traj_start', val[0], 'steps')
-                        output('traj_interval', val[1], 'steps')
-                        output('traj_key', val[2])
+            elif key == 'defe':
+                if val:
+                    output('defects_calculate', 'ON')
+                    output('defects_start', val[0], 'steps')
+                    output('defects_interval', val[1], 'steps')
+                    output('defects_distance', val[2], 'ang')
+                    if len(val) > 3:
+                        output('defects_backup', 'ON')
 
-                elif key == 'timing':
+            elif key == 'disp':
+                if val:
+                    output('displacements_calculate', 'ON')
+                    output('displacements_start', val[0], 'steps')
+                    output('displacements_interval', val[1], 'steps')
+                    output('displacements_distance', val[2], 'ang')
 
-                    if val.dump:
-                        output('dump_frequency', val.dump, 'steps')
-                    if val.steps:
-                        output('time_run', val.steps, 'steps')
-                    output('time_job', val.job, 's')
-                    output('time_close', val.close, 's')
-                    if val.collect:
-                        output('record_equilibration', 'ON')
+            elif key == 'impact':
+                if val:
+                    output('impact_part_index', val[0])
+                    output('impact_time', val[1], 'steps')
+                    output('impact_energy', val[2], 'ke.V')
+                    output('impact_direction', *val[3:], 'ang/ps')
 
-                    if val.variable:
-                        output('timestep_variable', 'ON')
-                        if val.mindis:
-                            output('timestep_variable_min_dist', val.mindis, 'ang')
-                        if val.maxdis:
-                            output('timestep_variable_max_dist', val.maxdis, 'ang')
-                        if val.mxstep:
-                            output('timestep_variable_max_delta', val.mxstep, 'ps')
+            elif key == 'minim':
+                if val:
+                    output('minimisation_criterion', val[0])
+                    output('minimisation_tolerance', val[1], 'ang')
+                    output('minimisation_step_length', val[2], 'ang')
+                    output('minimisation_frequency', val[3], 'steps')
 
-                    output('timestep', val.timestep, 'ps')
+            elif key == 'optim':
+                if val:
+                    output('minimisation_criterion', val[0])
+                    output('minimisation_tolerance', val[1], 'ang')
+                    output('minimisation_step_length', val[2], 'ang')
+                    output('minimisation_frequency', val[3], 'steps')
+
+            elif key == 'msdtmp':
+                if val:
+                    output('msd_calculate', 'ON')
+                    output('msd_start', val[0])
+                    output('msd_frequency', val[1])
+
+            elif key == 'nfold':
+                continue
+
+            elif key == 'pseudo':
+                if val:
+                    output('pseudo_thermostat_method', 'ON')
+                    output('pseudo_thermostat_width', val[0], 'ang')
+                    output('pseudo_thermostat_temperature', val[1], 'K')
+
+            elif key == 'seed':
+                output('random_seed', *val)
+            elif key == 'traj':
+                if val:
+                    output('traj_calculate', 'ON')
+                    output('traj_start', val[0], 'steps')
+                    output('traj_interval', val[1], 'steps')
+                    output('traj_key', val[2])
+
+            elif key == 'timing':
+
+                if val.dump:
+                    output('dump_frequency', val.dump, 'steps')
+                if val.steps:
+                    output('time_run', val.steps, 'steps')
+                output('time_job', val.job, 's')
+                output('time_close', val.close, 's')
+                if val.collect:
+                    output('record_equilibration', 'ON')
+
+                if val.variable:
+                    output('timestep_variable', 'ON')
+                    if val.mindis:
+                        output('timestep_variable_min_dist', val.mindis, 'ang')
+                    if val.maxdis:
+                        output('timestep_variable_max_dist', val.maxdis, 'ang')
+                    if val.mxstep:
+                        output('timestep_variable_max_delta', val.mxstep, 'ps')
+
+                output('timestep', val.timestep, 'ps')
+
+        return newControl
 
 
 if __name__ == '__main__':
