@@ -458,7 +458,7 @@ class TimingParam(DLPData):
             setattr(self, key, args)
         if check_arg(key, "timestep", "variable"):
             if isinstance(args, (list, tuple)):
-                word1 = args.pop()
+                word1 = args.pop(0)
             elif args:
                 word1 = args
             else:
