@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from dlpoly.output import output
+from dlpoly.output import Output
 import numpy as np
 
 
@@ -12,10 +12,10 @@ class OutputTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(OutputTest, cls).setUpClass()
-        cls.output = output(source="tests/OUTPUT")
+        cls.output = Output(source="tests/OUTPUT")
 
     def test_output_vdw(self):
-        self.assertEqual(self.output.vdw_energy, -0.298721E+04,
+        self.assertEqual(self.output.vdwEnergy, -0.298721E+04,
                          'incorrect lrc correction energy')
 
     def test_output_pres(self):
@@ -28,7 +28,7 @@ class OutputTest(unittest.TestCase):
 
     def test_output_avcell(self):
         cell = np.array([[112.3847796072, 0.0, 0.0], [0.0, 94.3222490199, 0.0], [0.0, 0.0, 94.2720855812]])
-        assert np.allclose(self.output.average_cell, cell)
+        assert np.allclose(self.output.averageCell, cell)
 
     def test_output_diff(self):
         self.assertEqual(self.output.diffusion['O'], (4.3873E-02, 1.8640E-02),

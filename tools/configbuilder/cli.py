@@ -2,12 +2,14 @@
 CLI for configbuilder
 """
 
-
+import sys
 import argparse
 
-_parser = argparse.ArgumentParser(description='Code to compile CONFIG/FIELD files', add_help=True)
-_parser.add_argument('sources', nargs="+", help="List of sources to compile")
-_parser.add_argument('-o', '--output', help="Filenames to create, default %(default)s", default="a")
+
+_PARSER = argparse.ArgumentParser(description='Code to compile CONFIG/FIELD files', add_help=True)
+_PARSER.add_argument('sources', nargs="+", help="List of sources to compile")
+_PARSER.add_argument('-o', '--output', help="Filenames to create, default %(default)s", default="a")
+
 
 def get_command_args():
     """Run parser and parse arguments
@@ -16,9 +18,9 @@ def get_command_args():
     :rtype: argparse.Namespace
 
     """
-    argList = _parser.parse_args()
+    argList = _PARSER.parse_args()
     print(argList)
     if not argList.sources:
-        _parser.print_help()
-        exit()
+        _PARSER.print_help()
+        sys.exit()
     return argList

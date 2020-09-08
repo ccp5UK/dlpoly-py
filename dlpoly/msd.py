@@ -5,6 +5,10 @@ import numpy as np
 
 
 class msd():
+    """Class relating to MSD data
+
+    :param source: File to read
+    """
 
     def __init__(self, source=None):
         self.nFrames = 0
@@ -23,6 +27,12 @@ class msd():
             self.read(source)
 
     def per_specie(self):
+        """List by species
+
+        :returns: List of species averages
+        :rtype: np.ndarray
+
+        """
         self.species = list(set(self.latom))
         d = np.zeros((self.nFrames, len(self.species), 2))
         for i in range(self.nFrames):
@@ -33,6 +43,11 @@ class msd():
         return d
 
     def read(self, filename="MSDTMP"):
+        """Read an MSDTMP file
+
+        :param filename: File to read
+
+        """
 
         try:
             fileIn = open(filename, 'r')
@@ -51,7 +66,7 @@ class msd():
             self.timestep = float(d[3])
             self.time[i] = float(d[4])
             for j in range(self.nAtoms):
-                if (i > 0):
+                if i > 0:
                     _, _, m, t = fileIn.readline().strip().split()
                     self.data[i, j, :] = float(m)**2, float(t)
                 else:

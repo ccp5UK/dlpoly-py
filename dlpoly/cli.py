@@ -10,6 +10,12 @@ class SmartFormatter(arg.HelpFormatter):
     """ Class to allow raw formatting only on certain lines """
 
     def _split_lines(self, text, width):
+        """ Do not format lines prefixed with R|
+
+        :param text: Texto to parse
+        :param width: Max width
+
+        """
         if text.startswith("R|"):
             return text[2:].splitlines()
         # this is the RawTextHelpFormatter._split_lines
@@ -21,6 +27,14 @@ class StoreDictKeyPair(arg.Action):
     """ Class to convert a=b into dictionary key, value pair """
 
     def __call__(self, parser, namespace, values, optionString=None):
+        """ Take a=b and map to dict
+
+        :param parser: Parse in
+        :param namespace: Object to write to
+        :param values: Vals to map
+        :param optionString: Extra options
+
+        """
         newDict = {}
         for keyVal in values.split(","):
             key, value = keyVal.split("=")
