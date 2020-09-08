@@ -5,10 +5,10 @@ import numpy as np
 
 
 class msd():
-        """Class relating to MSD data
+    """Class relating to MSD data
 
-        :param source: File to read
-        """
+    :param source: File to read
+    """
 
     def __init__(self, source=None):
         self.nFrames = 0
@@ -66,7 +66,7 @@ class msd():
             self.timestep = float(d[3])
             self.time[i] = float(d[4])
             for j in range(self.nAtoms):
-                if (i > 0):
+                if i > 0:
                     _, _, m, t = fileIn.readline().strip().split()
                     self.data[i, j, :] = float(m)**2, float(t)
                 else:
