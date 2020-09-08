@@ -4,23 +4,33 @@ Module containing utility functions supporting the DLPOLY Python Workflow
 
 import math
 import itertools
-import numpy as np
 from abc import ABC
 import shutil
+import numpy as np
 
 COMMENT_CHAR = '#'
 
 
-def copy_file(inpf, od):
-    """ copy a file in a folder, avoiding same file error"""
+def copy_file(inpf, outd):
+    """ Copy a file in a folder, avoiding same file error
+
+    :param inpf: input file to copy
+    :param outd: output directory to copy to
+    """
     try:
-        shutil.copy(inpf, od)
+        shutil.copy(inpf, outd)
     except shutil.SameFileError:
         pass
 
 
 def peek(iterable):
-    ''' Test generator without modifying '''
+    """ Test generator without modifying (creates new generator)
+
+    :param iterable: Generator to test
+    :returns: Original generator
+    :rtype: Generator
+
+    """
     try:
         first = next(iterable)
     except StopIteration:
@@ -29,12 +39,20 @@ def peek(iterable):
 
 
 def parse_line(line):
-    ''' Handle comment chars and whitespace '''
+    """ Handle comment chars and whitespace
+
+    :param line: line to parse
+
+    """
     return line.split(COMMENT_CHAR)[0].strip()
 
 
 def read_line(inFile):
-    ''' Read a line, stripping comments and blank lines '''
+    """ Read a line, stripping comments and blank lines
+
+    :param inFile: File to read
+
+    """
     line = None
     for line in inFile:
         line = parse_line(line)
@@ -45,9 +63,16 @@ def read_line(inFile):
     return line
 
 
-def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units='rad'):
-    ''' Build a rotation matrix in degrees or radians '''
-    if units == 'deg':
+def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units="rad"):
+    """ Build a rotation matrix in degrees or radians
+
+    :param alpha: Angle XY
+    :param beta:  Angle XZ
+    :param gamma: Angle YZ
+    :param units: Angle units "deg" or "rad"
+
+    """
+    if units == "deg":
         alpha, beta, gamma = map(lambda x: x*math.pi/180, (alpha, beta, gamma))
     salp, sbet, sgam = map(np.sin, (alpha, beta, gamma))
     calp, cbet, cgam = map(np.cos, (alpha, beta, gamma))
@@ -58,37 +83,44 @@ def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units='rad'):
 
 
 class DLPData(ABC):
-    ''' Abstract datatype for handling automatic casting and restricted assignment '''
+    """ Abstract datatype for handling automatic casting and restricted assignment
 
-    def __init__(self, dataTypes, strict=False):
+     :param dataTypes: Datatypes to handle as dict of "element name : dataype"
+     :param strict: Whether fuzzy matching will be applied
+
+     """
+
+    def __init__(self, dataTypes: dict, strict: bool = False):
         self._dataTypes = dataTypes
         self._strict = strict
 
     dataTypes = property(lambda self: self._dataTypes)
-    keys = property(lambda self: [key for key in self.dataTypes if key != 'keysHandled'])
+    keys = property(lambda self: [key for key in self.dataTypes if key != "keysHandled"])
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
+        """Dump keys to screen  """
+
         for key in self.keys:
             print(key, self[key])
 
     def __setattr__(self, key, val):
-        if key == '_dataTypes':  # Protect datatypes
+        if key == "_dataTypes":  # Protect datatypes
 
-            if not hasattr(self, '_dataTypes'):
-                self.__dict__[key] = {**val, 'keysHandled': tuple, '_strict': bool}
+            if not hasattr(self, "_dataTypes"):
+                self.__dict__[key] = {**val, "keysHandled": tuple, "_strict": bool}
             else:
-                print('Cannot alter dataTypes')
+                print("Cannot alter dataTypes")
             return
 
-        if key == 'source':  # source is not really a keyword
+        if key == "source":  # source is not really a keyword
             return
 
         if key not in self.dataTypes:
-            print('Param {} not allowed in {} definition'.format(key, self.className.lower()))
+            print("Param {} not allowed in {} definition".format(key, self.className.lower()))
             return
 
-        if key == 'ensemble' and val is None:
+        if key == "ensemble" and val is None:
             raise KeyError
 
         val = self._map_types(key, val)
@@ -104,13 +136,18 @@ class DLPData(ABC):
         if not self._strict:
             key = check_arg(keyIn, *self.keys)
             if not key:
-                raise KeyError(f'"{keyIn}" is not a member of {type(self).__name__}')
+                raise KeyError(f"'{keyIn}' is not a member of {type(self).__name__}")
         else:
             key = keyIn
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
-        ''' Map argument types to their respective types '''
+        """ Map argument types to their respective types according to datatypes.
+
+        :param key: Key to set
+        :param vals: Value to convert
+
+        """
         dType = self._dataTypes[key]
         if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)) and dType is not tuple:
             if not vals:
@@ -125,7 +162,7 @@ class DLPData(ABC):
                     except TypeError:
                         pass
                 else:
-                    raise TypeError('No arg of {} ({}) for key {} valid, must be castable to {}'.format(
+                    raise TypeError("No arg of {} ({}) for key {} valid, must be castable to {}".format(
                         vals,
                         [type(x).__name__ for x in vals], key,
                         dType.__name__))
@@ -151,7 +188,7 @@ class DLPData(ABC):
                 else:
                     val = [targetType(item) for item, targetType in zip(vals, dType)]
             except TypeError:
-                print('Type of {} ({}) not valid, must be castable to {}'.format(vals,
+                print("Type of {} ({}) not valid, must be castable to {}".format(vals,
                                                                                  [type(x).__name__ for x in vals],
                                                                                  [x.__name__ for x in dType]))
 
@@ -166,12 +203,19 @@ class DLPData(ABC):
                 val = self._dataTypes[key](vals)
             except TypeError as err:
                 print(err)
-                print('Type of {} ({}) not valid, must be castable to {}'.format(vals, type(vals).__name__,
+                print("Type of {} ({}) not valid, must be castable to {}".format(vals, type(vals).__name__,
                                                                                  dType.__name__))
         return val
 
 
 def check_arg(key, *args):
+    """ Perform fuzzy match against potential arguments
+
+    :param key: Key supplied
+    :param args: Potential matching fuzzies in order of priority
+    :returns: Matching key or False if not found
+    """
+
     for arg in args:
         if key.startswith(arg):
             return arg

@@ -1,32 +1,45 @@
+""" Module containing data related to parsing output """
 import numpy as np
 
 
-class output():
+class Output():
+    """Class containing parsed OUTPUT data
+
+     :param source: OUTPUT file to read
+
+     """
     __version__ = "0"
 
     def __init__(self, source=None):
 
-        self.vdw_energy = None
-        self.vdw_pressure = None
+        self.vdwEnergy = None
+        self.vdwPressure = None
         self.steps = None
-        self.average_steps = None
+        self.averageSteps = None
         self.time = None  # in ps
-        self.average_time = None
-        self.run_time = None
-        self.run_tps = None
+        self.averageTime = None
+        self.runTime = None
+        self.runTps = None
         self.average = None
         self.pressure = None
-        self.pressure_tensor = None
-        self.pressure_tensor_rms = None
-        self.average_cell = None
-        self.average_cell_rms = None
+        self.pressureTensor = None
+        self.pressureTensorRms = None
+        self.averageCell = None
+        self.averageCellRms = None
         self.diffusion = None
 
         if source is not None:
             self.source = source
             self.read(source)
 
-    def type_3x3(self, label, a):
+    @staticmethod
+    def type_3x3(label, a):
+        """Print as 3x3 block
+
+        :param label: Label to print
+        :param a: Value stored
+
+        """
         out = "{}: \n".format(label)
         for i in range(3):
             out += "{:16.8e} {:16.8e} {:16.8e}\n".format(a[i, 0], a[i, 1], a[i, 2])
@@ -34,15 +47,15 @@ class output():
 
     def __str__(self):
         outStr = ''
-        if self.vdw_energy is not None:
-            outStr += "long range vdw energy correction: {} donkeys\n".format(self.vdw_energy)
-            outStr += "long range vdw pressure correction: {} donkeys\n".format(self.vdw_pressure)
-        outStr += "runtime for md loop: {} s\n".format(self.run_time)
-        outStr += "time per md step: {} s\n".format(self.run_tps)
+        if self.vdwEnergy is not None:
+            outStr += "long range vdw energy correction: {} donkeys\n".format(self.vdwEnergy)
+            outStr += "long range vdw pressure correction: {} donkeys\n".format(self.vdwPressure)
+        outStr += "runtime for md loop: {} s\n".format(self.runTime)
+        outStr += "time per md step: {} s\n".format(self.runTps)
         outStr += "md steps: {}\n".format(self.steps)
-        outStr += "md steps for average: {}\n".format(self.average_steps)
+        outStr += "md steps for average: {}\n".format(self.averageSteps)
         outStr += "md simulation time: {} ps\n".format(self.time)
-        outStr += "md simulation time for average: {} ps\n".format(self.average_time)
+        outStr += "md simulation time for average: {} ps\n".format(self.averageTime)
         if self.average is not None:
             outStr += "Averages: \n"
             outStr += "#{:16s} {:>16s} {:>16s} \n".format("name", "value", "rms")
@@ -55,18 +68,21 @@ class output():
             for k, v in self.diffusion.items():
                 outStr += " {:16s}     {:16.8e} {:16.8e}\n".format(k, *v)
             outStr += "\n"
-        if self.pressure_tensor is not None:
-            outStr += self.type_3x3("Average pressure tensor [katm]: ", self.pressure_tensor)
-            outStr += self.type_3x3("Average pressure tensor rms [katm]: ", self.pressure_tensor_rms)
+        if self.pressureTensor is not None:
+            outStr += self.type_3x3("Average pressure tensor [katm]: ", self.pressureTensor)
+            outStr += self.type_3x3("Average pressure tensor rms [katm]: ", self.pressureTensorRms)
             outStr += "pressure (trace/3) [katm]: {}\n".format(self.pressure)
-        if self.average_cell is not None:
-            outStr += self.type_3x3("Average cell vectors [Å]: ", self.average_cell)
-            outStr += self.type_3x3("Average cell vectors rms [Å]: ", self.average_cell_rms)
+        if self.averageCell is not None:
+            outStr += self.type_3x3("Average cell vectors [Å]: ", self.averageCell)
+            outStr += self.type_3x3("Average cell vectors rms [Å]: ", self.averageCellRms)
         return outStr
 
     def read(self, source="OUTPUT"):
-        """ Read an OUTPUT file into memory """
+        """ Read an OUTPUT file into memory
 
+        :param source: File to read
+
+        """
         with open(source, 'r') as f:
             line = f.readline()
             while line:
@@ -76,15 +92,15 @@ class output():
                     continue
                 if a[0] == 'vdw':
                     if a[1] == 'energy':
-                        self.vdw_energy = float(a[2])
+                        self.vdwEnergy = float(a[2])
                     if a[1] == 'pressure':
-                        self.vdw_pressure = float(a[2])
+                        self.vdwPressure = float(a[2])
                     continue
                 if a[0] == 'run':
                     self.steps = int(a[3])
                     self.time = float(a[6])
-                    self.average_steps = int(a[12])
-                    self.average_time = float(a[15])
+                    self.averageSteps = int(a[12])
+                    self.averageTime = float(a[15])
                     dline = f.readline()
                     h = []
                     for i in range(3):
@@ -101,17 +117,17 @@ class output():
                     self.average = {l: (a, b) for (l, a, b) in zip(h, v, rms)}
                     continue
                 if a[0] == 'Loop':
-                    self.run_time = float(a[6])
-                    self.run_tps = float(a[11])
+                    self.runTime = float(a[6])
+                    self.runTps = float(a[11])
                     continue
                 if a[0] == 'Pressure':
                     dline = f.readline()
-                    self.pressure_tensor = np.zeros((3, 3))
-                    self.pressure_tensor_rms = np.zeros((3, 3))
+                    self.pressureTensor = np.zeros((3, 3))
+                    self.pressureTensorRms = np.zeros((3, 3))
                     for i in range(3):
                         a = [float(j) for j in f.readline().strip().split()]
-                        self.pressure_tensor[i, :] = np.array(a[0:3])
-                        self.pressure_tensor_rms[i, :] = np.array(a[3:6])
+                        self.pressureTensor[i, :] = np.array(a[0:3])
+                        self.pressureTensorRms[i, :] = np.array(a[3:6])
                     self.pressure = float(f.readline().strip().split()[1])
                     continue
                 if a[0] == 'Approximate':
@@ -125,18 +141,18 @@ class output():
                     self.diffusion = {e[0]: (float(e[1]), float(e[2])) for e in h}
                     continue
                 if a[0] == 'Average':
-                    self.average_cell = np.zeros((3, 3))
-                    self.average_cell_rms = np.zeros((3, 3))
+                    self.averageCell = np.zeros((3, 3))
+                    self.averageCellRms = np.zeros((3, 3))
                     for i in range(3):
                         a = [float(j) for j in f.readline().strip().split()]
-                        self.average_cell[i, :] = np.array(a[0:3])
-                        self.average_cell_rms[i, :] = np.array(a[3:6])
+                        self.averageCell[i, :] = np.array(a[0:3])
+                        self.averageCellRms[i, :] = np.array(a[3:6])
                     continue
 
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-        output = output(sys.argv[1])
+        OUTPUT = Output(sys.argv[1])
     else:
-        output = output("OUTPUT")
+        OUTPUT = Output("OUTPUT")

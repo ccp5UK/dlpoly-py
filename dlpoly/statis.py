@@ -7,6 +7,13 @@ from ruamel.yaml import YAML
 
 
 class Statis():
+    """Type to parse and interpret STATIS file
+
+    :param source: STATIS to read
+    :param control: Associated CONTROL
+    :param config: Associated CONFIG
+
+    """
     __version__ = "0"
 
     def __init__(self, source=None, control=None, config=None):
@@ -23,9 +30,18 @@ class Statis():
     _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels) % 5+1))
 
     def add_label(self, arg):
+        """Add a label to the list of labels
+
+        :param arg: Label to add
+        """
         self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
 
     def read(self, filename="STATIS"):
+        """Read and parse a STATIS file
+
+        :param filename: File to read
+        :returns: Parsed statis
+        """
         with open(filename, 'r') as f:
             a = f.readline().split()[0]
             if a == "%YAML":
@@ -51,6 +67,12 @@ class Statis():
         return self
 
     def gen_labels(self, control=None, config=None):
+        """Generate labels for headers in STATIS file
+
+        :param control: Control file relating to statis
+        :param config: Config file relating to statis
+        :returns: Set labels for further reference
+        """
         self.labels = ["1-1 Total Extended System Energy",
                        "1-2 System Temperature",
                        "1-3 Configurational Energy",
@@ -112,6 +134,7 @@ class Statis():
         self.labels = ['iter', 'time', 'vars'] + self.labels
 
     def flatten(self):
+        """FIXME! briefly describe function"""
         for i in range(self.columns-3):
             with open(self.labels[i], 'w') as f:
                 for j in range(self.rows):
