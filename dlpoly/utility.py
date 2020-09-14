@@ -168,6 +168,13 @@ class DLPData(ABC):
                         dType.__name__))
 
         if isinstance(dType, tuple):
+            try: # Catch final units
+                trial = dType[-1]
+                if trial is ...:
+                    trial = dType[-2]
+                trial(vals[-1])
+            except ValueError:
+                vals = vals[0:-1]
 
             if isinstance(vals, (int, float, str)):
                 vals = (vals,)
@@ -201,10 +208,10 @@ class DLPData(ABC):
             # print(key, vals)
             try:
                 val = self._dataTypes[key](vals)
-            except TypeError as err:
-                print(err)
+            except ValueError as err:
                 print("Type of {} ({}) not valid, must be castable to {}".format(vals, type(vals).__name__,
                                                                                  dType.__name__))
+                raise
         return val
 
 
