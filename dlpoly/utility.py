@@ -202,16 +202,20 @@ class DLPData(ABC):
         elif isinstance(vals, dType):  # Already right type
             val = vals
         elif dType is bool:  # If present true unless explicitly false
-            val = vals not in (0, False)
+            if isinstance(vals, str):
+                vals = vals.lower()
+            val = vals not in (0, False, "off", "false")
 
         else:
-            # print(key, vals)
+            if isinstance(vals, str) and dType in (float, int) and "d" in vals:
+                vals = vals.replace("d","e")
+
             try:
                 val = self._dataTypes[key](vals)
             except ValueError as err:
                 print("Type of {} ({}) not valid, must be castable to {}".format(vals, type(vals).__name__,
                                                                                  dType.__name__))
-                raise
+                raise err
         return val
 
 

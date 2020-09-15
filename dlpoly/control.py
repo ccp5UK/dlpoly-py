@@ -34,7 +34,7 @@ class FField(DLPData):
         self.polarMethod = ""
         self.polarTHole = 0
 
-    keysHandled = property(lambda self: ("reaction", "shift", "distance", "ewald", "coulomb",
+    keysHandled = property(lambda self: ("reaction", "shift", "distance", "ewald", "spme", "coulomb",
                                          "rpad", "delr", "padding", "cutoff", "rcut", "cut", "rvdw",
                                          "metal", "vdw", "polar", "ewald_vdw"))
 
@@ -365,12 +365,14 @@ class EnsembleParam:
         if self.ensemble not in ["nve", "pmf"]:
             trial = args.pop(0)
             test = check_arg(trial, *self.fullName)
-            self.means = self.fullName.get(test, default=trial)
+            self.means = self.fullName.get(test, trial)
             if trial == "dpds2":
                 self.dpdOrder = 2
             else:
                 self.dpdOrder = 1
-            self.args = args
+        self.args = args
+
+        self.area = self.orth = self.tens = self.semi = False
 
         for index, arg in enumerate(self.args):
             if check_arg(arg, "area"):
@@ -629,21 +631,21 @@ class Control(DLPData):
             if key in ("title", "filename") or key.startswith("_"):
                 continue
 
-            if key == "l_scr":
+            if key == "l_scr" and self.l_scr:
                 output("io_file_output", "SCREEN")
-            elif key == "l_print":
-                output("print_level", val)
-            elif key == "l_eng":
-                output("output_energy", "ON")
-            elif key == "l_rout":
-                output("io_write_ascii_revive", "ON")
-            elif key == "l_rin":
-                output("io_read_ascii_revold", "ON")
-            elif key == "l_dis":
-                output("initial_minimum_separation", val, "ang")
-            elif key == "l_tor":
+            elif key == "l_tor" and self.l_tor:
                 output("io_file_revcon", "NONE")
                 output("io_file_revive", "NONE")
+            elif key == "l_eng" and self.l_eng:
+                output("output_energy", "ON")
+            elif key == "l_rout" and self.l_rout:
+                output("io_write_ascii_revive", "ON")
+            elif key == "l_rin" and self.l_rin:
+                output("io_read_ascii_revold", "ON")
+            elif key == "l_print":
+                output("print_level", val)
+            elif key == "l_dis":
+                output("initial_minimum_separation", val, "ang")
             elif key == "unit_test":
                 output("unit_test", "ON")
             elif key == "binsize":
@@ -735,8 +737,8 @@ class Control(DLPData):
 
                         if check_arg(val.elecParams[0], "precision"):
                             output("ewald_precision", val.elecParams[1])
-                        if len(val.elecParams) > 2:
-                            output("ewald_nsplines", val.elecParams[2])
+                            if len(val.elecParams) > 2:
+                                output("ewald_nsplines", val.elecParams[2])
 
                         else:
                             if check_arg(val.elecParams[0], "sum"):
@@ -745,7 +747,7 @@ class Control(DLPData):
                                 parms = list(val.elecParams)
 
                             output("ewald_alpha", parms.pop(0))
-                            if len(parms >= 3):
+                            if len(parms) >= 3:
                                 output("ewald_kvec", parms.pop(0), parms.pop(0), parms.pop(0))
                             else:
                                 continue
@@ -836,7 +838,22 @@ class Control(DLPData):
                     output("io_file_revcon", val.revcon)
                 if not val.revold.endswith("REVOLD") and not self.l_tor:
                     output("io_file_revold", val.revold)
-
+                if not val.rdf.endswith('RDFDAT'):
+                    output('io_file_rdf', val.rdf)
+                if not val.msd.endswith('MSDTMP'):
+                    output('io_file_msd', val.msd)
+                if not val.tabbnd.endswith('TABBND'):
+                    output('io_file_tabbnd', val.tabbnd)
+                if not val.tabang.endswith('TABANG'):
+                    output('io_file_tabang', val.tabang)
+                if not val.tabdih.endswith('TABDIH'):
+                    output('io_file_tabdih', val.tabdih)
+                if not val.tabinv.endswith('TABINV'):
+                    output('io_file_tabinv', val.tabinv)
+                if not val.tabvdw.endswith('TABVDW'):
+                    output('io_file_tabvdw', val.tabvdw)
+                if not val.tabeam.endswith('TABEAM'):
+                    output('io_file_tabeam', val.tabeam)
             elif key == "defe":
                 if val:
                     output("defects_calculate", "ON")
@@ -900,7 +917,7 @@ class Control(DLPData):
                 if val.steps:
                     output("time_run", val.steps, "steps")
                 if val.equil:
-                    output("time_equilibration", val, "steps")
+                    output("time_equilibration", val.equil, "steps")
 
                 output("time_job", val.job, "s")
                 output("time_close", val.close, "s")
@@ -910,11 +927,11 @@ class Control(DLPData):
                 if val.variable:
                     output("timestep_variable", "ON")
                     if val.mindis:
-                        output("variable_timestep_min_dist", val.mindis, "ang")
+                        output("timestep_variable_min_dist", val.mindis, "ang")
                     if val.maxdis:
-                        output("variable_timestep_max_dist", val.maxdis, "ang")
+                        output("timestep_variable_max_dist", val.maxdis, "ang")
                     if val.mxstep:
-                        output("variable_timestep_max_delta", val.mxstep, "ps")
+                        output("timestep_variable_max_delta", val.mxstep, "ps")
 
                 output("timestep", val.timestep, "ps")
 
