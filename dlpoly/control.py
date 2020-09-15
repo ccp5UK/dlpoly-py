@@ -781,6 +781,7 @@ class Control(DLPData):
                         output("ensemble_thermostat_friction", val.args[1], "ps^-1")
                     elif check_arg(val.means, "dpd"):
                         output("ensemble_dpd_order", val.dpdOrder)
+                        output("ensemble_dpd_drag", val.args[0], 'Da/ps')
                     elif check_arg(val.means, "ttm"):
                         output("ttm_e-phonon_friction", val.args[0], "ps^-1")
                         output("ttm_e-stopping_friction", val.args[1], "ps^-1")
