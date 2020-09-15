@@ -147,7 +147,7 @@ class NewControl(DLPData):
             "ensemble_thermostat_softness": float,
             "ensemble_barostat_coupling": (float, str),
             "ensemble_barostat_friction": (float, str),
-            "ensemble_semi_isotropic": bool,
+            "ensemble_semi_isotropic": str,
             "ensemble_semi_orthorhombic": bool,
             "ensemble_tension": (float, str),
             "pressure_tensor": (float, float, float, float, float, float, str),
@@ -242,7 +242,7 @@ class NewControl(DLPData):
             "plumed_precision": float,
             "plumed_restart": bool,
             "strict_checks": bool,
-            "safe_comms": bool,
+            "unsafe_comms": bool,
             "unit_test": bool,
         }, strict=True)
 

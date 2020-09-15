@@ -488,7 +488,7 @@ class Control(DLPData):
     def __init__(self, source=None):
         DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "r_rout": bool,
                                 "l_rin": bool, "l_tor": bool, "l_dis": int, "unit_test": bool,
-                                "l_vdw": bool, "ana": Analysis, "app_test": bool, "currents": bool,
+                                "l_vdw": bool, "l_fast": bool, "ana": Analysis, "app_test": bool, "currents": bool,
                                 "binsize": float, "cap": float,
                                 "densvar": float, "eps": float, "exclu": bool,
                                 "heat_flux": bool, "rdf": int, "coord": (int, int, int), "adf": (int, float),
@@ -646,6 +646,8 @@ class Control(DLPData):
                 output("print_level", val)
             elif key == "l_dis":
                 output("initial_minimum_separation", val, "ang")
+            elif key == "l_fast" and self.l_fast:
+                output("unsafe_comms", "ON")
             elif key == "unit_test":
                 output("unit_test", "ON")
             elif key == "binsize":
