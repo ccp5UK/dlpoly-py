@@ -60,7 +60,7 @@ class FField(DLPData):
         elif check_arg(key, "rpad", "delr", "padding"):
             self.rpad = vals
             if check_arg(key, "delr"):
-                self.rpad *= 4
+                self.rpad /= 4
             self.rpadset = True
         elif check_arg(key, "cutoff", "rcut", "cut"):
             self.rcut = vals
