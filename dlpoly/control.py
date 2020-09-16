@@ -180,13 +180,18 @@ class Print(DLPData):
     def __init__(self, *_):
         DLPData.__init__(self, {"rdf": bool, "analysis": bool, "analObj": Analysis, "printevery": int,
                                 "vaf": bool, "zden": bool, "rdfevery": int, "vafevery": int,
-                                "vafbin": int, "statsevery": int, "zdenevery": int})
+                                "vafbin": int, "statsevery": int, "zdenevery": int, 
+                                "rdfprint": bool, "zdenprint": bool, "vafprint": bool})
 
         self.analysis = False
         self.analObj = Analysis()
         self.rdf = False
         self.vaf = False
         self.zden = False
+
+        self.rdfprint = False
+        self.zdenprint = False
+        self.vafprint = False
 
         self.printevery = 0
         self.statsevery = 0
@@ -208,14 +213,20 @@ class Print(DLPData):
             if args[0].isdigit():
                 self.printevery = args[0]
             else:
+                setattr(self, args[0]+"print", True)
                 setattr(self, args[0], True)
-                if not hasattr(self, args[0]+"every"):
+                if not getattr(self, args[0]+"every") > 0:
                     setattr(self, args[0]+"every", 1)
-        elif check_arg(key, "rdf", "zden", "stats"):
-            setattr(self, check_arg(key, "rdf", "zden", "stats")+"every", args[0])
+        elif check_arg(key, "stats"):
+            self.statsevery = args[0]
+        elif check_arg(key, "rdf", "zden"):
+            active = check_arg(key, "rdf", "zden")
+            setattr(self, active, True)
+            setattr(self, active+"every", args[0])
         elif check_arg(key, "ana"):
             self.analObj.parse(args)
         elif check_arg(key, "vaf"):
+            self.vaf = True
             self.vafevery, self.vafbin = args
 
     def __str__(self):
@@ -359,7 +370,6 @@ class EnsembleParam:
         if not argsIn: # Default to NVE because why not?
             argsIn = ("nve")
         args = list(argsIn)[:]  # Make copy
-
         self._ensemble = args.pop(0)
         self._means = None
         if self.ensemble not in ["nve", "pmf"]:
@@ -700,20 +710,26 @@ class Control(DLPData):
                 output("print_frequency", val.printevery, "steps")
                 output("stats_frequency", val.statsevery, "steps")
 
+                if val.rdfprint:
+                    output("rdf_print", "ON")
+
                 if val.rdf:
                     output("rdf_calculate", "ON")
-                    output("rdf_print", "ON")
                     output("rdf_frequency", val.rdfevery, "steps")
+
+                if val.vafprint:
+                    output("vaf_print", "ON")
 
                 if val.vaf:
                     output("vaf_calculate", "ON")
-                    output("vaf_print", "ON")
                     output("vaf_frequency", val.vafevery, "steps")
                     output("vaf_binsize", val.vafbin, "steps")
 
+                if val.zdenprint:
+                    output("zden_print", "ON")
+
                 if val.zden:
                     output("zden_calculate", "ON")
-                    output("zden_print", "ON")
                     output("zden_frequency", val.zdenevery, "steps")
 
             elif key == "ffield":
@@ -781,7 +797,8 @@ class Control(DLPData):
                         output("ensemble_thermostat_friction", val.args[1], "ps^-1")
                     elif check_arg(val.means, "dpd"):
                         output("ensemble_dpd_order", val.dpdOrder)
-                        output("ensemble_dpd_drag", val.args[0], 'Da/ps')
+                        if val.args:
+                            output("ensemble_dpd_drag", val.args[0], 'Da/ps')
                     elif check_arg(val.means, "ttm"):
                         output("ttm_e-phonon_friction", val.args[0], "ps^-1")
                         output("ttm_e-stopping_friction", val.args[1], "ps^-1")
