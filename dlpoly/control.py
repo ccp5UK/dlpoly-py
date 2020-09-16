@@ -11,7 +11,7 @@ from .utility import DLPData, check_arg
 class FField(DLPData):
     """ Class defining properties relating to forcefields """
     def __init__(self, *_):
-        DLPData.__init__(self, {"rvdw": float, "rcut": float, "rpad": float,
+        DLPData.__init__(self, {"rvdw": float, "rcut": float, "rpad": float, "rpadset": bool,
                                 "elec": bool, "elecMethod": str, "metal": bool, "vdw": bool, "ewaldVdw": bool,
                                 "elecParams": tuple, "vdwParams": dict, "metalStyle": str,
                                 "polarMethod": str, "polarTHole": int})
@@ -28,6 +28,7 @@ class FField(DLPData):
         self.rcut = 0.0
         self.rvdw = 0.0
         self.rpad = 0.0
+        self.rpadset = False
 
         self.ewaldVdw = False
 
@@ -60,6 +61,7 @@ class FField(DLPData):
             self.rpad = vals
             if check_arg(key, "delr"):
                 self.rpad *= 4
+            self.rpadset = True
         elif check_arg(key, "cutoff", "rcut", "cut"):
             self.rcut = vals
         elif check_arg(key, "rvdw"):
@@ -99,7 +101,7 @@ class FField(DLPData):
             outStr += "metal {}\n".format(" ".join(self.metalStyle))
         outStr += "rcut {}\n".format(self.rcut)
         outStr += "rvdw {}\n".format(self.rvdw)
-        outStr += "rpad {}\n".format(self.rpad)
+        outStr += "rpad {}\n".format(self.rpad) if self.rpadset else ""
         return outStr
 
 
@@ -728,7 +730,7 @@ class Control(DLPData):
                 if val.rvdw:
                     output("vdw_cutoff", val.rvdw, "ang")
 
-                if val.rpad:
+                if val.rpadset:
                     output("padding", val.rpad, "ang")
                 if val.rcut:
                     output("cutoff", val.rcut, "ang")
@@ -781,7 +783,8 @@ class Control(DLPData):
                         output("ensemble_thermostat_friction", val.args[1], "ps^-1")
                     elif check_arg(val.means, "dpd"):
                         output("ensemble_dpd_order", val.dpdOrder)
-                        output("ensemble_dpd_drag", val.args[0], 'Da/ps')
+                        if val.args:
+                            output("ensemble_dpd_drag", val.args[0], 'Da/ps')
                     elif check_arg(val.means, "ttm"):
                         output("ttm_e-phonon_friction", val.args[0], "ps^-1")
                         output("ttm_e-stopping_friction", val.args[1], "ps^-1")
@@ -922,8 +925,10 @@ class Control(DLPData):
                 if val.equil:
                     output("time_equilibration", val.equil, "steps")
 
-                output("time_job", val.job, "s")
-                output("time_close", val.close, "s")
+                if val.job > 0.1:
+                    output("time_job", val.job, "s")
+                if val.close > 0.1:
+                    output("time_close", val.close, "s")
                 if val.collect:
                     output("record_equilibration", "ON")
 
