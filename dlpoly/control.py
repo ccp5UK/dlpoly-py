@@ -900,13 +900,31 @@ class Control(DLPData):
                     output("impact_direction", *val[3:], "ang/ps")
 
             elif key in ("minim", "optim"):
-                tmp = (("minimisation_criterion", ""),
-                       ("minimisation_tolerance", "ang"),
-                       ("minimisation_step_length", "ang"),
-                       ("minimisation_frequency", "steps"))
+                crit = val.pop(0)
+                tol = freq = step = 0
+                if key == "minim" and val:
+                    freq = val.pop(0)
+                if val:
+                    tol = val.pop(0)
+                if val:
+                    step = val.pop(0)
 
-                for label, value in zip(tmp, val):
-                    output(label[0], value, label[1])
+                if check_arg(crit, "forc"):
+                    output("minimisation_criterion", "force")
+                    crit_unit = "internal_f"
+                elif check_arg(crit, "ener"):
+                    output("minimisation_criterion", "energy")
+                    crit_unit = "internal_e"
+                elif check_arg(crit, "dist"):
+                    output("minimisation_criterion", "distance")
+                    crit_unit = "internal_l"
+                        
+                if tol:
+                    output("minimisation_tolerance", tol, crit_unit)
+                if freq:
+                    output("minimisation_frequency", freq, "steps")
+                if step:
+                    output("minimisation_step_length", step, "ang")
 
             elif key == "msdtmp":
                 if val:
