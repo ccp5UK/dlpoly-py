@@ -653,10 +653,10 @@ class Control(DLPData):
             elif key == "unit_test":
                 output("unit_test", "ON")
             elif key == "binsize":
-                output("rdf_binsize", val)
-                output("zden_binsize", val)
+                output("rdf_binsize", val, "ang")
+                output("zden_binsize", val, "ang")
             elif key == "cap":
-                output("equilibration_force_cap", val, "kT/angs")
+                output("equilibration_force_cap", val, "kT/ang")
             elif key == "densvar":
                 output("density_variance", val, "%")
             elif key == "eps":
