@@ -163,7 +163,7 @@ class NewControl(DLPData):
             "impact_direction": (float, float, float),
             "ttm_calculate": bool,
             "ttm_num_ion_cells": int,
-            "ttm_num_elec_cells": (float, float, float),
+            "ttm_num_elec_cells": (int, int, int),
             "ttm_metal": bool,
             "ttm_heat_cap_model": str,
             "ttm_heat_cap": (float, str),
@@ -215,7 +215,7 @@ class NewControl(DLPData):
             "minimisation_frequency": (float, str),
             "initial_minimum_separation": (float, str),
             "restart": str,
-            "nfold": (float, float, float),
+            "nfold": (int, int, int),
             "cutoff": (float, str),
             "padding": (float, str),
             "coul_damping": (float, str),
@@ -272,7 +272,15 @@ class NewControl(DLPData):
         """
         def output(key, vals):
             if isinstance(vals, (list, tuple)):
-                print(key, *(f" {val}" for val in vals), file=outFile)
+                if isinstance(vals[-1], str):
+                    unit = vals.pop()
+                else:
+                    unit = ""
+                if len(vals) > 1:
+                    print(key, "[", *(f" {val}" for val in vals), "]", unit, file=outFile)
+                else:
+                    print(key, *(f" {val}" for val in vals), unit, file=outFile)
+
             elif isinstance(vals, bool):
                 if vals:
                     print(key, "ON", file=outFile)
