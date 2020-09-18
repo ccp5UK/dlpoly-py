@@ -182,7 +182,7 @@ class Print(DLPData):
     def __init__(self, *_):
         DLPData.__init__(self, {"rdf": bool, "analysis": bool, "analObj": Analysis, "printevery": int,
                                 "vaf": bool, "zden": bool, "rdfevery": int, "vafevery": int,
-                                "vafbin": int, "statsevery": int, "zdenevery": int, 
+                                "vafbin": int, "statsevery": int, "zdenevery": int,
                                 "rdfprint": bool, "zdenprint": bool, "vafprint": bool})
 
         self.analysis = False
@@ -716,6 +716,9 @@ class Control(DLPData):
                     output("rdf_print", "ON")
 
                 if val.rdf:
+                    if not val.rdfprint:
+                        output("rdf_print", "OFF")
+
                     output("rdf_calculate", "ON")
                     output("rdf_frequency", val.rdfevery, "steps")
 
@@ -723,6 +726,8 @@ class Control(DLPData):
                     output("vaf_print", "ON")
 
                 if val.vaf:
+                    if not val.vafprint:
+                        output("vaf_print", "OFF")
                     output("vaf_calculate", "ON")
                     output("vaf_frequency", val.vafevery, "steps")
                     output("vaf_binsize", val.vafbin, "steps")
@@ -731,6 +736,8 @@ class Control(DLPData):
                     output("zden_print", "ON")
 
                 if val.zden:
+                    if not val.zdenprint:
+                        output("zden_print", "OFF")
                     output("zden_calculate", "ON")
                     output("zden_frequency", val.zdenevery, "steps")
 
