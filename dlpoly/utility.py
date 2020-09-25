@@ -168,7 +168,7 @@ class DLPData(ABC):
                         dType.__name__))
 
         if isinstance(dType, tuple):
-            try: # Catch final units
+            try:   # Catch final units
                 trial = dType[-1]
                 if trial is ...:
                     trial = dType[-2]
@@ -208,7 +208,7 @@ class DLPData(ABC):
 
         else:
             if isinstance(vals, str) and dType in (float, int) and "d" in vals:
-                vals = vals.replace("d","e")
+                vals = vals.replace("d", "e")
 
             try:
                 val = self._dataTypes[key](vals)

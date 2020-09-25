@@ -369,7 +369,7 @@ class EnsembleParam:
     keysHandled = property(lambda self: ("ensemble",))
 
     def __init__(self, *argsIn):
-        if not argsIn: # Default to NVE because why not?
+        if not argsIn:          # Default to NVE because why not?
             argsIn = ("nve")
         args = list(argsIn)[:]  # Make copy
         self._ensemble = args.pop(0)
@@ -547,7 +547,7 @@ class Control(DLPData):
     @staticmethod
     def _strip_crap(args):
 
-        return [arg for arg in args if 
+        return [arg for arg in args if
                 not check_arg(arg, "constant", "every", "sampl", "tol",
                               "temp", "cutoff", "tensor", "collect",
                               "step", "forces", "sum", "time", "width")
@@ -834,7 +834,6 @@ class Control(DLPData):
                     if val.semi:
                         output('ensemble_semi_orthorhombic', 'ON')
 
-
             elif key == "ignore":
                 if val.elec:
                     output("coul_method", "OFF")
@@ -923,16 +922,16 @@ class Control(DLPData):
 
                 if check_arg(crit, "forc"):
                     output("minimisation_criterion", "force")
-                    crit_unit = "internal_f"
+                    critUnit = "internal_f"
                 elif check_arg(crit, "ener"):
                     output("minimisation_criterion", "energy")
-                    crit_unit = "internal_e"
+                    critUnit = "internal_e"
                 elif check_arg(crit, "dist"):
                     output("minimisation_criterion", "distance")
-                    crit_unit = "internal_l"
+                    critUnit = "internal_l"
 
                 if tol:
-                    output("minimisation_tolerance", tol, crit_unit)
+                    output("minimisation_tolerance", tol, critUnit)
                 if freq:
                     output("minimisation_frequency", freq, "steps")
                 if step:
