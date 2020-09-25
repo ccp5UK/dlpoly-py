@@ -513,7 +513,7 @@ class Control(DLPData):
                                 "print": Print, "ffield": FField, "ensemble": EnsembleParam,
                                 "ignore": Ignore, "io": IOParam, "subcell": float,
                                 "impact": (int, int, float, float, float, float),
-                                "minim": (str, int, float), "msdtmp": (int, int),
+                                "minim": (str, int, float, ...), "msdtmp": (int, int),
                                 "nfold": (int, int, int), "optim": (str, float),
                                 "pseudo": (str, float, float), "seed": (int, ...),
                                 "time_depth": int, "time_per_mpi": bool, "dftb_driver": bool,
@@ -911,6 +911,7 @@ class Control(DLPData):
                     output("impact_direction", *val[3:], "ang/ps")
 
             elif key in ("minim", "optim"):
+                print(val)
                 crit = val.pop(0)
                 tol = freq = step = 0
                 if key == "minim" and val:
