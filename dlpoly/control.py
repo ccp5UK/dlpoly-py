@@ -393,6 +393,7 @@ class EnsembleParam:
                 self.orth = True
             if check_arg(arg, "tens"):
                 self.tens = True
+                self.tension = self.args[index+1]
             if check_arg(arg, "semi"):
                 self.semi = True
 
@@ -823,7 +824,8 @@ class Control(DLPData):
                     if val.area:
                         output('ensemble_semi_isotropic', 'area')
                     elif val.tens:
-                        output('ensemble_semi_isotropic', 'tens')
+                        output('ensemble_semi_isotropic', 'tension')
+                        output('ensemble_tension', val.tension, 'dyn/cm')
                     elif val.orth:
                         output('ensemble_semi_isotropic', 'orthorhombic')
                     if val.semi:
