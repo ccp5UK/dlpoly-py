@@ -225,7 +225,7 @@ class NewControl(DLPData):
             "coul_precision": float,
             "ewald_precision": float,
             "ewald_alpha": (float, str),
-            "ewald_kvec": (float, float, float),
+            "ewald_kvec": (int, int, int),
             "ewald_kvec_spacing": (float, str),
             "ewald_nsplines": int,
             "polarisation_model": str,
