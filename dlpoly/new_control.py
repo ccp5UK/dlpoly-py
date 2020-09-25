@@ -210,7 +210,7 @@ class NewControl(DLPData):
             "rescale_frequency": (float, str),
             "equilibration_force_cap": (float, str),
             "minimisation_criterion": str,
-            "minimisation_tolerance": float,
+            "minimisation_tolerance": (float, str),
             "minimisation_step_length": (float, str),
             "minimisation_frequency": (float, str),
             "initial_minimum_separation": (float, str),
