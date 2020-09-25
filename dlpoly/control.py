@@ -773,7 +773,7 @@ class Control(DLPData):
                             else:
                                 parms = list(val.elecParams)
 
-                            output("ewald_alpha", parms.pop(0))
+                            output("ewald_alpha", parms.pop(0), "ang^-1")
                             if len(parms) >= 3:
                                 output("ewald_kvec", parms.pop(0), parms.pop(0), parms.pop(0))
                             else:
