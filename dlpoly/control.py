@@ -546,9 +546,12 @@ class Control(DLPData):
 
     @staticmethod
     def _strip_crap(args):
-        return [arg for arg in args if not check_arg(arg, "constant", "every", "sampl", "tol",
-                                                     "temp", "cutoff", "tensor", "collect",
-                                                     "step", "forces", "sum", "time", "width")]
+
+        return [arg for arg in args if 
+                not check_arg(arg, "constant", "every", "sampl", "tol",
+                              "temp", "cutoff", "tensor", "collect",
+                              "step", "forces", "sum", "time", "width")
+                or check_arg(arg, "timestep")]
 
     def read(self, filename):
         """ Read a control file
@@ -983,7 +986,7 @@ class Control(DLPData):
                         output("timestep_variable_max_dist", val.maxdis, "ang")
                     if val.mxstep:
                         output("timestep_variable_max_delta", val.mxstep, "ps")
-
+                print(val.timestep)
                 output("timestep", val.timestep, "ps")
 
         return newControl
