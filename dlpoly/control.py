@@ -666,7 +666,7 @@ class Control(DLPData):
                 output("rdf_binsize", val, "ang")
                 output("zden_binsize", val, "ang")
             elif key == "cap":
-                output("equilibration_force_cap", val, "kT/ang")
+                output("equilibration_force_cap", val, "k_B.temp/ang")
             elif key == "densvar":
                 output("density_variance", val, "%")
             elif key == "eps":
@@ -925,7 +925,7 @@ class Control(DLPData):
                 elif check_arg(crit, "dist"):
                     output("minimisation_criterion", "distance")
                     crit_unit = "internal_l"
-                        
+
                 if tol:
                     output("minimisation_tolerance", tol, crit_unit)
                 if freq:
