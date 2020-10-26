@@ -49,14 +49,26 @@ class FField(DLPData):
         fullName = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
                     "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func": "functional"}
 
-        if check_arg(key, "spme"):
-            key = "ewald"
-
-        if check_arg(key, "reaction", "shift", "distan", "ewald", "coul"):
+        if check_arg(key, "reaction", "shift", "distan", "coul"):
             vals = [val for val in vals if val != "field"]
             self.elec = True
             self.elecMethod = key
             self.elecParams = vals
+        elif check_arg(key, "ewald", "spme"):
+            vals = [val for val in vals if val != "field"]
+            self.elec = True
+            self.elecMethod = "spme"
+            if vals and vals[0] != "precision":
+                if vals[0] == "sum":
+                    vals.pop(0)
+
+                if check_arg(key, "ewald"):
+                    tmp = map(lambda val: str(int(val)*2), vals[1:4])
+                    self.elecParams = [vals[0], *tmp, *vals[4:]]
+
+            else:
+                self.elecParams = vals
+
         elif check_arg(key, "rpad", "delr", "padding"):
             self.rpad = vals
             if check_arg(key, "delr"):
@@ -607,9 +619,9 @@ class Control(DLPData):
                             output(f"{keyt} time {valt}")
                         elif keyt == "timestep":
                             if self.timing.variable:
-                                print("variable", keyt, valt, file=outFile)
+                                output("variable", keyt, valt)
                             else:
-                                print(keyt, valt, file=outFile)
+                                output((keyt, valt)
                         elif keyt == "variable":
                             continue
                         elif keyt in ("dump", "mindis", "maxdix", "mxstep") and valt > 0:
@@ -763,8 +775,8 @@ class Control(DLPData):
                     output("cutoff", val.rcut, "ang")
 
                 if val.elec:
-                    output("coul_method", val.elecMethod)
-                    if check_arg(val.elecMethod, "ewald", "spme"):
+                    if check_arg(val.elecMethod, "spme"):
+                        output("coul_method", "ewald")
 
                         if check_arg(val.elecParams[0], "precision"):
                             output("ewald_precision", val.elecParams[1])
@@ -773,7 +785,8 @@ class Control(DLPData):
 
                         else:
                             if check_arg(val.elecParams[0], "sum"):
-                                parms = list(val.elecParams[1:])
+                                
+                                parms = list(val.elecParams[1:3])
                             else:
                                 parms = list(val.elecParams)
 
@@ -784,6 +797,8 @@ class Control(DLPData):
                                 continue
                             if parms:
                                 output("ewald_nsplines", parms.pop(0))
+                    else:
+                        output("coul_method", val.elecMethod)
 
                 if val.metalStyle == "sqrtrho":
                     output("metal_sqrtrho", "ON")
@@ -911,7 +926,6 @@ class Control(DLPData):
                     output("impact_direction", *val[3:], "ang/ps")
 
             elif key in ("minim", "optim"):
-                print(val)
                 crit = val.pop(0)
                 tol = freq = step = 0
                 if key == "minim" and val:
@@ -986,7 +1000,6 @@ class Control(DLPData):
                         output("timestep_variable_max_dist", val.maxdis, "ang")
                     if val.mxstep:
                         output("timestep_variable_max_delta", val.mxstep, "ps")
-                print(val.timestep)
                 output("timestep", val.timestep, "ps")
 
         return newControl
