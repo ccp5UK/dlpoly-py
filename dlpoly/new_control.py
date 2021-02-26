@@ -119,6 +119,14 @@ class NewControl(DLPData):
             "io_file_revive": str,
             "io_file_revold": str,
             "io_file_revcon": str,
+            "io_file_rdf": str,
+            "io_file_msd": str,
+            "io_file_tabbnd": str,
+            "io_file_tabang": str,
+            "io_file_tabdih": str,
+            "io_file_tabinv": str,
+            "io_file_tabvdw": str,
+            "io_file_tabeam": str,
             "output_energy": bool,
             "ignore_config_indices": bool,
             "print_topology_info": bool,
@@ -127,9 +135,9 @@ class NewControl(DLPData):
             "timer_per_mpi": bool,
             "timestep": (float, str),
             "timestep_variable": bool,
-            "variable_timestep_min_dist": (float, str),
-            "variable_timestep_max_dist": (float, str),
-            "variable_timestep_max_delta": (float, str),
+            "timestep_variable_min_dist": (float, str),
+            "timestep_variable_max_dist": (float, str),
+            "timestep_variable_max_delta": (float, str),
             "ensemble": str,
             "ensemble_method": str,
             "ensemble_thermostat_coupling": (float, str),
@@ -139,7 +147,7 @@ class NewControl(DLPData):
             "ensemble_thermostat_softness": float,
             "ensemble_barostat_coupling": (float, str),
             "ensemble_barostat_friction": (float, str),
-            "ensemble_semi_isotropic": bool,
+            "ensemble_semi_isotropic": str,
             "ensemble_semi_orthorhombic": bool,
             "ensemble_tension": (float, str),
             "pressure_tensor": (float, float, float, float, float, float, str),
@@ -155,7 +163,7 @@ class NewControl(DLPData):
             "impact_direction": (float, float, float),
             "ttm_calculate": bool,
             "ttm_num_ion_cells": int,
-            "ttm_num_elec_cells": (float, float, float),
+            "ttm_num_elec_cells": (int, int, int),
             "ttm_metal": bool,
             "ttm_heat_cap_model": str,
             "ttm_heat_cap": (float, str),
@@ -202,12 +210,12 @@ class NewControl(DLPData):
             "rescale_frequency": (float, str),
             "equilibration_force_cap": (float, str),
             "minimisation_criterion": str,
-            "minimisation_tolerance": float,
+            "minimisation_tolerance": (float, str),
             "minimisation_step_length": (float, str),
             "minimisation_frequency": (float, str),
             "initial_minimum_separation": (float, str),
             "restart": str,
-            "nfold": (float, float, float),
+            "nfold": (int, int, int),
             "cutoff": (float, str),
             "padding": (float, str),
             "coul_damping": (float, str),
@@ -217,7 +225,7 @@ class NewControl(DLPData):
             "coul_precision": float,
             "ewald_precision": float,
             "ewald_alpha": (float, str),
-            "ewald_kvec": (float, float, float),
+            "ewald_kvec": (int, int, int),
             "ewald_kvec_spacing": (float, str),
             "ewald_nsplines": int,
             "polarisation_model": str,
@@ -234,7 +242,7 @@ class NewControl(DLPData):
             "plumed_precision": float,
             "plumed_restart": bool,
             "strict_checks": bool,
-            "safe_comms": bool,
+            "unsafe_comms": bool,
             "unit_test": bool,
         }, strict=True)
 
@@ -264,7 +272,15 @@ class NewControl(DLPData):
         """
         def output(key, vals):
             if isinstance(vals, (list, tuple)):
-                print(key, *(f" {val}" for val in vals), file=outFile)
+                if isinstance(vals[-1], str):
+                    unit = vals.pop()
+                else:
+                    unit = ""
+                if len(vals) > 1:
+                    print(key, "[", *(f" {val}" for val in vals), "]", unit, file=outFile)
+                else:
+                    print(key, *(f" {val}" for val in vals), unit, file=outFile)
+
             elif isinstance(vals, bool):
                 if vals:
                     print(key, "ON", file=outFile)

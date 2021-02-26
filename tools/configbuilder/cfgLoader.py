@@ -76,7 +76,7 @@ class CFG(Molecule):
         self.translate(-centreOfMass)
 
     def _centre_mol(self):
-        """ Centre molecule"s centroid about 0, 0, 0 """
+        """ Centre molecule's centroid about 0, 0, 0 """
         tmpArr = np.asarray(self.atomPos)
         maxPos, minPos = np.max(tmpArr, axis=0), np.min(tmpArr, axis=0)
         shift = (minPos + maxPos) / 2
