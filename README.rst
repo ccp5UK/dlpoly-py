@@ -18,7 +18,7 @@ You need Python 3.6 or later to run `dlpoly-py`. You can have multiple Python
 versions (2.x and 3.x) installed on the same system without problems.
 
 To install Python 3 for different Linux flavors, macOS and Windows, packages
-are available at 
+are available at
 `https://www.python.org/getit <https://www.python.org/getit/>`_
 
 **Using pip**
@@ -54,7 +54,7 @@ Depending on your configuration, you may have to run `pip` like this:
 
     pip install git+https://gitlab.com/drFaustroll/dlpoly-py.git
 
-For more information and examples, see the 
+For more information and examples, see the
 `pip install <https://pip.pypa.io/en/stable/reference/pip_install/#id18>`_
 reference.
 
@@ -71,14 +71,14 @@ reference.
 
 **conda** is the package management tool for Anaconda Python installations.
 
-Installing `dlpoly-py` from the `conda-forge` channel can be achieved by adding 
+Installing `dlpoly-py` from the `conda-forge` channel can be achieved by adding
 `conda-forge` to your channels with:
 
 .. code:: bash
 
     conda config --add channels conda-forge
 
-Once the `conda-forge` channel has been enabled, `dlpoly-py` can be installed 
+Once the `conda-forge` channel has been enabled, `dlpoly-py` can be installed
 with:
 
 .. code:: bash
@@ -113,7 +113,7 @@ sime run using Ar data from above folder.
    # change temperature and rerun, from previous termination
    dlPoly = DLPoly(control="Ar.control", config="argon/REVCON", destconfig="Ar.config",
                 field="Ar.field", workdir="argon-T310")
-   dlPoly.control['temp'] = 310.0
+   dlPoly.control.temp = 310.0
    dlPoly.run(executable=dlp,numProcs = 4)
 
 alternatively you can set the environment variable DLP_EXE to point to DL_POLY_4 executable and remove the executable parameter from
@@ -134,7 +134,7 @@ run.
    # change temperature and rerun, from previous termination
    dlPoly = DLPoly(control="Ar.control", config="argon/REVCON", destconfig="Ar.config",
                 field="Ar.field", workdir="argon-T310")
-   dlPoly.control['temp'] = 310.0
+   dlPoly.control.temp = 310.0
    dlPoly.run(numProcs = 4)
 
 
