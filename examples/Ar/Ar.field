@@ -1,11 +1,11 @@
-DL_POLY : Argon Gas
-units kj
-molecules 1
-Argon
-nummols     864
-atoms 1
-Ar             39.95         0.0    1    0  
-finish
-vdw     1
-Ar      Ar       lj      119.8      3.4050
-close
+Argon                                                                           
+UNITS kJ
+MOLECULES 1
+Argon Atoms
+NUMMOLS 100
+ATOMS   1
+Ar         39.948000    0.000000 
+FINISH
+VDW     1
+Ar      Ar      lj   0.9661      3.405
+CLOSE
