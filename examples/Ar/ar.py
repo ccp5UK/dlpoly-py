@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from dlpoly import DLPoly
+from dlpoly.field import Field
 import os
 
 dlp="/home/drFaustroll/bin/DLPOLY.Z"
@@ -15,7 +16,7 @@ dlPoly.control['temp'] = 310.0
 dlPoly.run(executable=dlp,numProcs = 4)
 
 wkd='argon-neweps'
-field = DLPoly(field="Ar.field").field
+field = Field("Ar.field")
 field.vdws[0].params=['125.0','3.0']
 field.write('Ar-n.field')
 
