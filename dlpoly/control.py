@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Module to handle DLPOLY control files
 """
@@ -785,7 +784,6 @@ class Control(DLPData):
 
                         else:
                             if check_arg(val.elecParams[0], "sum"):
-                                
                                 parms = list(val.elecParams[1:3])
                             else:
                                 parms = list(val.elecParams)
