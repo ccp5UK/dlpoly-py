@@ -620,7 +620,7 @@ class Control(DLPData):
                             if self.timing.variable:
                                 output("variable", keyt, valt)
                             else:
-                                output((keyt, valt)
+                                output(keyt, valt)
                         elif keyt == "variable":
                             continue
                         elif keyt in ("dump", "mindis", "maxdix", "mxstep") and valt > 0:
