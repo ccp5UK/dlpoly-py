@@ -982,13 +982,11 @@ class Control(DLPData):
                     output("traj_key", tmp)
 
             elif key == "timing":
+                output("time_run", val.steps, "steps")
+                output("time_equilibration", val.equil, "steps")
 
                 if val.dump:
                     output("data_dump_frequency", val.dump, "steps")
-                if val.steps:
-                    output("time_run", val.steps, "steps")
-                if val.equil:
-                    output("time_equilibration", val.equil, "steps")
 
                 if val.job > 0.1:
                     output("time_job", val.job, "s")
