@@ -247,7 +247,7 @@ class NewControl(DLPData):
             "unit_test": bool,
         }, strict=True)
 
-        self.io_file_output = ""
+        self.io_file_output = "OUTPUT"
         self.io_file_control = "CONTROL"
         self.io_file_config = "CONFIG"
         self.io_file_field = "FIELD"
