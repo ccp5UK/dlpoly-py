@@ -35,10 +35,9 @@ class ControlTest(unittest.TestCase):
         self.assertEqual(self.control.ensemble_method, 'hoover',
                          'incorrect ensemble type')
         self.assertListEqual(self.control.ensemble_thermostat_coupling, [0.5, 'ps'],
-                         'incorrect ensemble')
+                             'incorrect ensemble')
         self.assertListEqual(self.control.ensemble_barostat_coupling, [1.0, 'ps'],
-                         'incorrect ensemble')
-
+                             'incorrect ensemble')
 
     def test_control_prints(self):
         self.assertEqual(self.control.stats_frequency, [5.0, 'steps'],
