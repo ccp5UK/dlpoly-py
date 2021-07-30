@@ -5,6 +5,7 @@ Module to handle new DLPOLY control files
 from .utility import DLPData
 import os.path
 
+
 class NewControl(DLPData):
     """ Class defining a DLPOLY new control file
 
@@ -259,12 +260,12 @@ class NewControl(DLPData):
         self.io_file_revcon = "REVCON"
         self.io_file_rdf = "RDFDAT"
         self.io_file_msd = "MSDTMP"
-        self.io_file_tabbnd = "TABBND"  if os.path.isfile("TABVDW") else ""
-        self.io_file_tabang = "TABANG"  if os.path.isfile("TABBND") else ""
-        self.io_file_tabdih = "TABDIH"  if os.path.isfile("TABANG") else ""
-        self.io_file_tabinv = "TABINV"  if os.path.isfile("TABDIH") else ""
-        self.io_file_tabvdw = "TABVDW"  if os.path.isfile("TABINV") else ""
-        self.io_file_tabeam = "TABEAM"  if os.path.isfile("TABEAM") else ""
+        self.io_file_tabbnd = "TABBND" if os.path.isfile("TABVDW") else ""
+        self.io_file_tabang = "TABANG" if os.path.isfile("TABBND") else ""
+        self.io_file_tabdih = "TABDIH" if os.path.isfile("TABANG") else ""
+        self.io_file_tabinv = "TABINV" if os.path.isfile("TABDIH") else ""
+        self.io_file_tabvdw = "TABVDW" if os.path.isfile("TABINV") else ""
+        self.io_file_tabeam = "TABEAM" if os.path.isfile("TABEAM") else ""
 
         if source is not None:
             self.read(source)
@@ -286,11 +287,11 @@ class NewControl(DLPData):
                 if not line:
                     continue
                 key, *args = line.split()
-                if key == 'title': # Special case to handle string
+                # Special case to handle string
+                if key == 'title':
                     self[key] = ' '.join(args)
                     continue
                 self[key] = args
-
 
     def write(self, filename="new_control"):
         """ Write a new control file
@@ -325,6 +326,7 @@ class NewControl(DLPData):
                 if key in ("title", "filename", "io_file_control") or key.startswith("_"):
                     continue
                 output(key, vals)
+
 
 def is_new_control(filename):
     """ Determine if file is in old or new format """

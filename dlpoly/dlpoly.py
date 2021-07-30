@@ -51,10 +51,14 @@ class DLPoly:
             direc = self.workdir
 
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
-        self.control.io_file_statis = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_statis)))
-        self.control.io_file_output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_output)))
-        self.control.io_file_revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_revive)))
-        self.control.io_file_revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_revcon)))
+        self.control.io_file_statis = os.path.abspath(
+            os.path.join(direc, os.path.basename(self.control.io_file_statis)))
+        self.control.io_file_output = os.path.abspath(
+            os.path.join(direc, os.path.basename(self.control.io_file_output)))
+        self.control.io_file_revive = os.path.abspath(
+            os.path.join(direc, os.path.basename(self.control.io_file_revive)))
+        self.control.io_file_revcon = os.path.abspath(
+            os.path.join(direc, os.path.basename(self.control.io_file_revcon)))
 
         if hasattr(self.control, 'traj') and not self.control.io_file_history:
             self.control.io_file_history = 'HISTORY'
