@@ -280,8 +280,8 @@ class NewControl(DLPData):
         """
         with open(filename, "r") as inFile:
             for line in inFile:
-                line = line[0:line.find('#')]
-                line = line[0:line.find('!')]
+                line = line[0:line.find('#')] if line.find('#') > -1 else line
+                line = line[0:line.find('!')] if line.find('!') > -1 else line
                 line = line.strip()
                 if not line:
                     continue
