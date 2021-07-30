@@ -302,7 +302,7 @@ class NewControl(DLPData):
         def output(key, vals):
             if isinstance(vals, (list, tuple)):
                 if isinstance(vals[-1], str):
-                    unit = vals.pop()
+                    unit = vals[-1]
                 else:
                     unit = ""
                 if len(vals) > 1:
