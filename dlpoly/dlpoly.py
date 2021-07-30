@@ -43,7 +43,7 @@ class DLPoly:
 
         # Override output
         if output is not None:
-            self.control.io.output = output
+            self.control.io_file_output = output
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -51,38 +51,38 @@ class DLPoly:
             direc = self.workdir
 
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
-        self.control.io.statis = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.statis)))
-        self.control.io.output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.output)))
-        self.control.io.revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revive)))
-        self.control.io.revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io.revcon)))
+        self.control.io_file_statis = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_statis)))
+        self.control.io_file_output = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_output)))
+        self.control.io_file_revive = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_revive)))
+        self.control.io_file_revcon = os.path.abspath(os.path.join(direc, os.path.basename(self.control.io_file_revcon)))
 
-        if hasattr(self.control, 'traj') and not self.control.io.history:
-            self.control.io.history = 'HISTORY'
-        if self.control.io.history:
-            self.control.io.history = os.path.abspath(
-                os.path.join(direc, os.path.basename(self.control.io.history)))
+        if hasattr(self.control, 'traj') and not self.control.io_file_history:
+            self.control.io_file_history = 'HISTORY'
+        if self.control.io_file_history:
+            self.control.io_file_history = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io_file_history)))
 
-        if self.control.io.historf:
-            self.control.io.historf = os.path.abspath(
-                os.path.join(direc, os.path.basename(self.control.io.historf)))
+        if self.control.io_file_historf:
+            self.control.io_file_historf = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io_file_historf)))
 
-        if hasattr(self.control, 'restart') and not self.control.io.revold:
-            self.control.io.revold = 'REVOLD'
-        if self.control.io.revold:
-            self.control.io.revold = os.path.abspath(
-                os.path.join(direc, os.path.basename(self.control.io.revold)))
+        if hasattr(self.control, 'restart') and not self.control.io_file_revold:
+            self.control.io_file_revold = 'REVOLD'
+        if self.control.io_file_revold:
+            self.control.io_file_revold = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io_file_revold)))
 
-        if self.control.print.rdf and not self.control.io.rdf:
-            self.control.io.rdf = 'RDFDAT'
-        if self.control.io.rdf:
-            self.control.io.rdf = os.path.abspath(
-                os.path.join(direc, os.path.basename(self.control.io.rdf)))
+        if self.control.rdf_print and not self.control.io_file_rdf:
+            self.control.io_file_rdf = 'RDFDAT'
+        if self.control.io_file_rdf:
+            self.control.io_file_rdf = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io_file_rdf)))
 
-        if hasattr(self.control, 'msdtmp') and not self.control.io.msd:
-            self.control.io.msd = 'MSDTMP'
-        if self.control.io.msd:
-            self.control.io.msd = os.path.abspath(
-                os.path.join(direc, os.path.basename(self.control.io.msd)))
+        if hasattr(self.control, 'msdtmp') and not self.control.io_file_msd:
+            self.control.io_file_msd = 'MSDTMP'
+        if self.control.io_file_msd:
+            self.control.io_file_msd = os.path.abspath(
+                os.path.join(direc, os.path.basename(self.control.io_file_msd)))
 
     @staticmethod
     def _update_file(direc, file):
@@ -110,14 +110,14 @@ class DLPoly:
             self.vdwFile = self._update_file(direc, self.vdwFile)
         if self.eamFile:
             self.eamFile = self._update_file(direc, self.eamFile)
-        if self.control.io.tabbnd:
-            self.control.io.tabbnd = self._update_file(direc, self.control.io.tabbnd)
-        if self.control.io.tabang:
-            self.control.io.tabang = self._update_file(direc, self.control.io.tabang)
-        if self.control.io.tabdih:
-            self.control.io.tabdih = self._update_file(direc, self.control.io.tabdih)
-        if self.control.io.tabinv:
-            self.control.io.tabinv = self._update_file(direc, self.control.io.tabinv)
+        if self.control.io_file_tabbnd:
+            self.control.io_file_tabbnd = self._update_file(direc, self.control.io_file_tabbnd)
+        if self.control.io_file_tabang:
+            self.control.io_file_tabang = self._update_file(direc, self.control.io_file_tabang)
+        if self.control.io_file_tabdih:
+            self.control.io_file_tabdih = self._update_file(direc, self.control.io_file_tabdih)
+        if self.control.io_file_tabinv:
+            self.control.io_file_tabinv = self._update_file(direc, self.control.io_file_tabinv)
 
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
@@ -136,7 +136,7 @@ class DLPoly:
             if is_new_control(source):
                 self.control = NewControl(source)
             else:
-                self.control = Control(source)
+                self.control = Control(source).to_new()
             self.controlFile = source
         else:
             print("Unable to find file: {}".format(source))
@@ -184,69 +184,69 @@ class DLPoly:
     @property
     def controlFile(self):
         """ Path to control file """
-        return self.control.io.control
+        return self.control.io_file_control
 
     @controlFile.setter
     def controlFile(self, control):
-        self.control.io.control = control
+        self.control.io_file_control = control
 
     @property
     def fieldFile(self):
         """ Path to field file """
-        return self.control.io.field
+        return self.control.io_file_field
 
     @property
     def vdwFile(self):
         """ Path to TABLE for vdw file """
-        return self.control.io.tabvdw
+        return self.control.io_file_tabvdw
 
     @property
     def eamFile(self):
         """ Path to TABEAM for eam file """
-        return self.control.io.tabeam
+        return self.control.io_file_tabeam
 
     @controlFile.setter
     def controlFile(self, control):
-        self.control.io.control = control
+        self.control.io_file_control = control
 
     @fieldFile.setter
     def fieldFile(self, field):
-        self.control.io.field = field
+        self.control.io_file_field = field
 
     @vdwFile.setter
     def vdwFile(self, vdw):
-        self.control.io.tabvdw = vdw
+        self.control.io_file_tabvdw = vdw
 
     @eamFile.setter
     def eamFile(self, eam):
-        self.control.io.tabeam = eam
+        self.control.io_file_tabeam = eam
 
     @property
     def configFile(self):
         """ Path to config file """
-        return self.control.io.config
+        return self.control.io_file_config
 
     @configFile.setter
     def configFile(self, config):
-        self.control.io.config = config
+        self.control.io_file_config = config
 
     @property
     def statisFile(self):
         """ Path to statis file """
-        return self.control.io.statis
+        return self.control.io_file_statis
 
     @property
     def rdfFile(self):
         """ Path to rdf file """
-        return self.control.io.rdfFile
+        return self.control.io_file_rdfFile
 
     @rdfFile.setter
     def rdfFile(self, rdf):
-        self.control.io.rdfFile = rdf
+        self.control.io_file_rdfFile = rdf
 
     @statisFile.setter
     def statisFile(self, statis):
-        self.control.io.statis = statis
+        self.control.io_file_statis = statis
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):
@@ -272,7 +272,7 @@ class DLPoly:
         self.control.write(controlFile)
 
         if outputFile is None:
-            outputFile = self.control.io.output
+            outputFile = self.control.io_file_output
         if numProcs > 1:
             runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
                                                                       numProcs,

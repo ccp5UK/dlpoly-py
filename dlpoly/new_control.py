@@ -3,145 +3,7 @@ Module to handle new DLPOLY control files
 """
 
 from .utility import DLPData
-
-class DummyIOParam():
-    """ Dummy class defining io parameters """
-    def __init__(self, parent):
-        self.control = None
-        self.parent = parent
-
-    @property
-    def field(self):
-        return self.parent.io_file_field
-
-    @property
-    def config(self):
-        return self.parent.io_file_config
-
-    @property
-    def statis(self):
-        return self.parent.io_file_statis
-
-    @property
-    def output(self):
-        return self.parent.io_file_output
-
-    @property
-    def history(self):
-        return self.parent.io_file_history
-
-    @property
-    def historf(self):
-        return self.parent.io_file_historf
-
-    @property
-    def revive(self):
-        return self.parent.io_file_revive
-
-    @property
-    def revcon(self):
-        return self.parent.io_file_revcon
-
-    @property
-    def revold(self):
-        return self.parent.io_file_revold
-
-    @property
-    def rdf(self):
-        return self.parent.io_file_rdf
-
-    @property
-    def msd(self):
-        return self.parent.io_file_msd
-
-    @property
-    def tabvdw(self):
-        return self.parent.io_file_tabvdw
-
-    @property
-    def tabbnd(self):
-        return self.parent.io_file_tabbnd
-
-    @property
-    def tabang(self):
-        return self.parent.io_file_tabang
-
-    @property
-    def tabdih(self):
-        return self.parent.io_file_tabdih
-
-    @property
-    def tabinv(self):
-        return self.parent.io_file_tabinv
-
-    @property
-    def tabeam(self):
-        return self.parent.io_file_tabeam
-
-    @config.setter
-    def config(self,value):
-        self.parent.io_file_config = value
-
-    @field.setter
-    def field(self,value):
-        self.parent.io_file_field = value
-
-    @statis.setter
-    def statis(self,value):
-        self.parent.io_file_statis = value
-
-    @history.setter
-    def history(self,value):
-        self.parent.io_file_history = value
-
-    @historf.setter
-    def historf(self,value):
-        self.parent.io_file_historf = value
-
-    @revive.setter
-    def revive(self,value):
-        self.parent.io_file_revive = value
-
-    @revold.setter
-    def revold(self,value):
-        self.parent.io_file_revold = value
-
-    @revcon.setter
-    def revcon(self,value):
-        self.parent.io_file_revcon = value
-
-    @rdf.setter
-    def rdf(self,value):
-        self.parent.io_file_rdf = value
-
-    @msd.setter
-    def msd(self,value):
-        self.parent.io_file_msd = value
-
-    @tabbnd.setter
-    def tabbnd(self,value):
-        self.parent.io_file_tabbnd = value
-
-    @tabang.setter
-    def tabang(self,value):
-        self.parent.io_file_tabang = value
-
-    @tabdih.setter
-    def tabdih(self,value):
-        self.parent.io_file_tabdih = value
-
-    @tabinv.setter
-    def tabinv(self,value):
-        self.parent.io_file_tabinv = value
-
-    @tabvdw.setter
-    def tabvdw(self,value):
-        self.parent.io_file_tabvdw = value
-
-    @tabeam.setter
-    def tabeam(self,value):
-        self.parent.io_file_tabeam = value
-
+import os.path
 
 class NewControl(DLPData):
     """ Class defining a DLPOLY new control file
@@ -152,7 +14,6 @@ class NewControl(DLPData):
     """
     def __init__(self, source=None, **override):
         DLPData.__init__(self, {
-            "io": DummyIOParam,
             "title": str,
             "random_seed": (int, int, int),
             "density_variance": (float, str),
@@ -250,6 +111,7 @@ class NewControl(DLPData):
             "io_write_netcdf_format": str,
             "io_write_ascii_revive": bool,
             "io_file_output": str,
+            "io_file_control": str,
             "io_file_config": str,
             "io_file_field": str,
             "io_file_statis": str,
@@ -385,7 +247,24 @@ class NewControl(DLPData):
             "unit_test": bool,
         }, strict=True)
 
-        self.io = DummyIOParam(self)
+        self.io_file_output = ""
+        self.io_file_control = "CONTROL"
+        self.io_file_config = "CONFIG"
+        self.io_file_field = "FIELD"
+        self.io_file_statis = "STATIS"
+        self.io_file_history = "HISTORY"
+        self.io_file_historf = "HISTORF"
+        self.io_file_revive = "REVIVE"
+        self.io_file_revold = "REVOLD"
+        self.io_file_revcon = "REVCON"
+        self.io_file_rdf = "RDFDAT"
+        self.io_file_msd = "MSDTMP"
+        self.io_file_tabbnd = "TABBND"  if os.path.isfile("TABVDW") else ""
+        self.io_file_tabang = "TABANG"  if os.path.isfile("TABBND") else ""
+        self.io_file_tabdih = "TABDIH"  if os.path.isfile("TABANG") else ""
+        self.io_file_tabinv = "TABINV"  if os.path.isfile("TABDIH") else ""
+        self.io_file_tabvdw = "TABVDW"  if os.path.isfile("TABINV") else ""
+        self.io_file_tabeam = "TABEAM"  if os.path.isfile("TABEAM") else ""
 
         if source is not None:
             self.read(source)
@@ -401,8 +280,10 @@ class NewControl(DLPData):
         """
         with open(filename, "r") as inFile:
             for line in inFile:
+                line = line[0:line.find('#')]
+                line = line[0:line.find('!')]
                 line = line.strip()
-                if line == '':
+                if not line:
                     continue
                 key, *args = line.split()
                 self[key] = args
