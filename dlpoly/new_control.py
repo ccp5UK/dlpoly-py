@@ -280,13 +280,17 @@ class NewControl(DLPData):
         """
         with open(filename, "r") as inFile:
             for line in inFile:
-                line = line[0:line.find('#')] if line.find('#') > -1 else line
-                line = line[0:line.find('!')] if line.find('!') > -1 else line
+                line = line.split('#')[0]
+                line = line.split('!')[0]
                 line = line.strip()
                 if not line:
                     continue
                 key, *args = line.split()
+                if key == 'title': # Special case to handle string
+                    self[key] = ' '.join(args)
+                    continue
                 self[key] = args
+
 
     def write(self, filename="new_control"):
         """ Write a new control file
