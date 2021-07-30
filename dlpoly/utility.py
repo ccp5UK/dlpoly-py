@@ -207,7 +207,6 @@ class DLPData(ABC):
                                                                                  dType.__name__))
         return val
 
-
 def check_arg(key, *args):
     """ Perform fuzzy match against potential arguments
 

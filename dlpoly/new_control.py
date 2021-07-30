@@ -4,6 +4,144 @@ Module to handle new DLPOLY control files
 
 from .utility import DLPData
 
+class DummyIOParam():
+    """ Dummy class defining io parameters """
+    def __init__(self, parent):
+        self.control = None
+        self.parent = parent
+
+    @property
+    def field(self):
+        return self.parent.io_file_field
+
+    @property
+    def config(self):
+        return self.parent.io_file_config
+
+    @property
+    def statis(self):
+        return self.parent.io_file_statis
+
+    @property
+    def output(self):
+        return self.parent.io_file_output
+
+    @property
+    def history(self):
+        return self.parent.io_file_history
+
+    @property
+    def historf(self):
+        return self.parent.io_file_historf
+
+    @property
+    def revive(self):
+        return self.parent.io_file_revive
+
+    @property
+    def revcon(self):
+        return self.parent.io_file_revcon
+
+    @property
+    def revold(self):
+        return self.parent.io_file_revold
+
+    @property
+    def rdf(self):
+        return self.parent.io_file_rdf
+
+    @property
+    def msd(self):
+        return self.parent.io_file_msd
+
+    @property
+    def tabvdw(self):
+        return self.parent.io_file_tabvdw
+
+    @property
+    def tabbnd(self):
+        return self.parent.io_file_tabbnd
+
+    @property
+    def tabang(self):
+        return self.parent.io_file_tabang
+
+    @property
+    def tabdih(self):
+        return self.parent.io_file_tabdih
+
+    @property
+    def tabinv(self):
+        return self.parent.io_file_tabinv
+
+    @property
+    def tabeam(self):
+        return self.parent.io_file_tabeam
+
+    @config.setter
+    def config(self,value):
+        self.parent.io_file_config = value
+
+    @field.setter
+    def field(self,value):
+        self.parent.io_file_field = value
+
+    @statis.setter
+    def statis(self,value):
+        self.parent.io_file_statis = value
+
+    @history.setter
+    def history(self,value):
+        self.parent.io_file_history = value
+
+    @historf.setter
+    def historf(self,value):
+        self.parent.io_file_historf = value
+
+    @revive.setter
+    def revive(self,value):
+        self.parent.io_file_revive = value
+
+    @revold.setter
+    def revold(self,value):
+        self.parent.io_file_revold = value
+
+    @revcon.setter
+    def revcon(self,value):
+        self.parent.io_file_revcon = value
+
+    @rdf.setter
+    def rdf(self,value):
+        self.parent.io_file_rdf = value
+
+    @msd.setter
+    def msd(self,value):
+        self.parent.io_file_msd = value
+
+    @tabbnd.setter
+    def tabbnd(self,value):
+        self.parent.io_file_tabbnd = value
+
+    @tabang.setter
+    def tabang(self,value):
+        self.parent.io_file_tabang = value
+
+    @tabdih.setter
+    def tabdih(self,value):
+        self.parent.io_file_tabdih = value
+
+    @tabinv.setter
+    def tabinv(self,value):
+        self.parent.io_file_tabinv = value
+
+    @tabvdw.setter
+    def tabvdw(self,value):
+        self.parent.io_file_tabvdw = value
+
+    @tabeam.setter
+    def tabeam(self,value):
+        self.parent.io_file_tabeam = value
+
 
 class NewControl(DLPData):
     """ Class defining a DLPOLY new control file
@@ -14,16 +152,17 @@ class NewControl(DLPData):
     """
     def __init__(self, source=None, **override):
         DLPData.__init__(self, {
+            "io": DummyIOParam,
             "title": str,
             "random_seed": (int, int, int),
             "density_variance": (float, str),
             "data_dump_frequency": (int, str),
             "subcell_threshold": float,
-            "time_run": (int, str),
-            "time_equilibration": (int, str),
+            "time_run": (float, str),
+            "time_equilibration": (float, str),
             "time_job": (float, str),
             "time_close": (float, str),
-            "stats_frequency": (int, str),
+            "stats_frequency": (float, str),
             "stack_size": (int, str),
             "record_equilibration": bool,
             "print_per_particle_contrib": bool,
@@ -33,11 +172,11 @@ class NewControl(DLPData):
             "analyse_bonds": bool,
             "analyse_dihedrals": bool,
             "analyse_inversions": bool,
-            "analyse_frequency": (int, str),
-            "analyse_frequency_bonds": (int, str),
-            "analyse_frequency_angles": (int, str),
-            "analyse_frequency_dihedrals": (int, str),
-            "analyse_frequency_inversions": (int, str),
+            "analyse_frequency": (float, str),
+            "analyse_frequency_bonds": (float, str),
+            "analyse_frequency_angles": (float, str),
+            "analyse_frequency_dihedrals": (float, str),
+            "analyse_frequency_inversions": (float, str),
             "analyse_max_dist": (float, str),
             "analyse_num_bins": int,
             "analyse_num_bins_bonds": int,
@@ -46,30 +185,30 @@ class NewControl(DLPData):
             "analyse_num_bins_inversions": int,
             "msd_calculate": bool,
             "msd_start": (int, str),
-            "msd_frequency": (int, str),
+            "msd_frequency": (float, str),
             "traj_calculate": bool,
             "traj_key": str,
-            "traj_start": (int, str),
-            "traj_interval": (int, str),
+            "traj_start": (float, str),
+            "traj_interval": (float, str),
             "defects_calculate": bool,
-            "defects_start": (int, str),
-            "defects_interval": (int, str),
+            "defects_start": (float, str),
+            "defects_interval": (float, str),
             "defects_distance": (float, str),
             "defects_backup": bool,
             "displacements_calculate": bool,
-            "displacements_start": (int, str),
-            "displacements_interval": (int, str),
+            "displacements_start": (float, str),
+            "displacements_interval": (float, str),
             "displacements_distance": (float, str),
             "coord_calculate": bool,
             "coord_ops": int,
-            "coord_start": (int, str),
-            "coord_interval": (int, str),
+            "coord_start": (float, str),
+            "coord_interval": (float, str),
             "adf_calculate": bool,
-            "adf_frequency": (int, str),
+            "adf_frequency": (float, str),
             "adf_precision": float,
             "rdf_calculate": bool,
             "rdf_print": bool,
-            "rdf_frequency": (int, str),
+            "rdf_frequency": (float, str),
             "rdf_binsize": float,
             "rdf_error_analysis": str,
             "rdf_error_analysis_blocks": int,
@@ -79,11 +218,11 @@ class NewControl(DLPData):
             "zden_binsize": float,
             "vaf_calculate": bool,
             "vaf_print": bool,
-            "vaf_frequency": (int, str),
+            "vaf_frequency": (float, str),
             "vaf_binsize": int,
             "vaf_averaging": bool,
             "currents_calculate": bool,
-            "print_frequency": (int, str),
+            "print_frequency": (float, str),
             "io_units_scheme": str,
             "io_units_length": str,
             "io_units_time": str,
@@ -192,8 +331,8 @@ class NewControl(DLPData):
             "ttm_boundary_heat_flux": (bool, str),
             "ttm_time_offset": (float, str),
             "ttm_oneway": bool,
-            "ttm_statis_frequency": (int, str),
-            "ttm_traj_frequency": (int, str),
+            "ttm_statis_frequency": (float, str),
+            "ttm_traj_frequency": (float, str),
             "ttm_com_correction": str,
             "ttm_redistribute": bool,
             "ttm_e-phonon_friction": (float, str),
@@ -246,6 +385,8 @@ class NewControl(DLPData):
             "unit_test": bool,
         }, strict=True)
 
+        self.io = DummyIOParam(self)
+
         if source is not None:
             self.read(source)
 
@@ -259,8 +400,10 @@ class NewControl(DLPData):
 
         """
         with open(filename, "r") as inFile:
-            self["title"] = inFile.readline()
             for line in inFile:
+                line = line.strip()
+                if line == '':
+                    continue
                 key, *args = line.split()
                 self[key] = args
 
@@ -297,3 +440,17 @@ class NewControl(DLPData):
                 if key in ("title", "filename") or key.startswith("_"):
                     continue
                 output(key, vals)
+
+def is_new_control(filename):
+    """ Determine if file is in old or new format """
+    with open(filename, 'r') as inFile:
+        for line in inFile:
+            line = line[0:line.find('#')]
+            line = line[0:line.find('!')]
+            line = line.strip()
+
+            if not line:
+                continue
+
+            key = line.split()[0].lower()
+            return key == 'title'

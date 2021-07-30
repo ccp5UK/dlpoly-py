@@ -5,6 +5,7 @@ import subprocess
 import os.path
 import os
 import shutil
+from .new_control import (NewControl, is_new_control)
 from .control import Control
 from .config import Config
 from .field import Field
@@ -132,7 +133,10 @@ class DLPoly:
         if source is None:
             source = self.controlFile
         if os.path.isfile(source):
-            self.control = Control(source)
+            if is_new_control(source):
+                self.control = NewControl(source)
+            else:
+                self.control = Control(source)
             self.controlFile = source
         else:
             print("Unable to find file: {}".format(source))
