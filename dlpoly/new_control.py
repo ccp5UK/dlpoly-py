@@ -300,15 +300,19 @@ class NewControl(DLPData):
 
         """
         def output(key, vals):
+
             if isinstance(vals, (list, tuple)):
+                lvals = None
                 if isinstance(vals[-1], str):
                     unit = vals[-1]
+                    lvals = vals[:-1]
                 else:
                     unit = ""
-                if len(vals) > 1:
-                    print(key, "[", *(f" {val}" for val in vals), "]", unit, file=outFile)
+                    lvals = vals
+                if len(lvals) > 1:
+                    print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=outFile)
                 else:
-                    print(key, *(f" {val}" for val in vals), unit, file=outFile)
+                    print(key, *(f" {val}" for val in lvals), unit, file=outFile)
 
             elif isinstance(vals, bool):
                 if vals:
