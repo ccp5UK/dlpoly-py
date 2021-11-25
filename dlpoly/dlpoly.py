@@ -58,7 +58,6 @@ class DLPoly:
             else:
                 workdir = f"{self.default_name}1"
 
-
         # Override output
         if output is not None:
             self.control.io_file_output = output
