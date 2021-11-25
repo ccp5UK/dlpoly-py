@@ -52,7 +52,11 @@ class DLPoly:
                 # Get last dir number
                 idx = [int(re.search(dir, '([0-9]+)$').group(0)) for dir in dirs
                        if re.search(dir, '([0-9]+)$')]
-                newNum = (sorted(idx)[-1]) + 1
+
+                if idx:
+                    newNum = max(idx) + 1
+                else:
+                    newNum = 1
 
                 self.workdir = f"{self.default_name}{newNum}"
             else:
