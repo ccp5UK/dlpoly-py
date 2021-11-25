@@ -4,6 +4,8 @@
 import subprocess
 import os.path
 import os
+import glob
+import re
 import shutil
 from .new_control import (NewControl, is_new_control)
 from .control import Control
@@ -20,7 +22,7 @@ class DLPoly:
     __version__ = "4.10"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 destconfig=None, rdf=None, workdir=None):
+                 destconfig=None, rdf=None, workdir=None, default_name=None):
         # Default to having a control
         self.control = Control()
         self.config = None
@@ -29,6 +31,7 @@ class DLPoly:
         self.statis = None
         self.rdf = None
         self.workdir = workdir
+        self.default_name = "dlprun"
 
         if control is not None:
             self.load_control(control)
@@ -40,6 +43,21 @@ class DLPoly:
             self.load_statis(statis)
         if rdf is not None:
             self.load_rdf(rdf)
+
+        # If we're defaulting to default name
+        # Get last runname + 1 for this one
+        if workdir is None:
+            dirs = glob.glob(f"{self.default_name}*")
+            if dirs:
+                # Get last dir number
+                idx = [int(re.search(dir, '([0-9]+)$').group(0)) for dir in dirs
+                       if re.search(dir, '([0-9]+)$')]
+                newNum = (sorted(idx)[-1]) + 1
+
+                workdir = f"{self.default_name}{newNum}"
+            else:
+                workdir = f"{self.default_name}1"
+
 
         # Override output
         if output is not None:
