@@ -278,7 +278,6 @@ class DLPoly:
         except FileExistsError:
             print("Folder {} exists, over-writing.".format(self.workdir))
 
-
         dlpexe = executable
         if executable is None:
             try:
