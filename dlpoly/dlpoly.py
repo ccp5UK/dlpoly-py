@@ -44,24 +44,6 @@ class DLPoly:
         if rdf is not None:
             self.load_rdf(rdf)
 
-        # If we're defaulting to default name
-        # Get last runname + 1 for this one
-        if workdir is None:
-            dirs = glob.glob(f"{self.default_name}*")
-            if dirs:
-                # Get last dir number
-                idx = [int(re.search(dir, '([0-9]+)$').group(0)) for dir in dirs
-                       if re.search(dir, '([0-9]+)$')]
-
-                if idx:
-                    newNum = max(idx) + 1
-                else:
-                    newNum = 1
-
-                self.workdir = f"{self.default_name}{newNum}"
-            else:
-                self.workdir = f"{self.default_name}1"
-
         # Override output
         if output is not None:
             self.control.io_file_output = output
@@ -276,10 +258,26 @@ class DLPoly:
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
+        # If we're defaulting to default name
+        # Get last runname + 1 for this one
+        if self.workdir is None:
+            dirs = glob.glob(f"{self.default_name}*")
+            if dirs:
+                # Get last dir number
+                idx = [int(re.search('([0-9]+)$', dir).group(0)) for dir in dirs
+                       if re.search('([0-9]+)$', dir)]
+
+                newNum = max(idx) + 1
+
+                self.workdir = f"{self.default_name}{newNum}"
+            else:
+                self.workdir = f"{self.default_name}1"
+
         try:
             os.mkdir(self.workdir)
         except FileExistsError:
             print("Folder {} exists, over-writing.".format(self.workdir))
+
 
         dlpexe = executable
         if executable is None:
