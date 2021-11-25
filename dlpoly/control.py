@@ -863,8 +863,6 @@ class Control(DLPData):
                     continue
 
             elif key == "io":
-                if not val.output.endswith("OUTPUT") and not self.l_scr:
-                    output("io_file_output", val.output)
                 if not val.field.endswith("FIELD"):
                     output("io_file_field", val.field)
                 if not val.config.endswith("CONFIG"):
