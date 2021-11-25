@@ -248,6 +248,7 @@ class NewControl(DLPData):
             "unit_test": bool,
         }, strict=True)
 
+        self.io_file_output = "OUTPUT"
         self.io_file_control = "CONTROL"
         self.io_file_config = "CONFIG"
         self.io_file_field = "FIELD"
@@ -329,7 +330,6 @@ class NewControl(DLPData):
                 if (key in ("title", "filename", "io_file_control") or key.startswith("_") or
                     key in ("io_file_output") and vals.upper() != "SCREEN"):
                     continue
-
                 output(key, vals)
 
 

@@ -274,7 +274,7 @@ class DLPoly:
         self.control.write(controlFile)
 
         if outputFile is None:
-            if self.control.io_file_output.upper() != "SCREEN":
+            if self.control.io_file_output.upper() == "SCREEN":
                 outputFile = None
             else:
                 outputFile = self.control.io_file_output
