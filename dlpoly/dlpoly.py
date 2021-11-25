@@ -54,9 +54,9 @@ class DLPoly:
                        if re.search(dir, '([0-9]+)$')]
                 newNum = (sorted(idx)[-1]) + 1
 
-                workdir = f"{self.default_name}{newNum}"
+                self.workdir = f"{self.default_name}{newNum}"
             else:
-                workdir = f"{self.default_name}1"
+                self.workdir = f"{self.default_name}1"
 
         # Override output
         if output is not None:
