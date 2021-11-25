@@ -53,8 +53,6 @@ class DLPoly:
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
         self.control.io_file_statis = os.path.abspath(
             os.path.join(direc, os.path.basename(self.control.io_file_statis)))
-        self.control.io_file_output = os.path.abspath(
-            os.path.join(direc, os.path.basename(self.control.io_file_output)))
         self.control.io_file_revive = os.path.abspath(
             os.path.join(direc, os.path.basename(self.control.io_file_revive)))
         self.control.io_file_revcon = os.path.abspath(
@@ -276,15 +274,17 @@ class DLPoly:
         self.control.write(controlFile)
 
         if outputFile is None:
-            outputFile = self.control.io_file_output
+            if self.control.io_file_output.upper() != "SCREEN":
+                outputFile = None
+            else:
+                outputFile = self.control.io_file_output
+
+        outputFile = f"-o {outputFile}" if outputFile is not None else ""
+
         if numProcs > 1:
-            runCommand = "{0:s} {1:d} {2:s} -c {3:s} -o {4:s}".format(mpi,
-                                                                      numProcs,
-                                                                      dlpexe,
-                                                                      controlFile,
-                                                                      outputFile)
+            runCommand = f"{mpi} {numProcs} {dlpexe} -c {controlFile} {outputFile}"
         else:
-            runCommand = "{0:s} -c {1:s} -o {2:s}".format(dlpexe, controlFile, outputFile)
+            runCommand = f"{dlpexe} -c {controlFile} {outputFile}"
 
         if modules:
             loadMods = "module purge && module load " + modules

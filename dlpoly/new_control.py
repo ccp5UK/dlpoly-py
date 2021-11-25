@@ -248,7 +248,6 @@ class NewControl(DLPData):
             "unit_test": bool,
         }, strict=True)
 
-        self.io_file_output = "OUTPUT"
         self.io_file_control = "CONTROL"
         self.io_file_config = "CONFIG"
         self.io_file_field = "FIELD"
@@ -327,8 +326,10 @@ class NewControl(DLPData):
         with open(filename, "w") as outFile:
             output("title", self["title"])
             for key, vals in self.__dict__.items():
-                if key in ("title", "filename", "io_file_control") or key.startswith("_"):
+                if (key in ("title", "filename", "io_file_control") or key.startswith("_") or
+                    key in ("io_file_output") and vals.upper() != "SCREEN"):
                     continue
+
                 output(key, vals)
 
 
