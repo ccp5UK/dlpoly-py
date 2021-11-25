@@ -76,7 +76,7 @@ class DLPoly:
             self.control.io_file_revold = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io_file_revold)))
 
-        if self.control.rdf_print and not self.control.io_file_rdf:
+        if hasattr(self.control, 'rdf_print') and self.control.rdf_print and not self.control.io_file_rdf:
             self.control.io_file_rdf = 'RDFDAT'
         if self.control.io_file_rdf:
             self.control.io_file_rdf = os.path.abspath(
