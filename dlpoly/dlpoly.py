@@ -3,6 +3,7 @@
 
 import subprocess
 import os.path
+import sys
 import os
 import glob
 import re
@@ -189,23 +190,31 @@ class DLPoly:
 
     @property
     def exe(self):
-        return self.exe
+        """ executable name to be used to run DLPOLY"""
+        return self._exe
 
     @exe.setter
-    def set_exe(self, exe):
-        """ set the executable name, we assume the user passes a good one we do not check"""
-        self.exe = exe
-        if exe is None:
-            # user has set the env variable or will pass a hard coded in run
-            try:
-                self.exe = os.environ["DLP_EXE"]
-            except KeyError:
-                self.exe = "DLPOLY.Z"
+    def exe(self, exe):
+        """ set the executable name"""
+        if exe is not None and os.path.isfile(exe):
+            self._exe = exe
+        else:
+            if exe is None:  # user has not provided exe
+                exe = "DLPOLY.Z"
 
-    @property
-    def exe(self):
-        """ executable name to be used to run DLPOLY"""
-        return self.exe
+            if "DLP_EXE" in os.environ:
+                self._exe = os.environ["DLP_EXE"]
+            elif shutil.which(exe):
+                self._exe = shutil.which(exe)
+            else:  # Assume in folder
+                self._exe = exe
+        try:
+            proc = subprocess.run([exe, '-h'], capture_output=True)
+            print(proc)
+            if f"Usage: {os.path.basename(exe)}" not in proc.stderr.decode(sys.stdout.encoding):
+                print("{exe} is not DLPoly, run may not work")
+        except FileNotFoundError:
+            print("{exe} does not exist, run may not work")
 
     @property
     def controlFile(self):
