@@ -32,7 +32,7 @@ class DLPoly:
         self.rdf = None
         self.workdir = workdir
         self.default_name = "dlprun"
-        self.exe = self.set_exe(exe)
+        self.exe = exe
 
         if control is not None:
             self.load_control(control)
@@ -187,6 +187,7 @@ class DLPoly:
         else:
             print("Unable to find file: {}".format(source))
 
+    @exe.setter
     def set_exe(self, exe):
         """ set the executable name, we assume the user passes a good one we do not check"""
         self.exe = exe
