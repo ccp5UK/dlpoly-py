@@ -246,27 +246,23 @@ class DLPoly:
         """ Path to field file """
         return self.control.io_file_field
 
+    @fieldFile.setter
+    def fieldFile(self, field):
+        self.control.io_file_field = field
+
     @property
     def vdwFile(self):
         """ Path to TABLE for vdw file """
         return self.control.io_file_tabvdw
 
+    @vdwFile.setter
+    def vdwFile(self, vdw):
+        self.control.io_file_tabvdw = vdw
+
     @property
     def eamFile(self):
         """ Path to TABEAM for eam file """
         return self.control.io_file_tabeam
-
-    @controlFile.setter
-    def controlFile(self, control):
-        self.control.io_file_control = control
-
-    @fieldFile.setter
-    def fieldFile(self, field):
-        self.control.io_file_field = field
-
-    @vdwFile.setter
-    def vdwFile(self, vdw):
-        self.control.io_file_tabvdw = vdw
 
     @eamFile.setter
     def eamFile(self, eam):
@@ -286,6 +282,10 @@ class DLPoly:
         """ Path to statis file """
         return self.control.io_file_statis
 
+    @statisFile.setter
+    def statisFile(self, statis):
+        self.control.io_file_statis = statis
+
     @property
     def rdfFile(self):
         """ Path to rdf file """
@@ -294,10 +294,6 @@ class DLPoly:
     @rdfFile.setter
     def rdfFile(self, rdf):
         self.control.io_file_rdfFile = rdf
-
-    @statisFile.setter
-    def statisFile(self, statis):
-        self.control.io_file_statis = statis
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):
