@@ -953,7 +953,8 @@ class Control(DLPData):
                     output("msd_frequency", val[1], "steps")
 
             elif key == "nfold":
-                continue
+                if val:
+                    output("nfold", *val)
 
             elif key == "pseudo":
                 if val:
