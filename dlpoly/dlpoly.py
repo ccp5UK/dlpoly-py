@@ -22,7 +22,7 @@ class DLPoly:
     __version__ = "4.10"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 destconfig=None, rdf=None, workdir=None, default_name=None):
+                 destconfig=None, rdf=None, workdir=None, default_name=None, exe=None):
         # Default to having a control
         self.control = Control()
         self.config = None
@@ -32,6 +32,7 @@ class DLPoly:
         self.rdf = None
         self.workdir = workdir
         self.default_name = "dlprun"
+        self.exe = self.set_exe(exe)
 
         if control is not None:
             self.load_control(control)
@@ -186,6 +187,23 @@ class DLPoly:
         else:
             print("Unable to find file: {}".format(source))
 
+
+    @exe.setter
+    def set_exe(self,exe):
+        """ set the executable name, we assume the user passes a good one we do not check"""
+        self.exe = exe
+        if exe is None:
+            #user has set the env variable or will pass a hard coded in run
+            try:
+                self.exe = os.environ["DLP_EXE"]
+            except KeyError:
+                self.exe = "DLPOLY.Z"
+
+    @property
+    def exe(self):
+        """ executable name to be used to run DLPOLY"""
+        return self.exe
+
     @property
     def controlFile(self):
         """ Path to control file """
@@ -280,10 +298,7 @@ class DLPoly:
 
         dlpexe = executable
         if executable is None:
-            try:
-                dlpexe = os.environ["DLP_EXE"]
-            except KeyError:
-                dlpexe = "DLPOLY.Z"
+            dlpexe = self.exe
 
         prefix = self.workdir+"/"
         controlFile = prefix+os.path.basename(self.controlFile)
