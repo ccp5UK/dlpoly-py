@@ -210,7 +210,6 @@ class DLPoly:
                 self._exe = exe
         try:
             proc = subprocess.run([exe, '-h'], capture_output=True)
-            print(proc)
             if f"Usage: {os.path.basename(exe)}" not in proc.stderr.decode(sys.stdout.encoding):
                 print("{exe} is not DLPoly, run may not work")
         except FileNotFoundError:
