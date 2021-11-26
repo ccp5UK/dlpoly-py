@@ -191,7 +191,7 @@ class DLPoly:
     @property
     def exe(self):
         """ executable name to be used to run DLPOLY"""
-        return self.exe
+        return self._exe
 
     @exe.setter
     def exe(self, exe):
