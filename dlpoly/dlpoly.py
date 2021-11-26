@@ -187,6 +187,10 @@ class DLPoly:
         else:
             print("Unable to find file: {}".format(source))
 
+    @property
+    def exe(self):
+        return self.exe
+
     @exe.setter
     def set_exe(self, exe):
         """ set the executable name, we assume the user passes a good one we do not check"""
