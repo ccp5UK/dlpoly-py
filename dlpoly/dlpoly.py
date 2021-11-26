@@ -188,17 +188,6 @@ class DLPoly:
         else:
             print("Unable to find file: {}".format(source))
 
-    @exe.setter
-    def set_exe(self, exe):
-        """ set the executable name, we assume the user passes a good one we do not check"""
-        self.exe = exe
-        if exe is None:
-            # user has set the env variable or will pass a hard coded in run
-            try:
-                self.exe = os.environ["DLP_EXE"]
-            except KeyError:
-                self.exe = "DLPOLY.Z"
-
     @property
     def exe(self):
         """ executable name to be used to run DLPOLY"""
