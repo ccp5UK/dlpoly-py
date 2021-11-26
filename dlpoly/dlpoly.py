@@ -3,6 +3,7 @@
 
 import subprocess
 import os.path
+import sys
 import os
 import glob
 import re
@@ -32,7 +33,7 @@ class DLPoly:
         self.rdf = None
         self.workdir = workdir
         self.default_name = "dlprun"
-        self.exe = self.set_exe(exe)
+        self.exe = exe
 
         if control is not None:
             self.load_control(control)
@@ -187,21 +188,32 @@ class DLPoly:
         else:
             print("Unable to find file: {}".format(source))
 
-    @exe.setter
-    def set_exe(self, exe):
-        """ set the executable name, we assume the user passes a good one we do not check"""
-        self.exe = exe
-        if exe is None:
-            # user has set the env variable or will pass a hard coded in run
-            try:
-                self.exe = os.environ["DLP_EXE"]
-            except KeyError:
-                self.exe = "DLPOLY.Z"
-
     @property
     def exe(self):
         """ executable name to be used to run DLPOLY"""
-        return self.exe
+        return self._exe
+
+    @exe.setter
+    def exe(self, exe):
+        """ set the executable name"""
+        if exe is not None and os.path.isfile(exe):
+            self._exe = exe
+        else:
+            if exe is None:  # user has not provided exe
+                exe = "DLPOLY.Z"
+
+            if "DLP_EXE" in os.environ:
+                self._exe = os.environ["DLP_EXE"]
+            elif shutil.which(exe):
+                self._exe = shutil.which(exe)
+            else:  # Assume in folder
+                self._exe = exe
+        try:
+            proc = subprocess.run([exe, '-h'], capture_output=True)
+            if f"Usage: {os.path.basename(exe)}" not in proc.stderr.decode(sys.stdout.encoding):
+                print("{exe} is not DLPoly, run may not work")
+        except FileNotFoundError:
+            print("{exe} does not exist, run may not work")
 
     @property
     def controlFile(self):
@@ -217,27 +229,23 @@ class DLPoly:
         """ Path to field file """
         return self.control.io_file_field
 
+    @fieldFile.setter
+    def fieldFile(self, field):
+        self.control.io_file_field = field
+
     @property
     def vdwFile(self):
         """ Path to TABLE for vdw file """
         return self.control.io_file_tabvdw
 
+    @vdwFile.setter
+    def vdwFile(self, vdw):
+        self.control.io_file_tabvdw = vdw
+
     @property
     def eamFile(self):
         """ Path to TABEAM for eam file """
         return self.control.io_file_tabeam
-
-    @controlFile.setter
-    def controlFile(self, control):
-        self.control.io_file_control = control
-
-    @fieldFile.setter
-    def fieldFile(self, field):
-        self.control.io_file_field = field
-
-    @vdwFile.setter
-    def vdwFile(self, vdw):
-        self.control.io_file_tabvdw = vdw
 
     @eamFile.setter
     def eamFile(self, eam):
@@ -257,6 +265,10 @@ class DLPoly:
         """ Path to statis file """
         return self.control.io_file_statis
 
+    @statisFile.setter
+    def statisFile(self, statis):
+        self.control.io_file_statis = statis
+
     @property
     def rdfFile(self):
         """ Path to rdf file """
@@ -265,10 +277,6 @@ class DLPoly:
     @rdfFile.setter
     def rdfFile(self, rdf):
         self.control.io_file_rdfFile = rdf
-
-    @statisFile.setter
-    def statisFile(self, statis):
-        self.control.io_file_statis = statis
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None):
