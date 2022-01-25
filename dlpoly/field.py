@@ -157,6 +157,7 @@ class Molecule(PotHaver):
         print('atoms {}'.format(self.nAtoms), file=outFile)
         for element in self.species.values():
             print(element, file=outFile)
+        print('finish', file=outFile)
 
         for potClass in self.activeBonds:
             pots = list(self.get_pot_by_class(potClass))
