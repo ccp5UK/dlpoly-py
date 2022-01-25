@@ -151,7 +151,7 @@ class Molecule(PotHaver):
         return charges
 
     def write(self, outFile):
-        ''' Write self to outFile '''
+        ''' Write self to outFile (called by Field) '''
         print(self.name, file=outFile)
         print('nummols {}'.format(self.nMols), file=outFile)
         print('atoms {}'.format(self.nAtoms), file=outFile)
@@ -163,7 +163,7 @@ class Molecule(PotHaver):
             print('{} {}'.format(potClass, len(pots)), file=outFile)
             for pot in pots:
                 print(pot, file=outFile)
-        print('finish', file=outFile)
+            print('finish', file=outFile)
 
     def _read_block(self, fieldFile, potClass, nPots):
         ''' Read a potentials block '''
@@ -244,8 +244,7 @@ class Field(PotHaver):
         ''' Add molecule to self '''
         if molecule.name not in self.molecules:
             self.molecules[molecule.name] = molecule
-        else:
-            self.molecules[molecule.name].nMols += 1
+        self.molecules[molecule.name].nMols += 1
 
         return molecule.name, self.molecules[molecule.name].nMols
 
