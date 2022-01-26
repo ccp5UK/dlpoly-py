@@ -77,41 +77,51 @@ class PotHaver(ABC):
 
         self.pots[tuple(atoms)].append(potential)
 
-    def get_pot_by_species(self, species):
-        ''' Return all pots for a given pot species '''
-        out = peek(pot for potSet in self.pots.values() for pot in potSet if species in pot.atoms)
-        if out is None:
-            print('No potentials for species {} found'.format(species))
-            out = ()
-        return out
+    def set_potential(self, oldPot, newPot):
+        ''' Override a potential with a new one '''
+        for i, currPot in enumerate(self.pots[oldPot.atoms]):
+            if currPot == oldPot:
+                self.pots[oldPot.atoms][i] = newPot
+                return
 
-    def get_pot_by_class(self, potClass):
-        ''' Return all pots for a given pot class '''
-        out = peek(pot for potSet in self.pots.values() for pot in potSet if pot.potClass == potClass)
-        if out is None:
-            print('No potentials for potClass {} found'.format(potClass))
-            out = ()
-        return out
-
-    def get_pot_by_type(self, potType):
+    def get_pot(self, species=None, potClass=None, potType=None, quiet=False):
         ''' Return all pots for a given pot type '''
-        out = peek(pot for potSet in self.pots.values() for pot in potSet if pot.potType == potType)
+
+        tests = (('atoms', species), ('potClass', potClass), ('potType', potType))
+        out = peek(pot for potSet in self.pots.values() for pot in potSet if
+                   all(getattr(pot, prop) == val for prop, val in tests if val is not None)
+                   )
         if out is None:
-            print('No potentials for potType {} found'.format(potType))
+            if quiet:
+                for name, val in tests:
+                    if val is not None:
+                        print('No potentials for {} {} found'.format(name, val))
             out = ()
         return out
 
-    def get_num_pot_by_species(self, species):
+    def get_pot_by_species(self, species, quiet=False):
         ''' Return all pots for a given pot species '''
-        return len([pot for potSet in self.pots.values() for pot in potSet if species in pot.atoms])
+        return self.get_pot(species=species, quiet=quiet)
 
-    def get_num_pot_by_class(self, potClass):
+    def get_pot_by_class(self, potClass, quiet=False):
         ''' Return all pots for a given pot class '''
-        return len([pot for potSet in self.pots.values() for pot in potSet if pot.potClass == potClass])
+        return self.get_pot(potClass=potClass, quiet=quiet)
 
-    def get_num_pot_by_type(self, potType):
+    def get_pot_by_type(self, potType, quiet=False):
         ''' Return all pots for a given pot type '''
-        return len([pot for potSet in self.pots.values() for pot in potSet if pot.potType == potType])
+        return self.get_pot(potType=potType, quiet=quiet)
+
+    def get_num_pot_by_species(self, species, quiet=False):
+        ''' Return all pots for a given pot species '''
+        return len(list(self.get_pot_by_species(species, quiet)))
+
+    def get_num_pot_by_class(self, potClass, quiet=False):
+        ''' Return all pots for a given pot class '''
+        return len(list(self.get_pot_by_class(potClass, quiet)))
+
+    def get_num_pot_by_type(self, potType, quiet=False):
+        ''' Return all pots for a given pot type '''
+        return len(list(self.get_pot_by_type(potType, quiet)))
 
 
 class Molecule(PotHaver):
@@ -276,7 +286,7 @@ class Field(PotHaver):
             for molecule in self.molecules.values():
                 molecule.write(outFile)
             for potClass in self.activePots:
-                pots = list(self.get_pot_by_class(potClass))
+                pots = list(self.get_pot_by_class(potClass, quiet=True))
                 print('{} {}'.format(potClass, len(pots)), file=outFile)
                 for pot in pots:
                     print(pot, file=outFile)
