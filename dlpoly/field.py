@@ -40,8 +40,6 @@ class Bond(Interaction):
         # In bonds key comes first...
         self.potType, params = params[0], params[1:]
         self.atoms, self.params = params[0:self.nAtoms[potClass]], params[self.nAtoms[potClass]:]
-        # Atoms always in alphabetical/numerical order
-        self.atoms = sorted(self.atoms)
 
     def __str__(self):
         return '{} {} {}'.format(self.potType, ' '.join(self.atoms), ' '.join(self.params))
