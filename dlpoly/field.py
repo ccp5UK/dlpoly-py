@@ -165,14 +165,13 @@ class Molecule(PotHaver):
         print('atoms {}'.format(self.nAtoms), file=outFile)
         for element in self.species.values():
             print(element, file=outFile)
-        print('finish', file=outFile)
 
         for potClass in self.activeBonds:
             pots = list(self.get_pot_by_class(potClass))
             print('{} {}'.format(potClass, len(pots)), file=outFile)
             for pot in pots:
                 print(pot, file=outFile)
-            print('finish', file=outFile)
+        print('finish', file=outFile)
 
     def _read_block(self, fieldFile, potClass, nPots):
         ''' Read a potentials block '''
