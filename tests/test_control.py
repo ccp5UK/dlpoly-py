@@ -88,7 +88,6 @@ class ControlTest(unittest.TestCase):
             test_dict = {'tim_run': [20.0, 'steps']}
             cont = NewControl.from_dict(test_dict)
 
-
         self.assertTrue('not allowed in' in str(context.exception))
 
 
