@@ -85,17 +85,17 @@ def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units="rad"):
 class DLPData(ABC):
     """ Abstract datatype for handling automatic casting and restricted assignment
 
-     :param dataTypes: Datatypes to handle as dict of "element name : dataype"
+     :param datatypes: Datatypes to handle as dict of "element name : dataype"
      :param strict: Whether fuzzy matching will be applied
 
      """
 
-    def __init__(self, dataTypes: dict, strict: bool = False):
-        self._dataTypes = dataTypes
+    def __init__(self, datatypes: dict, strict: bool = False):
+        self._datatypes = datatypes
         self._strict = strict
 
-    dataTypes = property(lambda self: self._dataTypes)
-    keys = property(lambda self: [key for key in self.dataTypes if key != "keysHandled"])
+    datatypes = property(lambda self: self._datatypes)
+    keys = property(lambda self: [key for key in self.datatypes if key != "keysHandled"])
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
@@ -110,19 +110,19 @@ class DLPData(ABC):
         return self._strict
 
     def __setattr__(self, key, val):
-        if key == "_dataTypes":  # Protect datatypes
+        if key == "_datatypes":  # Protect datatypes
 
-            if not hasattr(self, "_dataTypes"):
+            if not hasattr(self, "_datatypes"):
                 self.__dict__[key] = {**val, "keysHandled": tuple, "_strict": bool}
             else:
-                print("Cannot alter dataTypes")
+                raise KeyError("Cannot alter datatypes")
             return
 
         if key == "_strict":
             if not hasattr(self, "_strict"):
                 self.__dict__[key] = val
             else:
-                print("Cannot alter strict")
+                raise KeyError("Cannot alter strict")
             return
 
         if key == "source":  # source is not really a keyword
@@ -131,9 +131,8 @@ class DLPData(ABC):
         if key == "ensemble" and val is None:
             raise KeyError("Ensemble cannot be empty")
 
-        if self.strict and key not in self.dataTypes:
+        if self.strict and key not in self.datatypes:
             raise KeyError(f"Param {key} not allowed in {self.className.lower()} definition")
-
 
         val = self._map_types(key, val)
         self.__dict__[key] = val
@@ -160,10 +159,10 @@ class DLPData(ABC):
         :param vals: Value to convert
 
         """
-        dType = self._dataTypes[key]
-        if (isinstance(vals, (tuple, list)) and
-            not isinstance(dType, (tuple, bool)) and
-            dType is not tuple):
+        datatype = self._datatypes[key]
+        if isinstance(vals, (tuple, list)) and \
+           not isinstance(datatype, (tuple, bool)) and \
+           datatype is not tuple:
 
             if not vals:
                 pass
@@ -178,44 +177,58 @@ class DLPData(ABC):
                         pass
                 else:
                     raise TypeError(f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
-                                    f"for key {key} valid, must be castable to {dType.__name__}")
+                                    f"for key {key} valid, must be castable to {datatype.__name__}")
 
-        if isinstance(dType, tuple):
+        if isinstance(datatype, tuple):
 
             if isinstance(vals, (int, float, str)):
                 vals = (vals,)
 
             try:
-                if ... in dType:
-                    loc = dType.index(...)
-                    if loc != len(dType)-1:
-                        pre, ellided, post = dType[:loc], dType[loc-1], dType[loc+1:]
-                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                if ... in datatype:
+                    loc = datatype.index(...)
+                    if loc != len(datatype)-1:
+                        pre, ellided, post = datatype[:loc], datatype[loc-1], datatype[loc+1:]
+                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
                                [ellided(item) for item in vals[loc:-len(post)]] +
-                               [targetType(item) for item, targetType in zip(vals[-len(post):], post)])
+                               [target_type(item)
+                                for item, target_type in zip(vals[-len(post):], post)])
                     else:
-                        pre, ellided = dType[:loc], dType[loc-1]
-                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                        pre, ellided = datatype[:loc], datatype[loc-1]
+                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
                                [ellided(item) for item in vals[loc:]])
 
                 else:
-                    val = [targetType(item) for item, targetType in zip(vals, dType)]
-            except TypeError:
-                print(f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
-                      f"must be castable to {[x.__name__ for x in dType]}")
+                    val = [target_type(item) for item, target_type in zip(vals, datatype)]
+            except TypeError as err:
+                message = (f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
+                           f"must be castable to {[x.__name__ for x in datatype]}")
 
-        elif isinstance(vals, dType):  # Already right type
+                if not self.strict:
+                    print(message)
+                    return None
+
+                raise TypeError(message) from err
+
+        elif isinstance(vals, datatype):  # Already right type
             val = vals
-        elif dType is bool:  # If present true unless explicitly false
+        elif datatype is bool:  # If present true unless explicitly false
             val = vals not in (0, False)
 
         else:
             try:
-                val = self._dataTypes[key](vals)
+                val = self._datatypes[key](vals)
             except TypeError as err:
-                print(err)
-                print(f"Type of {vals} ({type(vals).__name__}) not valid, "
-                      f"must be castable to {dType.__name__}")
+                message = (f"Type of {vals} ({type(vals).__name__}) not valid, "
+                           f"must be castable to {datatype.__name__}")
+
+                if not self.strict:
+                    print(err)
+                    print(message)
+                    return None
+
+                raise TypeError(message) from err
+
         return val
 
 
