@@ -118,14 +118,22 @@ class DLPData(ABC):
                 print("Cannot alter dataTypes")
             return
 
+        if key == "_strict":
+            if not hasattr(self, "_strict"):
+                self.__dict__[key] = val
+            else:
+                print("Cannot alter strict")
+            return
+
         if key == "source":  # source is not really a keyword
             return
+
+        if key == "ensemble" and val is None:
+            raise KeyError("Ensemble cannot be empty")
 
         if self.strict and key not in self.dataTypes:
             raise KeyError(f"Param {key} not allowed in {self.className.lower()} definition")
 
-        if key == "ensemble" and val is None:
-            raise KeyError("Ensemble cannot be empty")
 
         val = self._map_types(key, val)
         self.__dict__[key] = val
@@ -202,7 +210,6 @@ class DLPData(ABC):
             val = vals not in (0, False)
 
         else:
-            # print(key, vals)
             try:
                 val = self._dataTypes[key](vals)
             except TypeError as err:
