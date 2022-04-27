@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-import dlpoly as dlp
 import unittest
+
+import dlpoly as dlp
+from dlpoly.new_control import NewControl
 
 
 class ControlTest(unittest.TestCase):
@@ -57,6 +59,37 @@ class ControlTest(unittest.TestCase):
         self.assertEqual(self.control.shake_tolerance, [0.000001, 'ang'],
                          'incorrect shake')
 
+    def test_control_from_dict(self):
+
+        test_dict = {
+            'time_run': [20.0, 'steps'],
+            'time_equilibration': [10.0, 'steps'],
+            'timestep': [0.001, 'ps'],
+            'timestep_variable': True,
+            'temperature': [300.0, 'K'],
+            'pressure_hydrostatic': [0.001, 'katm'],
+            'ensemble': 'npt',
+            'ensemble_method': 'hoover',
+            'ensemble_thermostat_coupling': [0.5, 'ps'],
+            'ensemble_barostat_coupling': [1.0, 'ps'],
+            'stats_frequency': [5.0, 'steps'],
+            'print_frequency': [5.0, 'steps'],
+            'rdf_print': True,
+            'record_equilibration': True,
+            'equilibration_force_cap': [1000.0, 'k_B.temp/ang'],
+            'rescale_frequency': [3, 'steps'],
+            'shake_tolerance': [0.000001, 'ang']}
+
+        cont = NewControl.from_dict(test_dict)
+        for key in test_dict:
+            self.assertEqual(cont[key], self.control[key])
+
+        with self.assertRaises(KeyError) as context:
+            test_dict = {'tim_run': [20.0, 'steps']}
+            cont = NewControl.from_dict(test_dict)
+
+        self.assertTrue('not allowed in' in context.exception)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -65,6 +98,7 @@ def suite():
     suite.addTest(ControlTest('test_control_ens'))
     suite.addTest(ControlTest('test_control_prints'))
     suite.addTest(ControlTest('test_control_equil'))
+    suite.addTest(ControlTest('test_control_from_dict'))
     return suite
 
 

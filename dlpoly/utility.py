@@ -47,14 +47,14 @@ def parse_line(line):
     return line.split(COMMENT_CHAR)[0].strip()
 
 
-def read_line(inFile):
+def read_line(in_file):
     """ Read a line, stripping comments and blank lines
 
-    :param inFile: File to read
+    :param in_file: File to read
 
     """
     line = None
-    for line in inFile:
+    for line in in_file:
         line = parse_line(line)
         if line:
             break
@@ -99,10 +99,15 @@ class DLPData(ABC):
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
-        """Dump keys to screen  """
+        """ Dump keys to screen """
 
         for key in self.keys:
             print(key, self[key])
+
+    @property
+    def strict(self):
+        """ Whether should throw if bad keys supplied """
+        return self._strict
 
     def __setattr__(self, key, val):
         if key == "_dataTypes":  # Protect datatypes
@@ -116,12 +121,11 @@ class DLPData(ABC):
         if key == "source":  # source is not really a keyword
             return
 
-        if key not in self.dataTypes:
-            print("Param {} not allowed in {} definition".format(key, self.className.lower()))
-            return
+        if self.strict and key not in self.dataTypes:
+            raise KeyError(f"Param {key} not allowed in {self.className.lower()} definition")
 
         if key == "ensemble" and val is None:
-            raise KeyError
+            raise KeyError("Ensemble cannot be empty")
 
         val = self._map_types(key, val)
         self.__dict__[key] = val
@@ -131,14 +135,14 @@ class DLPData(ABC):
         key = check_arg(key, *self.keys)
         return getattr(self, str(key))
 
-    def __setitem__(self, keyIn, val):
+    def __setitem__(self, key_in, val):
         """ Fuzzy matching on get/set item """
-        if not self._strict:
-            key = check_arg(keyIn, *self.keys)
+        if not self.strict:
+            key = check_arg(key_in, *self.keys)
             if not key:
-                raise KeyError(f"'{keyIn}' is not a member of {type(self).__name__}")
+                raise KeyError(f"'{key_in}' is not a member of {type(self).__name__}")
         else:
-            key = keyIn
+            key = key_in
         setattr(self, key, val)
 
     def _map_types(self, key, vals):
@@ -149,7 +153,10 @@ class DLPData(ABC):
 
         """
         dType = self._dataTypes[key]
-        if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)) and dType is not tuple:
+        if (isinstance(vals, (tuple, list)) and
+            not isinstance(dType, (tuple, bool)) and
+            dType is not tuple):
+
             if not vals:
                 pass
             elif len(vals) == 1:
@@ -162,10 +169,8 @@ class DLPData(ABC):
                     except TypeError:
                         pass
                 else:
-                    raise TypeError("No arg of {} ({}) for key {} valid, must be castable to {}".format(
-                        vals,
-                        [type(x).__name__ for x in vals], key,
-                        dType.__name__))
+                    raise TypeError(f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
+                                    f"for key {key} valid, must be castable to {dType.__name__}")
 
         if isinstance(dType, tuple):
 
@@ -188,9 +193,8 @@ class DLPData(ABC):
                 else:
                     val = [targetType(item) for item, targetType in zip(vals, dType)]
             except TypeError:
-                print("Type of {} ({}) not valid, must be castable to {}".format(vals,
-                                                                                 [type(x).__name__ for x in vals],
-                                                                                 [x.__name__ for x in dType]))
+                print(f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
+                      f"must be castable to {[x.__name__ for x in dType]}")
 
         elif isinstance(vals, dType):  # Already right type
             val = vals
@@ -203,8 +207,8 @@ class DLPData(ABC):
                 val = self._dataTypes[key](vals)
             except TypeError as err:
                 print(err)
-                print("Type of {} ({}) not valid, must be castable to {}".format(vals, type(vals).__name__,
-                                                                                 dType.__name__))
+                print(f"Type of {vals} ({type(vals).__name__}) not valid, "
+                      f"must be castable to {dType.__name__}")
         return val
 
 
