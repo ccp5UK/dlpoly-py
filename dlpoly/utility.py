@@ -95,12 +95,13 @@ class DLPData(ABC):
         self._strict = strict
 
     datatypes = property(lambda self: self._datatypes)
-    keys = property(lambda self: [key for key in self.datatypes if key != "keysHandled"])
+    keys = property(lambda self: (key for key in self.datatypes
+                                  if key not in ("keysHandled", "_strict")))
+    set_keys = property(lambda self: (key for key in self.keys if self.is_set(key)))
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
         """ Dump keys to screen """
-
         for key in self.keys:
             print(key, self[key])
 
@@ -151,6 +152,21 @@ class DLPData(ABC):
         else:
             key = key_in
         setattr(self, key, val)
+
+    def is_set(self, key):
+        """ Check if key is set in this object
+
+        :param key: Key to check
+        """
+        return key in self.__dict__
+
+    def __iter__(self):
+        return ((key, self[key]) for key in self.set_keys)
+
+    def __add__(self, other):
+        for key, val in other:
+            if not self.is_set(key):
+                self[key] = val
 
     def _map_types(self, key, vals):
         """ Map argument types to their respective types according to datatypes.
