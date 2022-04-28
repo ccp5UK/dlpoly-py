@@ -2,11 +2,9 @@
 """
 
 import subprocess
+import os
 import os.path
 import sys
-import os
-import glob
-import re
 import shutil
 from .new_control import (NewControl, is_new_control)
 from .control import Control
@@ -15,7 +13,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
-from .utility import copy_file
+from .utility import (copy_file, next_file)
 
 
 class DLPoly:
@@ -23,17 +21,20 @@ class DLPoly:
     __version__ = "4.10"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 destconfig=None, rdf=None, workdir=None, default_name=None, exe=None):
+                 dest_config=None, rdf=None, workdir=None, default_name=None, exe=None):
         # Default to having a control
         self.control = NewControl()
         self.config = None
-        self.destconfig = destconfig
+        self.dest_config = dest_config
+        self.default_name = default_name
         self.field = None
         self.statis = None
         self.rdf = None
         self.workdir = workdir
-        self.default_name = "dlprun"
         self.exe = exe
+
+        if default_name is None:
+            self.default_name = "dlprun"
 
         if control is not None:
             self.load_control(control)
@@ -79,7 +80,9 @@ class DLPoly:
             self.control.io_file_revold = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io_file_revold)))
 
-        if hasattr(self.control, 'rdf_print') and self.control.rdf_print and not self.control.io_file_rdf:
+        if hasattr(self.control, 'rdf_print') and \
+           self.control.rdf_print and \
+           not self.control.io_file_rdf:
             self.control.io_file_rdf = 'RDFDAT'
         if self.control.io_file_rdf:
             self.control.io_file_rdf = os.path.abspath(
@@ -92,9 +95,11 @@ class DLPoly:
                 os.path.join(direc, os.path.basename(self.control.io_file_msd)))
 
     @staticmethod
-    def _update_file(direc, file):
-        copy_file(file, direc)
-        return os.path.join(direc, os.path.basename(file))
+    def _update_file(direc, file, dest_name=None):
+        if dest_name is None:
+            dest_name = os.path.basename(file)
+        copy_file(file, os.path.join(direc, dest_name))
+        return os.path.join(direc, os.path.basename(dest_name))
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
@@ -105,11 +110,11 @@ class DLPoly:
         except shutil.SameFileError:
             pass
 
-        if self.destconfig is None:
+        if self.dest_config is None:
             self.configFile = self._update_file(direc, self.configFile)
 
         else:
-            self.configFile = self._update_file(direc, self.destconfig)
+            self.configFile = self._update_file(direc, self.configFile, self.dest_config)
 
         self.fieldFile = self._update_file(direc, self.fieldFile)
 
@@ -146,7 +151,7 @@ class DLPoly:
                 self.control = Control(source).to_new()
             self.controlFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_field(self, source=None):
         """ Load field file into class """
@@ -156,7 +161,7 @@ class DLPoly:
             self.field = Field(source)
             self.fieldFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_config(self, source=None):
         """ Load config file into class """
@@ -166,7 +171,7 @@ class DLPoly:
             self.config = Config(source)
             self.configFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_statis(self, source=None):
         """ Load statis file into class """
@@ -176,7 +181,7 @@ class DLPoly:
             self.statis = Statis(source)
             self.statisFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_rdf(self, source=None):
         """ Load statis file into class """
@@ -186,7 +191,7 @@ class DLPoly:
             self.rdf = rdf(source)
             self.rdfFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     @property
     def exe(self):
@@ -286,66 +291,52 @@ class DLPoly:
         # If we're defaulting to default name
         # Get last runname + 1 for this one
         if self.workdir is None:
-            dirs = glob.glob(f"{self.default_name}*")
-            if dirs:
-                # Get last dir number
-                idx = [int(re.search('([0-9]+)$', dir).group(0)) for dir in dirs
-                       if re.search('([0-9]+)$', dir)]
-
-                newNum = max(idx) + 1
-
-                self.workdir = f"{self.default_name}{newNum}"
-            else:
-                self.workdir = f"{self.default_name}1"
+            self.workdir = next_file(self.default_name)
 
         try:
             os.mkdir(self.workdir)
         except FileExistsError:
-            print("Folder {} exists, over-writing.".format(self.workdir))
+            print(f"Folder {self.workdir} exists, over-writing.")
 
         dlpexe = executable
         if executable is None:
             dlpexe = self.exe
 
-        prefix = self.workdir+"/"
-        controlFile = prefix+os.path.basename(self.controlFile)
+        control_file = f"{self.workdir}/{os.path.basename(self.controlFile)}"
         self.copy_input()
         self.redir_output()
-        self.control.write(controlFile)
+        self.control.write(control_file)
 
         if outputFile is None:
-            if self.control.io_file_output.upper() == "SCREEN":
-                outputFile = None
-            else:
-                outputFile = self.control.io_file_output
+            outputFile = next_file(self.control.io_file_output)
 
-        outputFile = f"-o {outputFile}" if outputFile is not None else ""
+        outputFile = f"-o {outputFile}"
 
         if numProcs > 1:
-            runCommand = f"{mpi} {numProcs} {dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{mpi} {numProcs} {dlpexe} -c {control_file} {outputFile}"
         else:
-            runCommand = f"{dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{dlpexe} -c {control_file} {outputFile}"
 
         if modules:
-            loadMods = "module purge && module load " + modules
-            with open("env.sh", 'w') as outFile:
-                outFile.write(loadMods+"\n")
-                outFile.write(runCommand)
+            load_mods = "module purge && module load " + modules
+            with open("env.sh", 'w') as out_file:
+                out_file.write(load_mods+"\n")
+                out_file.write(run_command)
                 cmd = ['sh ./env.sh']
         else:
-            cmd = [runCommand]
+            cmd = [run_command]
 
-        errorCode = subprocess.call(cmd, shell=True)
-        return errorCode
+        error_code = subprocess.call(cmd, shell=True)
+        return error_code
 
 
 def main():
     """ Run the main program """
-    argList = get_command_args()
-    dlPoly = DLPoly(control=argList.control, config=argList.config,
-                    field=argList.field, statis=argList.statis,
-                    workdir=argList.workdir)
-    dlPoly.run(executable=argList.dlp)
+    arg_list = get_command_args()
+    dlp_run = DLPoly(control=arg_list.control, config=arg_list.config,
+                     field=arg_list.field, statis=arg_list.statis,
+                     workdir=arg_list.workdir)
+    dlp_run.run(executable=arg_list.dlp)
 
 
 if __name__ == "__main__":
