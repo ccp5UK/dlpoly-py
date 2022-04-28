@@ -35,10 +35,10 @@ def next_file(filename):
     files = glob.glob(f"{filename}*")
     if files:
         # Get last dir number
-        idx = [int(re.search('([0-9]+)$', file).group(0)) for file in files
-               if re.search('([0-9]+)$', file)]
+        idx = (int(re.search('([0-9]+)$', file).group(0)) for file in files
+               if re.search('([0-9]+)$', file))
 
-        new_num = max(idx) + 1
+        new_num = max(idx, default=0) + 1
 
         outfile = f"{filename}{new_num}"
     else:
