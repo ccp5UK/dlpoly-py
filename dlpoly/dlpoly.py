@@ -25,7 +25,7 @@ class DLPoly:
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
                  destconfig=None, rdf=None, workdir=None, default_name=None, exe=None):
         # Default to having a control
-        self.control = Control()
+        self.control = NewControl()
         self.config = None
         self.destconfig = destconfig
         self.field = None
@@ -129,7 +129,7 @@ class DLPoly:
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
         if control:
-            self.control.write_old(prefix+self.controlFile+suffix)
+            self.control.write(prefix+self.controlFile+suffix)
         if config and self.config:
             self.config.write(prefix+self.configFile+suffix)
         if field and self.field:
