@@ -94,7 +94,7 @@ class DLPoly:
     @staticmethod
     def _update_file(direc, file, dest_name=None):
         if dest_name is None:
-            dest_name = file
+            dest_name = os.path.basename(file)
         copy_file(file, os.path.join(direc, dest_name))
         return os.path.join(direc, os.path.basename(dest_name))
 
