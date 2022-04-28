@@ -2,9 +2,9 @@
 """
 
 import subprocess
+import os
 import os.path
 import sys
-import os
 import glob
 import re
 import shutil
@@ -23,11 +23,11 @@ class DLPoly:
     __version__ = "4.10"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 destconfig=None, rdf=None, workdir=None, default_name=None, exe=None):
+                 dest_config=None, rdf=None, workdir=None, default_name=None, exe=None):
         # Default to having a control
         self.control = NewControl()
         self.config = None
-        self.destconfig = destconfig
+        self.dest_config = dest_config
         self.field = None
         self.statis = None
         self.rdf = None
@@ -92,8 +92,8 @@ class DLPoly:
                 os.path.join(direc, os.path.basename(self.control.io_file_msd)))
 
     @staticmethod
-    def _update_file(direc, file):
-        copy_file(file, direc)
+    def _update_file(direc, file, dest_name=""):
+        copy_file(file, os.path.join(direc, dest_name))
         return os.path.join(direc, os.path.basename(file))
 
     def copy_input(self, direc=None):
@@ -105,11 +105,11 @@ class DLPoly:
         except shutil.SameFileError:
             pass
 
-        if self.destconfig is None:
+        if self.dest_config is None:
             self.configFile = self._update_file(direc, self.configFile)
 
         else:
-            self.configFile = self._update_file(direc, self.destconfig)
+            self.configFile = self._update_file(direc, self.configFile, self.dest_config)
 
         self.fieldFile = self._update_file(direc, self.fieldFile)
 
@@ -146,7 +146,7 @@ class DLPoly:
                 self.control = Control(source).to_new()
             self.controlFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_field(self, source=None):
         """ Load field file into class """
@@ -156,7 +156,7 @@ class DLPoly:
             self.field = Field(source)
             self.fieldFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_config(self, source=None):
         """ Load config file into class """
@@ -166,7 +166,7 @@ class DLPoly:
             self.config = Config(source)
             self.configFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_statis(self, source=None):
         """ Load statis file into class """
@@ -176,7 +176,7 @@ class DLPoly:
             self.statis = Statis(source)
             self.statisFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     def load_rdf(self, source=None):
         """ Load statis file into class """
@@ -186,7 +186,7 @@ class DLPoly:
             self.rdf = rdf(source)
             self.rdfFile = source
         else:
-            print("Unable to find file: {}".format(source))
+            print(f"Unable to find file: {source}")
 
     @property
     def exe(self):
@@ -292,9 +292,9 @@ class DLPoly:
                 idx = [int(re.search('([0-9]+)$', dir).group(0)) for dir in dirs
                        if re.search('([0-9]+)$', dir)]
 
-                newNum = max(idx) + 1
+                new_num = max(idx) + 1
 
-                self.workdir = f"{self.default_name}{newNum}"
+                self.workdir = f"{self.default_name}{new_num}"
             else:
                 self.workdir = f"{self.default_name}1"
 
@@ -322,30 +322,30 @@ class DLPoly:
         outputFile = f"-o {outputFile}" if outputFile is not None else ""
 
         if numProcs > 1:
-            runCommand = f"{mpi} {numProcs} {dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{mpi} {numProcs} {dlpexe} -c {controlFile} {outputFile}"
         else:
-            runCommand = f"{dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{dlpexe} -c {controlFile} {outputFile}"
 
         if modules:
-            loadMods = "module purge && module load " + modules
+            load_mods = "module purge && module load " + modules
             with open("env.sh", 'w') as outFile:
-                outFile.write(loadMods+"\n")
-                outFile.write(runCommand)
+                outFile.write(load_mods+"\n")
+                outFile.write(run_command)
                 cmd = ['sh ./env.sh']
         else:
-            cmd = [runCommand]
+            cmd = [run_command]
 
-        errorCode = subprocess.call(cmd, shell=True)
-        return errorCode
+        error_code = subprocess.call(cmd, shell=True)
+        return error_code
 
 
 def main():
     """ Run the main program """
     argList = get_command_args()
-    dlPoly = DLPoly(control=argList.control, config=argList.config,
-                    field=argList.field, statis=argList.statis,
-                    workdir=argList.workdir)
-    dlPoly.run(executable=argList.dlp)
+    dlp_run = DLPoly(control=argList.control, config=argList.config,
+                     field=argList.field, statis=argList.statis,
+                     workdir=argList.workdir)
+    dlp_run.run(executable=argList.dlp)
 
 
 if __name__ == "__main__":
