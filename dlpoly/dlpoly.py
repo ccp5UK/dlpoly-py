@@ -5,8 +5,6 @@ import subprocess
 import os
 import os.path
 import sys
-import glob
-import re
 import shutil
 from .new_control import (NewControl, is_new_control)
 from .control import Control
@@ -32,8 +30,10 @@ class DLPoly:
         self.statis = None
         self.rdf = None
         self.workdir = workdir
-        self.default_name = "dlprun"
         self.exe = exe
+
+        if default_name is None:
+            self.default_name = "dlprun"
 
         if control is not None:
             self.load_control(control)
@@ -79,7 +79,9 @@ class DLPoly:
             self.control.io_file_revold = os.path.abspath(
                 os.path.join(direc, os.path.basename(self.control.io_file_revold)))
 
-        if hasattr(self.control, 'rdf_print') and self.control.rdf_print and not self.control.io_file_rdf:
+        if hasattr(self.control, 'rdf_print') and \
+           self.control.rdf_print and \
+           not self.control.io_file_rdf:
             self.control.io_file_rdf = 'RDFDAT'
         if self.control.io_file_rdf:
             self.control.io_file_rdf = os.path.abspath(
@@ -293,36 +295,32 @@ class DLPoly:
         try:
             os.mkdir(self.workdir)
         except FileExistsError:
-            print("Folder {} exists, over-writing.".format(self.workdir))
+            print(f"Folder {self.workdir} exists, over-writing.")
 
         dlpexe = executable
         if executable is None:
             dlpexe = self.exe
 
-        prefix = self.workdir+"/"
-        controlFile = prefix+os.path.basename(self.controlFile)
+        control_file = f"{self.workdir}/{os.path.basename(self.controlFile)}"
         self.copy_input()
         self.redir_output()
-        self.control.write(controlFile)
+        self.control.write(control_file)
 
         if outputFile is None:
-            if self.control.io_file_output.upper() == "SCREEN":
-                outputFile = None
-            else:
-                outputFile = next_file(self.control.io_file_output)
+            outputFile = next_file(self.control.io_file_output)
 
         outputFile = f"-o {outputFile}" if outputFile is not None else ""
 
         if numProcs > 1:
-            run_command = f"{mpi} {numProcs} {dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{mpi} {numProcs} {dlpexe} -c {control_file} {outputFile}"
         else:
-            run_command = f"{dlpexe} -c {controlFile} {outputFile}"
+            run_command = f"{dlpexe} -c {control_file} {outputFile}"
 
         if modules:
             load_mods = "module purge && module load " + modules
-            with open("env.sh", 'w') as outFile:
-                outFile.write(load_mods+"\n")
-                outFile.write(run_command)
+            with open("env.sh", 'w') as out_file:
+                out_file.write(load_mods+"\n")
+                out_file.write(run_command)
                 cmd = ['sh ./env.sh']
         else:
             cmd = [run_command]
@@ -333,11 +331,11 @@ class DLPoly:
 
 def main():
     """ Run the main program """
-    argList = get_command_args()
-    dlp_run = DLPoly(control=argList.control, config=argList.config,
-                     field=argList.field, statis=argList.statis,
-                     workdir=argList.workdir)
-    dlp_run.run(executable=argList.dlp)
+    arg_list = get_command_args()
+    dlp_run = DLPoly(control=arg_list.control, config=arg_list.config,
+                     field=arg_list.field, statis=arg_list.statis,
+                     workdir=arg_list.workdir)
+    dlp_run.run(executable=arg_list.dlp)
 
 
 if __name__ == "__main__":
