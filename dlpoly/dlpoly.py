@@ -310,7 +310,7 @@ class DLPoly:
         if outputFile is None:
             outputFile = next_file(self.control.io_file_output)
 
-        outputFile = f"-o {outputFile}" if outputFile is not None else ""
+        outputFile = f"-o {outputFile}"
 
         if numProcs > 1:
             run_command = f"{mpi} {numProcs} {dlpexe} -c {control_file} {outputFile}"

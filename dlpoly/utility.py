@@ -38,11 +38,11 @@ def next_file(filename):
         idx = (int(re.search('([0-9]+)$', file).group(0)) for file in files
                if re.search('([0-9]+)$', file))
 
-        new_num = max(idx, default=0) + 1
+        new_num = max(idx, default=1) + 1
 
         outfile = f"{filename}{new_num}"
     else:
-        outfile = f"{filename}1"
+        outfile = f"{filename}"
 
     return outfile
 
