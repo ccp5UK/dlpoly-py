@@ -2,8 +2,8 @@
 Module to handle new DLPOLY control files
 """
 
-from .utility import DLPData
 import os.path
+from .utility import DLPData
 
 
 class NewControl(DLPData):
@@ -273,14 +273,32 @@ class NewControl(DLPData):
         for key, val in override.items():
             self[key] = val
 
+    @staticmethod
+    def from_dict(in_dict, strict=True):
+        """ Create a control file from a dictionary ignoring invalid options in dictionary
+
+        :param in_dict: Dictionary to read
+        :param strict: Error on invalid keys
+        """
+        new_control = NewControl()
+        if strict:
+            for key, val in in_dict.items():
+                new_control[key] = val
+        else:
+            for key, val in in_dict:
+                if key in new_control.keys:
+                    new_control[key] = val
+
+        return new_control
+
     def read(self, filename):
         """ Read a control file
 
         :param filename: File to read
 
         """
-        with open(filename, "r") as inFile:
-            for line in inFile:
+        with open(filename, "r") as in_file:
+            for line in in_file:
                 line = line.split('#')[0]
                 line = line.split('!')[0]
                 line = line.strip()
@@ -310,21 +328,21 @@ class NewControl(DLPData):
                     unit = ""
                     lvals = vals
                 if len(lvals) > 1:
-                    print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=outFile)
+                    print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=out_file)
                 else:
-                    print(key, *(f" {val}" for val in lvals), unit, file=outFile)
+                    print(key, *(f" {val}" for val in lvals), unit, file=out_file)
 
             elif isinstance(vals, bool):
                 if vals:
-                    print(key, "ON", file=outFile)
+                    print(key, "ON", file=out_file)
                 else:
-                    print(key, "OFF", file=outFile)
+                    print(key, "OFF", file=out_file)
             elif isinstance(vals, str) and not vals:
                 return
             else:
-                print(key, vals, file=outFile)
+                print(key, vals, file=out_file)
 
-        with open(filename, "w") as outFile:
+        with open(filename, "w") as out_file:
             output("title", self["title"])
             for key, vals in self.__dict__.items():
                 if (key in ("title", "filename", "io_file_control") or key.startswith("_") or
@@ -335,8 +353,8 @@ class NewControl(DLPData):
 
 def is_new_control(filename):
     """ Determine if file is in old or new format """
-    with open(filename, 'r') as inFile:
-        for line in inFile:
+    with open(filename, 'r') as in_file:
+        for line in in_file:
             line = line[0:line.find('#')]
             line = line[0:line.find('!')]
             line = line.strip()

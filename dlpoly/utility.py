@@ -47,14 +47,14 @@ def parse_line(line):
     return line.split(COMMENT_CHAR)[0].strip()
 
 
-def read_line(inFile):
+def read_line(in_file):
     """ Read a line, stripping comments and blank lines
 
-    :param inFile: File to read
+    :param in_file: File to read
 
     """
     line = None
-    for line in inFile:
+    for line in in_file:
         line = parse_line(line)
         if line:
             break
@@ -85,43 +85,55 @@ def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units="rad"):
 class DLPData(ABC):
     """ Abstract datatype for handling automatic casting and restricted assignment
 
-     :param dataTypes: Datatypes to handle as dict of "element name : dataype"
+     :param datatypes: Datatypes to handle as dict of "element name : dataype"
      :param strict: Whether fuzzy matching will be applied
 
      """
 
-    def __init__(self, dataTypes: dict, strict: bool = False):
-        self._dataTypes = dataTypes
+    def __init__(self, datatypes: dict, strict: bool = False):
+        self._datatypes = datatypes
         self._strict = strict
 
-    dataTypes = property(lambda self: self._dataTypes)
-    keys = property(lambda self: [key for key in self.dataTypes if key != "keysHandled"])
+    datatypes = property(lambda self: self._datatypes)
+    keys = property(lambda self: [key for key in self.datatypes
+                                  if key not in ("keysHandled", "_strict")])
+    set_keys = property(lambda self: (key for key in self.keys if self.is_set(key)))
     className = property(lambda self: type(self).__name__)
 
     def dump(self):
-        """Dump keys to screen  """
-
+        """ Dump keys to screen """
         for key in self.keys:
             print(key, self[key])
 
-    def __setattr__(self, key, val):
-        if key == "_dataTypes":  # Protect datatypes
+    @property
+    def strict(self):
+        """ Whether should throw if bad keys supplied """
+        return self._strict
 
-            if not hasattr(self, "_dataTypes"):
+    def __setattr__(self, key, val):
+        if key == "_datatypes":  # Protect datatypes
+
+            if not hasattr(self, "_datatypes"):
                 self.__dict__[key] = {**val, "keysHandled": tuple, "_strict": bool}
             else:
-                print("Cannot alter dataTypes")
+                raise KeyError("Cannot alter datatypes")
+            return
+
+        if key == "_strict":
+            if not hasattr(self, "_strict"):
+                self.__dict__[key] = val
+            else:
+                raise KeyError("Cannot alter strict")
             return
 
         if key == "source":  # source is not really a keyword
             return
 
-        if key not in self.dataTypes:
-            print("Param {} not allowed in {} definition".format(key, self.className.lower()))
-            return
-
         if key == "ensemble" and val is None:
-            raise KeyError
+            raise KeyError("Ensemble cannot be empty")
+
+        if self.strict and key not in self.datatypes:
+            raise KeyError(f"Param {key} not allowed in {self.className.lower()} definition")
 
         val = self._map_types(key, val)
         self.__dict__[key] = val
@@ -131,15 +143,30 @@ class DLPData(ABC):
         key = check_arg(key, *self.keys)
         return getattr(self, str(key))
 
-    def __setitem__(self, keyIn, val):
+    def __setitem__(self, key_in, val):
         """ Fuzzy matching on get/set item """
-        if not self._strict:
-            key = check_arg(keyIn, *self.keys)
+        if not self.strict:
+            key = check_arg(key_in, *self.keys)
             if not key:
-                raise KeyError(f"'{keyIn}' is not a member of {type(self).__name__}")
+                raise KeyError(f"'{key_in}' is not a member of {type(self).__name__}")
         else:
-            key = keyIn
+            key = key_in
         setattr(self, key, val)
+
+    def is_set(self, key):
+        """ Check if key is set in this object
+
+        :param key: Key to check
+        """
+        return key in self.__dict__
+
+    def __iter__(self):
+        return ((key, self[key]) for key in self.set_keys)
+
+    def __add__(self, other):
+        for key, val in other:
+            if not self.is_set(key):
+                self[key] = val
 
     def _map_types(self, key, vals):
         """ Map argument types to their respective types according to datatypes.
@@ -148,8 +175,11 @@ class DLPData(ABC):
         :param vals: Value to convert
 
         """
-        dType = self._dataTypes[key]
-        if isinstance(vals, (tuple, list)) and not isinstance(dType, (tuple, bool)) and dType is not tuple:
+        datatype = self._datatypes[key]
+        if isinstance(vals, (tuple, list)) and \
+           not isinstance(datatype, (tuple, bool)) and \
+           datatype is not tuple:
+
             if not vals:
                 pass
             elif len(vals) == 1:
@@ -162,49 +192,59 @@ class DLPData(ABC):
                     except TypeError:
                         pass
                 else:
-                    raise TypeError("No arg of {} ({}) for key {} valid, must be castable to {}".format(
-                        vals,
-                        [type(x).__name__ for x in vals], key,
-                        dType.__name__))
+                    raise TypeError(f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
+                                    f"for key {key} valid, must be castable to {datatype.__name__}")
 
-        if isinstance(dType, tuple):
+        if isinstance(datatype, tuple):
 
             if isinstance(vals, (int, float, str)):
                 vals = (vals,)
 
             try:
-                if ... in dType:
-                    loc = dType.index(...)
-                    if loc != len(dType)-1:
-                        pre, ellided, post = dType[:loc], dType[loc-1], dType[loc+1:]
-                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                if ... in datatype:
+                    loc = datatype.index(...)
+                    if loc != len(datatype)-1:
+                        pre, ellided, post = datatype[:loc], datatype[loc-1], datatype[loc+1:]
+                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
                                [ellided(item) for item in vals[loc:-len(post)]] +
-                               [targetType(item) for item, targetType in zip(vals[-len(post):], post)])
+                               [target_type(item)
+                                for item, target_type in zip(vals[-len(post):], post)])
                     else:
-                        pre, ellided = dType[:loc], dType[loc-1]
-                        val = ([targetType(item) for item, targetType in zip(vals[:loc], pre)] +
+                        pre, ellided = datatype[:loc], datatype[loc-1]
+                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
                                [ellided(item) for item in vals[loc:]])
 
                 else:
-                    val = [targetType(item) for item, targetType in zip(vals, dType)]
-            except TypeError:
-                print("Type of {} ({}) not valid, must be castable to {}".format(vals,
-                                                                                 [type(x).__name__ for x in vals],
-                                                                                 [x.__name__ for x in dType]))
+                    val = [target_type(item) for item, target_type in zip(vals, datatype)]
+            except TypeError as err:
+                message = (f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
+                           f"must be castable to {[x.__name__ for x in datatype]}")
 
-        elif isinstance(vals, dType):  # Already right type
+                if not self.strict:
+                    print(message)
+                    return None
+
+                raise TypeError(message) from err
+
+        elif isinstance(vals, datatype):  # Already right type
             val = vals
-        elif dType is bool:  # If present true unless explicitly false
+        elif datatype is bool:  # If present true unless explicitly false
             val = vals not in (0, False)
 
         else:
-            # print(key, vals)
             try:
-                val = self._dataTypes[key](vals)
+                val = self._datatypes[key](vals)
             except TypeError as err:
-                print(err)
-                print("Type of {} ({}) not valid, must be castable to {}".format(vals, type(vals).__name__,
-                                                                                 dType.__name__))
+                message = (f"Type of {vals} ({type(vals).__name__}) not valid, "
+                           f"must be castable to {datatype.__name__}")
+
+                if not self.strict:
+                    print(err)
+                    print(message)
+                    return None
+
+                raise TypeError(message) from err
+
         return val
 
 
