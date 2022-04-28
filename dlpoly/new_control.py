@@ -286,7 +286,7 @@ class NewControl(DLPData):
                 new_control[key] = val
         else:
             for key, val in in_dict:
-                if key in new_control.dataTypes:
+                if key in new_control.keys:
                     new_control[key] = val
 
         return new_control

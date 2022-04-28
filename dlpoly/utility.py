@@ -95,8 +95,8 @@ class DLPData(ABC):
         self._strict = strict
 
     datatypes = property(lambda self: self._datatypes)
-    keys = property(lambda self: (key for key in self.datatypes
-                                  if key not in ("keysHandled", "_strict")))
+    keys = property(lambda self: [key for key in self.datatypes
+                                  if key not in ("keysHandled", "_strict")])
     set_keys = property(lambda self: (key for key in self.keys if self.is_set(key)))
     className = property(lambda self: type(self).__name__)
 
