@@ -6,6 +6,8 @@ import math
 import itertools
 from abc import ABC
 import shutil
+import re
+import glob
 import numpy as np
 
 COMMENT_CHAR = '#'
@@ -21,6 +23,28 @@ def copy_file(inpf, outd):
         shutil.copy(inpf, outd)
     except shutil.SameFileError:
         pass
+
+
+def next_file(filename):
+    """ Get the name of the next available file
+
+    :param filename: filename to check
+    :returns: New output file name
+    :rtype: str
+    """
+    files = glob.glob(f"{filename}*")
+    if files:
+        # Get last dir number
+        idx = [int(re.search('([0-9]+)$', file).group(0)) for file in files
+               if re.search('([0-9]+)$', file)]
+
+        new_num = max(idx) + 1
+
+        outfile = f"{filename}{new_num}"
+    else:
+        outfile = f"{filename}1"
+
+    return outfile
 
 
 def peek(iterable):

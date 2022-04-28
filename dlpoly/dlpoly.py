@@ -15,7 +15,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
-from .utility import copy_file
+from .utility import (copy_file, next_file)
 
 
 class DLPoly:
@@ -288,17 +288,7 @@ class DLPoly:
         # If we're defaulting to default name
         # Get last runname + 1 for this one
         if self.workdir is None:
-            dirs = glob.glob(f"{self.default_name}*")
-            if dirs:
-                # Get last dir number
-                idx = [int(re.search('([0-9]+)$', dir).group(0)) for dir in dirs
-                       if re.search('([0-9]+)$', dir)]
-
-                new_num = max(idx) + 1
-
-                self.workdir = f"{self.default_name}{new_num}"
-            else:
-                self.workdir = f"{self.default_name}1"
+            self.workdir = next_file(self.default_name)
 
         try:
             os.mkdir(self.workdir)
@@ -319,7 +309,7 @@ class DLPoly:
             if self.control.io_file_output.upper() == "SCREEN":
                 outputFile = None
             else:
-                outputFile = self.control.io_file_output
+                outputFile = next_file(self.control.io_file_output)
 
         outputFile = f"-o {outputFile}" if outputFile is not None else ""
 
