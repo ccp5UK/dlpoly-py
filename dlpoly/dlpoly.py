@@ -92,9 +92,11 @@ class DLPoly:
                 os.path.join(direc, os.path.basename(self.control.io_file_msd)))
 
     @staticmethod
-    def _update_file(direc, file, dest_name=""):
+    def _update_file(direc, file, dest_name=None):
+        if dest_name is None:
+            dest_name = file
         copy_file(file, os.path.join(direc, dest_name))
-        return os.path.join(direc, os.path.basename(file))
+        return os.path.join(direc, os.path.basename(dest_name))
 
     def copy_input(self, direc=None):
         """ Copy input field and config to the working location """
