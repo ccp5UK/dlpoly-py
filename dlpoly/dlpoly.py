@@ -26,6 +26,7 @@ class DLPoly:
         self.control = NewControl()
         self.config = None
         self.dest_config = dest_config
+        self.default_name = default_name
         self.field = None
         self.statis = None
         self.rdf = None
