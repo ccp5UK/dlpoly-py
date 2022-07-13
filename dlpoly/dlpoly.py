@@ -216,9 +216,9 @@ class DLPoly:
         try:
             proc = subprocess.run([exe, '-h'], capture_output=True)
             if f"Usage: {os.path.basename(exe)}" not in proc.stderr.decode(sys.stdout.encoding):
-                print("{exe} is not DLPoly, run may not work")
+                print(f"{exe} is not DLPoly, run may not work")
         except FileNotFoundError:
-            print("{exe} does not exist, run may not work")
+            print(f"{exe} does not exist, run may not work")
 
     @property
     def controlFile(self):
