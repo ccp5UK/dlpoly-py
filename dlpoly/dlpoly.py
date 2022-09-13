@@ -312,15 +312,13 @@ class DLPoly:
             outputFile = next_file(self.control.io_file_output)
 
         if is_mpi():
-            from mpi4py import MPI
-            comm = MPI.COMM_WORLD
-            rank = comm.Get_rank()
+            from mpi4py.MPI import (COMM_WORLD, COMM_SELF)
 
-            if rank == 0:
-                MPI.COMM_SELF.Spawn(dlpexe,
-                                    [f"-c {control_file}", f"-o {outputFile}"],
-                                    maxprocs=numProcs)
-            comm.Barrier()
+            if COMM_WORLD.Get_rank() == 0:
+                COMM_SELF.Spawn(dlpexe,
+                                [f"-c {control_file}", f"-o {outputFile}"],
+                                maxprocs=numProcs)
+            COMM_WORLD.Barrier()
 
         else:
             run_command = f"{dlpexe} -c {control_file} -o {outputFile}"
