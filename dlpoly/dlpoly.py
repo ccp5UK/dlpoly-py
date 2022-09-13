@@ -16,7 +16,6 @@ from .cli import get_command_args
 from .utility import (copy_file, next_file, is_mpi)
 
 
-
 class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "4.10"  # which version of dlpoly supports
