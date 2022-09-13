@@ -312,12 +312,18 @@ class DLPoly:
 
         if is_mpi():
             from mpi4py.MPI import (COMM_WORLD, COMM_SELF)
+            from mpi4py.MPI import Exception as MPIException
 
+            error_code = 0
             if COMM_WORLD.Get_rank() == 0:
-                COMM_SELF.Spawn(dlpexe,
-                                [f"-c {control_file}", f"-o {outputFile}"],
-                                maxprocs=numProcs)
-            COMM_WORLD.Barrier()
+                try:
+                    COMM_SELF.Spawn(dlpexe,
+                                    [f"-c {control_file}", f"-o {outputFile}"],
+                                    maxprocs=numProcs)
+                except MPIException as err:
+                    error_code = err.Get_error_code()
+
+            COMM_WORLD.Bcast(error_code, 0)
 
         else:
             run_command = f"{dlpexe} -c {control_file} -o {outputFile}"
@@ -334,7 +340,8 @@ class DLPoly:
             else:
                 cmd = [run_command]
 
-        error_code = subprocess.call(cmd, shell=True)
+            error_code = subprocess.call(cmd, shell=True)
+
         return error_code
 
 
