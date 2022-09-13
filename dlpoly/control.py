@@ -49,10 +49,12 @@ class FField(DLPData):
         fullName = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
                     "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func": "functional"}
 
-        if check_arg(key, "spme"):
-            key = "ewald"
+        if check_arg(key, "ewald"):
+            key = "spme"
+        if check_arg(key, "reaction"):
+            key = "reaction_field"
 
-        if check_arg(key, "reaction", "shift", "distan", "ewald", "coul"):
+        if check_arg(key, "reaction_field", "spme", "shift", "distan", "coul"):
             vals = [val for val in vals if val != "field"]
             self.elec = True
             self.elecMethod = key
