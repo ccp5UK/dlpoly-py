@@ -13,7 +13,8 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
-from .utility import (copy_file, next_file)
+from .utility import (copy_file, next_file, is_mpi)
+
 
 
 class DLPoly:
@@ -310,21 +311,31 @@ class DLPoly:
         if outputFile is None:
             outputFile = next_file(self.control.io_file_output)
 
-        outputFile = f"-o {outputFile}"
+        if is_mpi():
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            rank = comm.Get_rank()
 
-        if numProcs > 1:
-            run_command = f"{mpi} {numProcs} {dlpexe} -c {control_file} {outputFile}"
-        else:
-            run_command = f"{dlpexe} -c {control_file} {outputFile}"
+            if rank == 0:
+                MPI.COMM_SELF.Spawn(dlpexe,
+                                    [f"-c {control_file}", f"-o {outputFile}"],
+                                    maxprocs=numProcs)
+            comm.Barrier()
 
-        if modules:
-            load_mods = "module purge && module load " + modules
-            with open("env.sh", 'w') as out_file:
-                out_file.write(load_mods+"\n")
-                out_file.write(run_command)
-                cmd = ['sh ./env.sh']
         else:
-            cmd = [run_command]
+            run_command = f"{dlpexe} -c {control_file} -o {outputFile}"
+
+            if numProcs > 1:
+                run_command = f"{mpi} {numProcs} {run_command}"
+
+            if modules:
+                load_mods = "module purge && module load " + modules
+                with open("env.sh", 'w') as out_file:
+                    out_file.write(load_mods+"\n")
+                    out_file.write(run_command)
+                    cmd = ['sh ./env.sh']
+            else:
+                cmd = [run_command]
 
         error_code = subprocess.call(cmd, shell=True)
         return error_code
