@@ -8,6 +8,7 @@ from abc import ABC
 import shutil
 import re
 import glob
+import sys
 import numpy as np
 
 COMMENT_CHAR = '#'
@@ -283,4 +284,13 @@ def check_arg(key, *args):
     for arg in args:
         if key.startswith(arg):
             return arg
+    return False
+
+
+def is_mpi():
+    # Imported mpi4py
+    if 'mpi4py' in sys.modules:
+        from mpi4py import MPI
+        return MPI.COMM_WORLD.Get_size > 1
+
     return False
