@@ -330,7 +330,10 @@ class NewControl(DLPData):
                 if len(lvals) > 1:
                     print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=out_file)
                 else:
-                    print(key, *(f" {val}" for val in lvals), unit, file=out_file)
+                    if unit == 'steps':
+                        print(key, *(f" {int(val)}" for val in lvals), unit, file=out_file)
+                    else:
+                        print(key, *(f" {val}" for val in lvals), unit, file=out_file)
 
             elif isinstance(vals, bool):
                 if vals:
