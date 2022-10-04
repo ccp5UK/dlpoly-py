@@ -323,7 +323,7 @@ class DLPoly:
                 except MPIException as err:
                     error_code = err.Get_error_code()
 
-            COMM_WORLD.Bcast(error_code, 0)
+            error_code = COMM_WORLD.Bcast(error_code, 0)
 
         else:
             run_command = f"{dlpexe} -c {control_file} -o {outputFile}"

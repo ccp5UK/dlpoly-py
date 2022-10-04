@@ -291,6 +291,6 @@ def is_mpi():
     # Imported mpi4py
     if 'mpi4py' in sys.modules:
         from mpi4py import MPI
-        return MPI.COMM_WORLD.Get_size > 1
+        return MPI.COMM_WORLD.Get_size() > 1
 
     return False
