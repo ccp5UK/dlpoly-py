@@ -2,6 +2,7 @@
 """
 
 import subprocess
+from pathlib import Path
 import os
 import os.path
 import sys
@@ -214,8 +215,9 @@ class DLPoly:
             else:  # Assume in folder
                 self._exe = exe
         try:
-            proc = subprocess.run([exe, '-h'], capture_output=True)
-            if f"Usage: {os.path.basename(exe)}" not in proc.stderr.decode(sys.stdout.encoding):
+            proc = subprocess.Popen([exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            result, _ = proc.communicate()
+            if f"Usage: {os.path.basename(exe)}" not in result:
                 print(f"{exe} is not DLPoly, run may not work")
         except FileNotFoundError:
             print(f"{exe} does not exist, run may not work")
@@ -284,7 +286,8 @@ class DLPoly:
         self.control.io_file_rdfFile = rdf
 
     def run(self, executable=None, modules=(),
-            numProcs=1, mpi='mpirun -n', outputFile=None):
+            numProcs=1, mpi='mpirun -n', outputFile=None,
+            RUN_CHECK=15):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -332,15 +335,20 @@ class DLPoly:
                 run_command = f"{mpi} {numProcs} {run_command}"
 
             if modules:
-                load_mods = "module purge && module load " + modules
                 with open("env.sh", 'w') as out_file:
-                    out_file.write(load_mods+"\n")
+                    out_file.write(f"module purge && module load {' '.join(modules)}\n")
                     out_file.write(run_command)
-                    cmd = ['sh ./env.sh']
+                cmd = ['sh', './env.sh']
             else:
-                cmd = [run_command]
+                cmd = run_command.split()
 
-            error_code = subprocess.call(cmd, shell=True)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc.wait(RUN_CHECK)
+            if not Path(outputFile).is_file(): # Job not started yet
+                proc.kill()
+                raise RuntimeError("DLPoly failing to start, output ({outputFile}) not found after {RUN_CHECK}s")
+
+            error_code = proc.wait()
 
         return error_code
 
