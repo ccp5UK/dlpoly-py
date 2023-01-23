@@ -171,9 +171,10 @@ class Config:
     def read(self, filename="CONFIG"):
         """ Read file into Config
 
-        :param filename: Filt to read
+        :param filename: File to read
 
         """
+
         try:
             fileIn = open(filename, "r")
         except IOError:
