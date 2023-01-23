@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 import os
 import os.path
-import sys
 import shutil
 from .new_control import (NewControl, is_new_control)
 from .control import Control
@@ -344,7 +343,7 @@ class DLPoly:
 
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             proc.wait(RUN_CHECK)
-            if not Path(outputFile).is_file(): # Job not started yet
+            if not Path(outputFile).is_file():  # Job not started yet
                 proc.kill()
                 raise RuntimeError("DLPoly failing to start, output ({outputFile}) not found after {RUN_CHECK}s")
 
