@@ -17,7 +17,7 @@ from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 
 class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
-    __version__ = "4.10"  # which version of dlpoly supports
+    __version__ = "5.0"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
                  dest_config=None, rdf=None, workdir=None, default_name=None, exe=None):
@@ -70,30 +70,24 @@ class DLPoly:
         self.control.io_file_revive = str(direc / Path(self.control.io_file_revive).name)
         self.control.io_file_revcon = str(direc / Path(self.control.io_file_revcon).name)
 
-        if hasattr(self.control, 'traj') and not self.control.io_file_history:
-            self.control.io_file_history = 'HISTORY'
-        if self.control.io_file_history:
-            self.control.io_file_history = str(direc / Path(self.control.io_file_history).name)
+        if getattr(self.control, "traj_calculate", False) or self.control.io_file_history:
+            self.control.io_file_history = str(
+                direc / Path(getattr(self.control, "io_file_history", "HISTORY")).name)
 
         if self.control.io_file_historf:
             self.control.io_file_historf = str(direc / Path(self.control.io_file_historf).name)
 
-        if hasattr(self.control, 'restart') and not self.control.io_file_revold:
-            self.control.io_file_revold = 'REVOLD'
-        if self.control.io_file_revold:
-            self.control.io_file_revold = str(direc / Path(self.control.io_file_revold).name)
+        if getattr(self.control, "restart", "clean") != "clean" or self.control.io_file_revold:
+            self.control.io_file_revold = str(
+                direc / Path(getattr(self.control, "io_file_revold", "REVOLD")).name)
 
-        if all(hasattr(self.control, 'rdf_print'),
-               self.control.rdf_print,
-               not self.control.io_file_rdf):
-            self.control.io_file_rdf = 'RDFDAT'
-        if self.control.io_file_rdf:
-            self.control.io_file_rdf = str(direc / Path(self.control.io_file_rdf).name)
+        if getattr(self.control, "rdf_print", False):
+            self.control.io_file_rdf = str(
+                direc / Path(getattr(self.control, "io_file_rdf", "RDFDAT")).name)
 
-        if hasattr(self.control, 'msdtmp') and not self.control.io_file_msd:
-            self.control.io_file_msd = 'MSDTMP'
-        if self.control.io_file_msd:
-            self.control.io_file_msd = str(direc / Path(self.control.io_file_msd).name)
+        if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
+            self.control.io_file_msd = str(
+                direc / Path(getattr(self.control, "io_file_msd", "MSDTMP")).name)
 
     @staticmethod
     def _update_file(direc, in_file, dest_name=None):
@@ -235,9 +229,9 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-            proc = subprocess.Popen([exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen([self.exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result, _ = proc.communicate()
-            if f"Usage: {self.exe.name}" not in result.decode("utf-8"):
+            if f"Usage: {self.exe}" not in result.decode("utf-8"):
                 print(f"{self.exe.absolute()} is not DLPoly, run may not work")
         except FileNotFoundError:
             print(f"{self.exe.absolute()} does not exist, run may not work")
@@ -256,7 +250,7 @@ class DLPoly:
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
-            pre_run="", post_run="", run_check=15):
+            pre_run="", post_run="", run_check=30):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -318,7 +312,11 @@ class DLPoly:
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
 
-            proc.wait(run_check)
+            try:
+                proc.wait(run_check)
+            except subprocess.TimeoutExpired:
+                pass
+
             if not Path(outputFile).is_file():  # Job not started yet
                 proc.kill()
                 raise RuntimeError(
