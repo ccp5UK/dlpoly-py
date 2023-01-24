@@ -5,6 +5,7 @@ Module containing utility functions supporting the DLPOLY Python Workflow
 import math
 import itertools
 from abc import ABC
+from pathlib import Path
 import shutil
 import re
 import glob
@@ -46,6 +47,14 @@ def next_file(filename):
         outfile = f"{filename}"
 
     return outfile
+
+
+def file_get_set_factory(name):
+    def getter(self):
+        return Path(filepath) if (filepath := getattr(self.control, f"io_file_{name}", "")) else ""
+    def setter(self, val):
+        setattr(self.control, f"io_file_{name}", str(val))
+    return getter, setter
 
 
 def peek(iterable):

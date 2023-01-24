@@ -12,7 +12,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
-from .utility import (copy_file, next_file, is_mpi)
+from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 
 
 class DLPoly:
@@ -49,6 +49,14 @@ class DLPoly:
         # Override output
         if output is not None:
             self.control.io_file_output = output
+
+    controlFile = property(*file_get_set_factory("control"))
+    fieldFile = property(*file_get_set_factory("field"))
+    vdwFile = property(*file_get_set_factory("tabvdw"))
+    eamFile = property(*file_get_set_factory("tabeam"))
+    configFile = property(*file_get_set_factory("config"))
+    statisFile = property(*file_get_set_factory("statis"))
+    rdfFile = property(*file_get_set_factory("rdf"))
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -245,69 +253,6 @@ class DLPoly:
             self._workdir = None
         else:
             self._workdir = Path(workdir)
-
-    @property
-    def controlFile(self):
-        """ Path to control file """
-        return Path(self.control.io_file_control)
-
-    @controlFile.setter
-    def controlFile(self, control):
-        self.control.io_file_control = str(control)
-
-    @property
-    def fieldFile(self):
-        """ Path to field file """
-        return Path(self.control.io_file_field)
-
-    @fieldFile.setter
-    def fieldFile(self, field):
-        self.control.io_file_field = str(field)
-
-    @property
-    def vdwFile(self):
-        """ Path to TABLE for vdw file """
-        return Path(self.control.io_file_tabvdw)
-
-    @vdwFile.setter
-    def vdwFile(self, vdw):
-        self.control.io_file_tabvdw = str(vdw)
-
-    @property
-    def eamFile(self):
-        """ Path to TABEAM for eam file """
-        return Path(self.control.io_file_tabeam)
-
-    @eamFile.setter
-    def eamFile(self, eam):
-        self.control.io_file_tabeam = str(eam)
-
-    @property
-    def configFile(self):
-        """ Path to config file """
-        return Path(self.control.io_file_config)
-
-    @configFile.setter
-    def configFile(self, config):
-        self.control.io_file_config = str(config)
-
-    @property
-    def statisFile(self):
-        """ Path to statis file """
-        return Path(self.control.io_file_statis)
-
-    @statisFile.setter
-    def statisFile(self, statis):
-        self.control.io_file_statis = str(statis)
-
-    @property
-    def rdfFile(self):
-        """ Path to rdf file """
-        return Path(self.control.io_file_rdfFile)
-
-    @rdfFile.setter
-    def rdfFile(self, rdf):
-        self.control.io_file_rdfFile = str(rdf)
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
