@@ -250,7 +250,7 @@ class DLPoly:
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
-            pre_run="", post_run="", run_check=15):
+            pre_run="", post_run="", run_check=30):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -312,7 +312,11 @@ class DLPoly:
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
 
-            proc.wait(run_check)
+            try:
+                proc.wait(run_check)
+            except subprocess.TimeoutExpired:
+                pass
+
             if not Path(outputFile).is_file():  # Job not started yet
                 proc.kill()
                 raise RuntimeError(
