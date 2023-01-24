@@ -2,7 +2,7 @@
 Module to handle new DLPOLY control files
 """
 
-import os.path
+from pathlib import Path
 from .utility import DLPData
 
 
@@ -260,12 +260,12 @@ class NewControl(DLPData):
         self.io_file_revcon = "REVCON"
         self.io_file_rdf = "RDFDAT"
         self.io_file_msd = "MSDTMP"
-        self.io_file_tabbnd = "TABBND" if os.path.isfile("TABVDW") else ""
-        self.io_file_tabang = "TABANG" if os.path.isfile("TABBND") else ""
-        self.io_file_tabdih = "TABDIH" if os.path.isfile("TABANG") else ""
-        self.io_file_tabinv = "TABINV" if os.path.isfile("TABDIH") else ""
-        self.io_file_tabvdw = "TABVDW" if os.path.isfile("TABINV") else ""
-        self.io_file_tabeam = "TABEAM" if os.path.isfile("TABEAM") else ""
+        self.io_file_tabbnd = "TABBND" if Path("TABVDW").exists() else ""
+        self.io_file_tabang = "TABANG" if Path("TABBND").exists() else ""
+        self.io_file_tabdih = "TABDIH" if Path("TABANG").exists() else ""
+        self.io_file_tabinv = "TABINV" if Path("TABDIH").exists() else ""
+        self.io_file_tabvdw = "TABVDW" if Path("TABINV").exists() else ""
+        self.io_file_tabeam = "TABEAM" if Path("TABEAM").exists() else ""
 
         if source is not None:
             self.read(source)

@@ -3,7 +3,7 @@
 Module to handle DLPOLY control files
 """
 
-import os.path
+from pathlib import Path
 from .new_control import NewControl
 from .utility import DLPData, check_arg
 
@@ -277,13 +277,13 @@ class IOParam(DLPData):
                                 "tabang": str, "tabdih": str,
                                 "tabinv": str, "tabeam": str})
 
-        # Get control"s path
+        # Get control's path
         if control is not None:
-            controlTruepath = os.path.dirname(os.path.abspath(control))
+            controlTruepath = Path(control).absolute().parent
             # Make other paths relative to control (i.e. load them correctly)
             field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd, \
                 tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam = \
-                map(lambda path: os.path.abspath(os.path.join(controlTruepath, path)),
+                map(lambda path: controlTruepath / path,
                     (field, config, statis, output, history, historf, revive, revcon, revold,
                      rdf, msd, tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam))
 
@@ -300,12 +300,12 @@ class IOParam(DLPData):
         self.rdf = ""
         self.msd = ""
 
-        self.tabvdw = tabvdw if os.path.isfile(tabvdw) else ""
-        self.tabbnd = tabbnd if os.path.isfile(tabbnd) else ""
-        self.tabang = tabang if os.path.isfile(tabang) else ""
-        self.tabdih = tabdih if os.path.isfile(tabdih) else ""
-        self.tabinv = tabinv if os.path.isfile(tabinv) else ""
-        self.tabeam = tabeam if os.path.isfile(tabeam) else ""
+        self.tabvdw = tabvdw if Path(tabvdw).is_file() else ""
+        self.tabbnd = tabbnd if Path(tabbnd).is_file() else ""
+        self.tabang = tabang if Path(tabang).is_file() else ""
+        self.tabdih = tabdih if Path(tabdih).is_file() else ""
+        self.tabinv = tabinv if Path(tabinv).is_file() else ""
+        self.tabeam = tabeam if Path(tabeam).is_file() else ""
 
     keysHandled = property(lambda self: ("io",))
 
