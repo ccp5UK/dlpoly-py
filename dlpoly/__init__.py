@@ -26,7 +26,7 @@ modules = Path(__file__).parent.glob("*.py")
 __all__ = [f.stem for f in modules if f.is_file()
            and f.name != '__init__.py']
 
-__version__ = '0.3.6'
+__version__ = '0.3.7'
 
 try:
     from .dlpoly import DLPoly
