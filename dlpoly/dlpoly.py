@@ -70,30 +70,24 @@ class DLPoly:
         self.control.io_file_revive = str(direc / Path(self.control.io_file_revive).name)
         self.control.io_file_revcon = str(direc / Path(self.control.io_file_revcon).name)
 
-        if hasattr(self.control, 'traj') and not self.control.io_file_history:
-            self.control.io_file_history = 'HISTORY'
-        if self.control.io_file_history:
-            self.control.io_file_history = str(direc / Path(self.control.io_file_history).name)
+        if getattr(self.control, "traj_calculate", False) or self.control.io_file_history:
+            self.control.io_file_history = str(
+                direc / Path(getattr(self.control, "io_file_history", "HISTORY")).name)
 
         if self.control.io_file_historf:
             self.control.io_file_historf = str(direc / Path(self.control.io_file_historf).name)
 
-        if hasattr(self.control, 'restart') and not self.control.io_file_revold:
-            self.control.io_file_revold = 'REVOLD'
-        if self.control.io_file_revold:
-            self.control.io_file_revold = str(direc / Path(self.control.io_file_revold).name)
+        if getattr(self.control, "restart", "clean") != "clean" or self.control.io_file_revold:
+            self.control.io_file_revold = str(
+                direc / Path(getattr(self.control, "io_file_revold", "REVOLD")).name)
 
-        if all(hasattr(self.control, 'rdf_print'),
-               self.control.rdf_print,
-               not self.control.io_file_rdf):
-            self.control.io_file_rdf = 'RDFDAT'
-        if self.control.io_file_rdf:
-            self.control.io_file_rdf = str(direc / Path(self.control.io_file_rdf).name)
+        if getattr(self.control, "rdf_print", False):
+            self.control.io_file_rdf = str(
+                direc / Path(getattr(self.control, "io_file_rdf", "RDFDAT")).name)
 
-        if hasattr(self.control, 'msdtmp') and not self.control.io_file_msd:
-            self.control.io_file_msd = 'MSDTMP'
-        if self.control.io_file_msd:
-            self.control.io_file_msd = str(direc / Path(self.control.io_file_msd).name)
+        if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
+            self.control.io_file_msd = str(
+                direc / Path(getattr(self.control, "io_file_msd", "MSDTMP")).name)
 
     @staticmethod
     def _update_file(direc, in_file, dest_name=None):
