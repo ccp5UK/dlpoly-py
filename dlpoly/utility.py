@@ -50,10 +50,19 @@ def next_file(filename):
 
 
 def file_get_set_factory(name):
+    """ Creates getters and setters for standard access to control from DLPoly
+
+    :param name: Name of file as given by control
+    :returns: getter & setter functions for property
+    :rtype: func
+    """
+
     def getter(self):
         return Path(filepath) if (filepath := getattr(self.control, f"io_file_{name}", "")) else ""
+
     def setter(self, val):
         setattr(self.control, f"io_file_{name}", str(val))
+
     return getter, setter
 
 
@@ -297,6 +306,10 @@ def check_arg(key, *args):
 
 
 def is_mpi():
+    """ Checks whether MPI is active and available
+
+    :returns: True/False if mpi available and active
+    """
     # Imported mpi4py
     if 'mpi4py' in sys.modules:
         from mpi4py import MPI

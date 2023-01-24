@@ -83,9 +83,9 @@ class DLPoly:
         if self.control.io_file_revold:
             self.control.io_file_revold = str(direc / Path(self.control.io_file_revold).name)
 
-        if hasattr(self.control, 'rdf_print') and \
-           self.control.rdf_print and \
-           not self.control.io_file_rdf:
+        if all(hasattr(self.control, 'rdf_print'),
+               self.control.rdf_print,
+               not self.control.io_file_rdf):
             self.control.io_file_rdf = 'RDFDAT'
         if self.control.io_file_rdf:
             self.control.io_file_rdf = str(direc / Path(self.control.io_file_rdf).name)
@@ -256,7 +256,7 @@ class DLPoly:
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
-            RUN_CHECK=15):
+            pre_run="", post_run="", run_check=15):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -304,18 +304,26 @@ class DLPoly:
                 run_command = f"{mpi} {numProcs} {run_command}"
 
             if modules:
-                with open("env.sh", 'w') as out_file:
-                    out_file.write(f"module purge && module load {' '.join(modules)}\n")
-                    out_file.write(run_command)
-                cmd = ['sh', './env.sh']
-            else:
-                cmd = run_command.split()
+                pre_run = f"module purge && module load {' '.join(modules)}\n{pre_run}"
 
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            proc.wait(RUN_CHECK)
+            if pre_run or post_run:  # Windows will not work here
+                script_file = self.workdir / "env.sh"
+                with open(script_file, "w", encoding="utf-8") as out_file:
+                    out_file.write(f"{pre_run}\n")
+                    out_file.write(f"{run_command}\n")
+                    out_file.write(f"{post_run}\n")
+                run_command = f"sh {script_file}"
+
+            proc = subprocess.Popen(run_command.split(),
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+
+            proc.wait(run_check)
             if not Path(outputFile).is_file():  # Job not started yet
                 proc.kill()
-                raise RuntimeError("DLPoly failing to start, output ({outputFile}) not found after {RUN_CHECK}s")
+                raise RuntimeError(
+                    f"DLPoly failing to start, output ({outputFile}) not found after {run_check}s"
+                )
 
             error_code = proc.wait()
 
