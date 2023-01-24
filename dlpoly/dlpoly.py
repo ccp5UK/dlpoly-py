@@ -229,10 +229,10 @@ class DLPoly:
         try:
             proc = subprocess.Popen([exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result, _ = proc.communicate()
-            if f"Usage: {os.path.basename(exe)}" not in result:
-                print(f"{exe} is not DLPoly, run may not work")
+            if f"Usage: {self.exe.name}" not in result.decode("utf-8"):
+                print(f"{self.exe.absolute()} is not DLPoly, run may not work")
         except FileNotFoundError:
-            print(f"{exe} does not exist, run may not work")
+            print(f"{self.exe.absolute()} does not exist, run may not work")
 
     @property
     def workdir(self):
