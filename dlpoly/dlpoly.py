@@ -17,7 +17,7 @@ from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 
 class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
-    __version__ = "4.10"  # which version of dlpoly supports
+    __version__ = "5.0"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
                  dest_config=None, rdf=None, workdir=None, default_name=None, exe=None):
@@ -229,9 +229,9 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-            proc = subprocess.Popen([exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen([self.exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result, _ = proc.communicate()
-            if f"Usage: {self.exe.name}" not in result.decode("utf-8"):
+            if f"Usage: {self.exe}" not in result.decode("utf-8"):
                 print(f"{self.exe.absolute()} is not DLPoly, run may not work")
         except FileNotFoundError:
             print(f"{self.exe.absolute()} does not exist, run may not work")
