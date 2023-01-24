@@ -12,7 +12,7 @@ from .field import Field
 from .statis import Statis
 from .rdf import rdf
 from .cli import get_command_args
-from .utility import (copy_file, next_file, is_mpi)
+from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 
 
 class DLPoly:
@@ -50,6 +50,14 @@ class DLPoly:
         if output is not None:
             self.control.io_file_output = output
 
+    controlFile = property(*file_get_set_factory("control"))
+    fieldFile = property(*file_get_set_factory("field"))
+    vdwFile = property(*file_get_set_factory("tabvdw"))
+    eamFile = property(*file_get_set_factory("tabeam"))
+    configFile = property(*file_get_set_factory("config"))
+    statisFile = property(*file_get_set_factory("statis"))
+    rdfFile = property(*file_get_set_factory("rdf"))
+
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
         if direc is None:
@@ -75,9 +83,9 @@ class DLPoly:
         if self.control.io_file_revold:
             self.control.io_file_revold = str(direc / Path(self.control.io_file_revold).name)
 
-        if hasattr(self.control, 'rdf_print') and \
-           self.control.rdf_print and \
-           not self.control.io_file_rdf:
+        if all(hasattr(self.control, 'rdf_print'),
+               self.control.rdf_print,
+               not self.control.io_file_rdf):
             self.control.io_file_rdf = 'RDFDAT'
         if self.control.io_file_rdf:
             self.control.io_file_rdf = str(direc / Path(self.control.io_file_rdf).name)
@@ -246,72 +254,9 @@ class DLPoly:
         else:
             self._workdir = Path(workdir)
 
-    @property
-    def controlFile(self):
-        """ Path to control file """
-        return Path(self.control.io_file_control)
-
-    @controlFile.setter
-    def controlFile(self, control):
-        self.control.io_file_control = str(control)
-
-    @property
-    def fieldFile(self):
-        """ Path to field file """
-        return Path(self.control.io_file_field)
-
-    @fieldFile.setter
-    def fieldFile(self, field):
-        self.control.io_file_field = str(field)
-
-    @property
-    def vdwFile(self):
-        """ Path to TABLE for vdw file """
-        return Path(self.control.io_file_tabvdw)
-
-    @vdwFile.setter
-    def vdwFile(self, vdw):
-        self.control.io_file_tabvdw = str(vdw)
-
-    @property
-    def eamFile(self):
-        """ Path to TABEAM for eam file """
-        return Path(self.control.io_file_tabeam)
-
-    @eamFile.setter
-    def eamFile(self, eam):
-        self.control.io_file_tabeam = str(eam)
-
-    @property
-    def configFile(self):
-        """ Path to config file """
-        return Path(self.control.io_file_config)
-
-    @configFile.setter
-    def configFile(self, config):
-        self.control.io_file_config = str(config)
-
-    @property
-    def statisFile(self):
-        """ Path to statis file """
-        return Path(self.control.io_file_statis)
-
-    @statisFile.setter
-    def statisFile(self, statis):
-        self.control.io_file_statis = str(statis)
-
-    @property
-    def rdfFile(self):
-        """ Path to rdf file """
-        return Path(self.control.io_file_rdfFile)
-
-    @rdfFile.setter
-    def rdfFile(self, rdf):
-        self.control.io_file_rdfFile = str(rdf)
-
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
-            RUN_CHECK=15):
+            pre_run="", post_run="", run_check=15):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -359,18 +304,26 @@ class DLPoly:
                 run_command = f"{mpi} {numProcs} {run_command}"
 
             if modules:
-                with open("env.sh", 'w') as out_file:
-                    out_file.write(f"module purge && module load {' '.join(modules)}\n")
-                    out_file.write(run_command)
-                cmd = ['sh', './env.sh']
-            else:
-                cmd = run_command.split()
+                pre_run = f"module purge && module load {' '.join(modules)}\n{pre_run}"
 
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            proc.wait(RUN_CHECK)
+            if pre_run or post_run:  # Windows will not work here
+                script_file = self.workdir / "env.sh"
+                with open(script_file, "w", encoding="utf-8") as out_file:
+                    out_file.write(f"{pre_run}\n")
+                    out_file.write(f"{run_command}\n")
+                    out_file.write(f"{post_run}\n")
+                run_command = f"sh {script_file}"
+
+            proc = subprocess.Popen(run_command.split(),
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+
+            proc.wait(run_check)
             if not Path(outputFile).is_file():  # Job not started yet
                 proc.kill()
-                raise RuntimeError("DLPoly failing to start, output ({outputFile}) not found after {RUN_CHECK}s")
+                raise RuntimeError(
+                    f"DLPoly failing to start, output ({outputFile}) not found after {run_check}s"
+                )
 
             error_code = proc.wait()
 
