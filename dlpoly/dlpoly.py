@@ -229,14 +229,9 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-<<<<<<< dlpoly/dlpoly.py
-            proc = subprocess.run([exe, '-h'], capture_output=True)
-            if f"Usage: {exe.name}" not in proc.stderr.decode(sys.stdout.encoding):
-=======
             proc = subprocess.Popen([exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result, _ = proc.communicate()
             if f"Usage: {os.path.basename(exe)}" not in result:
->>>>>>> dlpoly/dlpoly.py
                 print(f"{exe} is not DLPoly, run may not work")
         except FileNotFoundError:
             print(f"{exe} does not exist, run may not work")
