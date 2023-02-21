@@ -77,7 +77,6 @@ class DLPoly:
         self.control.io_file_revive = str(direc / Path(self.control.io_file_revive).name)
         self.control.io_file_revcon = str(direc / Path(self.control.io_file_revcon).name)
 
-
         if getattr(self.control, "traj_calculate", False) or self.control.io_file_history:
             self.control.io_file_history = str(
                 direc / Path(get_file_def("io_file_history", "HISTORY")).name)
