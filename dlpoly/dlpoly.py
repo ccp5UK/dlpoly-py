@@ -60,6 +60,13 @@ class DLPoly:
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
+
+        def get_file_def(filetype, default):
+            """ Get default filename if filename not specified """
+            if path := getattr(self.control, filetype, False):
+                return path
+            return default
+
         if direc is None:
             direc = self.workdir.absolute()
         else:
@@ -72,22 +79,22 @@ class DLPoly:
 
         if getattr(self.control, "traj_calculate", False) or self.control.io_file_history:
             self.control.io_file_history = str(
-                direc / Path(getattr(self.control, "io_file_history", "HISTORY")).name)
+                direc / Path(get_file_def("io_file_history", "HISTORY")).name)
 
         if self.control.io_file_historf:
             self.control.io_file_historf = str(direc / Path(self.control.io_file_historf).name)
 
         if getattr(self.control, "restart", "clean") != "clean" or self.control.io_file_revold:
             self.control.io_file_revold = str(
-                direc / Path(getattr(self.control, "io_file_revold", "REVOLD")).name)
+                direc / Path(get_file_def("io_file_revold", "REVOLD")).name)
 
         if getattr(self.control, "rdf_print", False):
             self.control.io_file_rdf = str(
-                direc / Path(getattr(self.control, "io_file_rdf", "RDFDAT")).name)
+                direc / Path(get_file_def("io_file_rdf", "RDFDAT")).name)
 
         if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
             self.control.io_file_msd = str(
-                direc / Path(getattr(self.control, "io_file_msd", "MSDTMP")).name)
+                direc / Path(get_file_def("io_file_msd", "MSDTMP")).name)
 
     @staticmethod
     def _update_file(direc, in_file, dest_name=None):
