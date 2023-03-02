@@ -319,18 +319,7 @@ class DLPoly:
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
 
-            try:
-                proc.wait(run_check)
-            except subprocess.TimeoutExpired:
-                pass
-
-            if not Path(outputFile).is_file():  # Job not started yet
-                proc.kill()
-                raise RuntimeError(
-                    f"DLPoly failing to start, output ({outputFile}) not found after {run_check}s"
-                )
-
-            error_code = proc.wait()
+            _, error_code = proc.communicate()
 
         return error_code
 
