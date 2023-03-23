@@ -12,32 +12,32 @@ class FField(DLPData):
     """ Class defining properties relating to forcefields """
     def __init__(self, *_):
         DLPData.__init__(self, {"rvdw": float, "rcut": float, "rpad": float, "rpadset": bool,
-                                "elec": bool, "elecMethod": str, "metal": bool, "vdw": bool, "ewaldVdw": bool,
-                                "elecParams": tuple, "vdwParams": dict, "metalStyle": str,
-                                "polarMethod": str, "polarTHole": int})
+                                "elec": bool, "elec_method": str, "metal": bool, "vdw": bool,
+                                "ewald_vdw": bool, "elec_params": tuple, "vdw_params": dict,
+                                "metal_style": str, "polar_method": str, "polar_t_hole": int})
         self.elec = False
-        self.elecMethod = "coul"
-        self.elecParams = ("",)
+        self.elec_method = "coul"
+        self.elec_params = ("",)
 
         self.metal = False
-        self.metalStyle = "TAB"
+        self.metal_style = "TAB"
 
         self.vdw = False
-        self.vdwParams = {}
+        self.vdw_params = {}
 
         self.rcut = 0.0
         self.rvdw = 0.0
         self.rpad = 0.0
         self.rpadset = False
 
-        self.ewaldVdw = False
+        self.ewald_vdw = False
 
-        self.polarMethod = ""
-        self.polarTHole = 0
+        self.polar_method = ""
+        self.polar_t_hole = 0
 
-    keysHandled = property(lambda self: ("reaction", "shift", "distance", "ewald", "spme", "coulomb",
-                                         "rpad", "delr", "padding", "cutoff", "rcut", "cut", "rvdw",
-                                         "metal", "vdw", "polar", "ewald_vdw"))
+    keysHandled = property(lambda self: ("reaction", "shift", "distance", "ewald", "spme",
+                                         "coulomb", "rpad", "delr", "padding", "cutoff", "rcut",
+                                         "cut", "rvdw", "metal", "vdw", "polar", "ewald_vdw"))
 
     def parse(self, key, vals):
         """ Handle key-vals for FField types
@@ -46,8 +46,9 @@ class FField(DLPData):
         :param vals: Value to assign
 
         """
-        fullName = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
-                    "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func": "functional"}
+        full_name = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
+                     "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func":
+                     "functional"}
 
         if check_arg(key, "spme"):
             key = "ewald"
@@ -55,8 +56,8 @@ class FField(DLPData):
         if check_arg(key, "reaction", "shift", "distan", "ewald", "coul"):
             vals = [val for val in vals if val != "field"]
             self.elec = True
-            self.elecMethod = key
-            self.elecParams = vals
+            self.elec_method = key
+            self.elec_params = vals
         elif check_arg(key, "rpad", "delr", "padding"):
             self.rpad = vals
             if check_arg(key, "delr"):
@@ -68,41 +69,42 @@ class FField(DLPData):
             self.rvdw = vals
         elif check_arg(key, "metal"):
             self.metal = True
-            self.metalStyle = vals
+            self.metal_style = vals
         elif check_arg(key, "vdw"):
             self.vdw = True
             while vals:
                 val = vals.pop(0)
                 if check_arg(val, "direct"):
-                    self.vdwParams["direct"] = ""
+                    self.vdw_params["direct"] = ""
                 if check_arg(val, "mix"):
-                    self.vdwParams["mix"] = fullName[check_arg(vals.pop(0), *fullName.keys())]
+                    self.vdw_params["mix"] = full_name[check_arg(vals.pop(0), *full_name.keys())]
                 if check_arg(val, "shift"):
-                    self.vdwParams["shift"] = ""
+                    self.vdw_params["shift"] = ""
         elif key == "polar":
             while vals:
                 val = vals.pop()
                 if check_arg(val, "scheme", "type", "dump", "factor"):
                     continue
                 if check_arg(val, "charmm"):
-                    self.polarMethod = "charmm"
+                    self.polar_method = "charmm"
                 elif check_arg(val, "thole"):
-                    self.polarTHole = val.pop()
+                    self.polar_t_hole = val.pop()
         elif key == "ewald_vdw":
-            self.ewaldVdw = True
+            self.ewald_vdw = True
 
     def __str__(self):
-        outStr = ""
+        out_str = ""
         if self.elec:
-            outStr += "{} {}\n".format(self.elecMethod, " ".join(self.elecParams))
+            out_str += f"{self.elec_method} {' '.join(self.elec_params)}\n"
         if self.vdw:
-            outStr += "vdw {}\n".format("{} {}".format(key, val) for key, val in self.vdwParams)
+            for key, val in self.vdw_params:
+                out_str += f"vdw {key} {val}\n"
         if self.metal:
-            outStr += "metal {}\n".format(" ".join(self.metalStyle))
-        outStr += "rcut {}\n".format(self.rcut)
-        outStr += "rvdw {}\n".format(self.rvdw)
-        outStr += "rpad {}\n".format(self.rpad) if self.rpadset else ""
-        return outStr
+            out_str += f"metal {' '.join(self.metal_style)}\n"
+        out_str += f"rcut {self.rcut}\n"
+        out_str += f"rvdw {self.rvdw}\n"
+        out_str += f"rpad {self.rpad}\n" if self.rpadset else ""
+        return out_str
 
 
 class Ignore(DLPData):
@@ -133,11 +135,11 @@ class Ignore(DLPData):
         self[args[0]] = True
 
     def __str__(self):
-        outStr = ""
+        out_str = ""
         for item in self.keys:
             if getattr(self, item):
-                outStr += f"no {item}\n"
-        return outStr
+                out_str += f"no {item}\n"
+        return out_str
 
 
 class Analysis(DLPData):
@@ -164,29 +166,30 @@ class Analysis(DLPData):
         """
         self[args[0]] = args[1:]
 
-    def __str__(self):
+    # def __str__(self):
         # if any(self.all > 0):
         #     return "analyse all every {} nbins {} rmax {}".format(*self.all)
 
-        outstr = ""
+        # outstr = ""
         # for analtype in ("bonds", "angles", "dihedrals", "inversions"):
-        #     args = getattr(self, analtype)
+        #     freq, nbins, rmax = getattr(self, analtype)
         #     if any(args > 0):
-        #         outstr += ("analyse {} every {} nbins {} rmax {}\n".format(analtype, *args) if len(args) > 2 else
+        #         outstr += f"analyse {analtype} every {freq} nbins {nbins} rmax {rmax}\n"
+        # else
         #                    "analyse {} every {} nbind {}\n".format(analtype, *args))
-        return outstr
+        # return outstr
 
 
 class Print(DLPData):
     """ Class definining properties that can be printed """
     def __init__(self, *_):
         DLPData.__init__(self, {"rdf": bool, "analysis": bool, "analysisprint": bool,
-                                "analObj": Analysis, "printevery": int,
+                                "analysis_object": Analysis, "printevery": int,
                                 "vaf": bool, "zden": bool, "rdfevery": int, "vafevery": int,
                                 "vafbin": int, "statsevery": int, "zdenevery": int,
                                 "rdfprint": bool, "zdenprint": bool, "vafprint": bool})
 
-        self.analObj = Analysis()
+        self.analysis_object = Analysis()
         self.rdf = False
         self.vaf = False
         self.zden = False
@@ -230,82 +233,69 @@ class Print(DLPData):
             setattr(self, active, True)
             setattr(self, active+"every", args[0])
         elif check_arg(key, "ana"):
-            self.analObj.parse(args)
+            self.analysis_object.parse(args)
         elif check_arg(key, "vaf"):
             self.vaf = True
             self.vafevery, self.vafbin = args
 
     def __str__(self):
-        outStr = ""
+        out_str = ""
         if self.printevery > 0:
-            outStr += f"print every {self.printevery}\n"
+            out_str += f"print every {self.printevery}\n"
         if self.statsevery > 0:
-            outStr += f"stats {self.statsevery}\n"
+            out_str += f"stats {self.statsevery}\n"
         if self.analysis:
-            outStr += "print analysis\n"
-            outStr += str(self.analObj)
+            out_str += "print analysis\n"
+            out_str += str(self.analysis_object)
         for item in ("rdf", "vaf", "zden"):
-            toPrint, freq = getattr(self, item), getattr(self, item+"every")
-            if toPrint and freq:
-                outStr += f"print {item}\n"
-                outStr += f"{item}  {freq}\n"
+            to_print, freq = getattr(self, item), getattr(self, item+"every")
+            if to_print and freq:
+                out_str += f"print {item}\n"
+                out_str += f"{item}  {freq}\n"
         if self.vaf and self.vafevery:
-            outStr += "print vaf\n"
-            outStr += f"vaf {self.vafevery} {self.vafbin}"
-        return outStr
+            out_str += "print vaf\n"
+            out_str += f"vaf {self.vafevery} {self.vafbin}"
+        return out_str
 
 
 class IOParam(DLPData):
     """ Class defining io parameters """
-    def __init__(self, control="CONTROL", field="FIELD",
-                 config="CONFIG", statis="STATIS",
-                 output="OUTPUT", history="HISTORY",
-                 historf="HISTORF", revive="REVIVE",
-                 revcon="REVCON", revold="REVOLD",
-                 rdf="RDFDAT", msd="MSDTMP",
-                 tabvdw="TABLE", tabbnd="TABBND",
-                 tabang="TABANG", tabdih="TABDIH",
-                 tabinv="TABINV", tabeam="TABEAM"):
 
-        DLPData.__init__(self, {"control": str, "field": str,
-                                "config": str, "statis": str,
-                                "output": str, "history": str,
-                                "historf": str, "revive": str,
-                                "revcon": str, "revold": str,
-                                "rdf": str, "msd": str,
-                                "tabvdw": str, "tabbnd": str,
-                                "tabang": str, "tabdih": str,
-                                "tabinv": str, "tabeam": str})
+    dlp_files = property(lambda self: {"control", "field", "config", "statis", "output", "history",
+                                       "historf", "revive", "revcon", "revold", "rdf", "msd",
+                                       "tabvdw", "tabbnd", "tabang", "tabdih", "tabinv", "tabeam"})
+
+    def __init__(self, **files_in):
+
+        DLPData.__init__(self, {file_type: str for file_type in self.dlp_files})
+
+        control_defined = 'control' in files_in
+
+        # Set defaults
+        files_in = {file: files_in.get(file, file.upper())
+                    for file in self.dlp_files}
 
         # Get control's path
-        if control is not None:
-            controlTruepath = Path(control).absolute().parent
+        if control_defined:
+            control = files_in['control']
+
+            true_control_path = Path(control).absolute().parent
             # Make other paths relative to control (i.e. load them correctly)
-            field, config, statis, output, history, historf, revive, revcon, revold, rdf, msd, \
-                tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam = \
-                map(lambda path: controlTruepath / path,
-                    (field, config, statis, output, history, historf, revive, revcon, revold,
-                     rdf, msd, tabvdw, tabbnd, tabang, tabdih, tabinv, tabeam))
+            files = self.dlp_files - {"control"}
 
-        self.control = control
-        self.field = field
-        self.config = config
-        self.statis = statis
-        self.output = output
-        self.history = ""
-        self.historf = ""
-        self.revive = revive
-        self.revcon = revcon
-        self.revold = ""
-        self.rdf = ""
-        self.msd = ""
+            files_in = {file: true_control_path / files_in[file]
+                        for file in self.dlp_files}
 
-        self.tabvdw = tabvdw if Path(tabvdw).is_file() else ""
-        self.tabbnd = tabbnd if Path(tabbnd).is_file() else ""
-        self.tabang = tabang if Path(tabang).is_file() else ""
-        self.tabdih = tabdih if Path(tabdih).is_file() else ""
-        self.tabinv = tabinv if Path(tabinv).is_file() else ""
-        self.tabeam = tabeam if Path(tabeam).is_file() else ""
+        for file in ('control', 'field', 'config', 'statis',
+                     'output', 'revive', 'revcon'):
+            setattr(self, file, files_in[file])
+
+        for file in ('history', 'historf', 'revold', 'rdf', 'msd'):
+            setattr(self, file, "")
+
+        for file in ('tabvdw', 'tabbnd', 'tabang', 'tabdih', 'tabinv', 'tabeam'):
+            curr = files_in[file]
+            setattr(self, file, curr if Path(curr).is_file() else "")
 
     keysHandled = property(lambda self: ("io",))
 
@@ -319,35 +309,9 @@ class IOParam(DLPData):
         setattr(self, args[0], args[1])
 
     def __str__(self):
-        out = (f"io field {self.field}\n"   # First IO is key
-               f"io config {self.config}\n"
-               f"io statis {self.statis}\n"
-               f"io revive {self.revive}\n"
-               f"io revcon {self.revcon}\n")
-
-        if self.revold:
-            out += f"io revold {self.revold}\n"
-        if self.history:
-            out += f"io history {self.history}\n"
-        if self.historf:
-            out += f"io historf {self.historf}\n"
-        if self.msd:
-            out += f"io msd {self.msd}\n"
-        if self.rdf:
-            out += f"io rdf {self.rdf}\n"
-        if self.tabvdw:
-            out += f"io tabvdw {self.tabvdw}\n"
-        if self.tabbnd:
-            out += f"io tabbnd {self.tabbnd}\n"
-        if self.tabang:
-            out += f"io tabang {self.tabang}\n"
-        if self.tabdih:
-            out += f"io tabdih {self.tabdih}\n"
-        if self.tabinv:
-            out += f"io tabinv {self.tabinv}\n"
-        if self.tabeam:
-            out += f"io tabeam {self.tabeam}\n"
-
+        out = '\n'.join(f"io {file} {file_name}"
+                        for file in self.dlp_files
+                        if (file_name := getattr(self, file)))
         return out
 
 
@@ -367,8 +331,8 @@ class EnsembleParam:
                  ("nst", "langevin"): range(2, 6), ("nst", "berendsen"): range(2, 6),
                  ("nst", "hoover"): range(2, 6), ("nst", "mtk"): range(2, 6)}
 
-    fullName = {"lang": "langevin", "ander": "andersen", "ber": "berendsen",
-                "hoover": "hoover", "inhomo": "ttm", "ttm": "ttm", "mtk": "mtk", "dpd": "dpd", "gst": "gst"}
+    full_name = {"lang": "langevin", "ander": "andersen", "ber": "berendsen", "hoover": "hoover",
+                 "inhomo": "ttm", "ttm": "ttm", "mtk": "mtk", "dpd": "dpd", "gst": "gst"}
 
     keysHandled = property(lambda self: ("ensemble",))
 
@@ -378,14 +342,14 @@ class EnsembleParam:
         args = list(argsIn)[:]  # Make copy
         self._ensemble = args.pop(0)
         self._means = None
-        if self.ensemble not in ["nve", "pmf"]:
+        if self.ensemble not in ("nve", "pmf"):
             trial = args.pop(0)
-            test = check_arg(trial, *self.fullName)
-            self.means = self.fullName.get(test, trial)
+            test = check_arg(trial, *self.full_name)
+            self.means = self.full_name.get(test, trial)
             if trial == "dpds2":
-                self.dpdOrder = 2
+                self.dpd_order = 2
             else:
-                self.dpdOrder = 1
+                self.dpd_order = 1
         self.args = args
 
         self.area = self.orth = self.tens = self.semi = False
@@ -410,8 +374,8 @@ class EnsembleParam:
     def ensemble(self, ensemble):
         """ Set ensemble and check if valid """
         if ensemble not in EnsembleParam.validMeans:
-            raise ValueError("Cannot set ensemble to be {}. Valid ensembles {}.".format(
-                ensemble, ", ".join(EnsembleParam.validMeans.keys())))
+            raise ValueError(f"Cannot set ensemble to be {ensemble}. "
+                             f"Valid ensembles {', '.join(EnsembleParam.validMeans.keys())}.")
         self._means = None
         self.args = []
         self._ensemble = ensemble
@@ -424,8 +388,8 @@ class EnsembleParam:
     @means.setter
     def means(self, means):
         if means not in EnsembleParam.validMeans[self.ensemble]:
-            raise ValueError("Cannot set means to be {}. Valid means {}.".format(
-                means, ", ".join(EnsembleParam.validMeans[self.ensemble])))
+            raise ValueError(f"Cannot set means to be {means}. "
+                             f"Valid means {', '.join(EnsembleParam.validMeans[self.ensemble])}.")
         self.args = []
         self._means = means
 
@@ -434,20 +398,21 @@ class EnsembleParam:
         received = len(self.args)
         if ((isinstance(expect, (range, tuple)) and received not in expect) or
                 (isinstance(expect, int) and received != expect)):
-            raise IndexError("Wrong number of args in ensemble {} {}. Expected {}, received {}.".format(
-                self.ensemble, self.means, expect, received))
+            raise IndexError(f"Wrong number of args in ensemble {self.ensemble} {self.means}. "
+                             f"Expected {expect}, received {received}.")
 
-        return "{} {} {}".format(self.ensemble,
-                                 self.means if self.means else "",
-                                 " ".join(map(str, self.args)) if self.args else "")
+        return " ".join((self.ensemble,
+                         self.means if self.means else '',
+                         *map(str, self.args))
+                        )
 
 
 class TimingParam(DLPData):
     """ Class defining io parameters """
     def __init__(self, **kwargs):
-        DLPData.__init__(self, {"close": float, "steps": int, "equil": int, "timestep": float, "variable": bool,
-                                "maxdis": float, "mindis": float, "mxstep": float, "job": float, "collect": bool,
-                                "dump": int})
+        DLPData.__init__(self, {"close": float, "steps": int, "equil": int, "timestep": float,
+                                "variable": bool, "maxdis": float, "mindis": float, "mxstep": float,
+                                "job": float, "collect": bool, "dump": int})
         self.close = 0
         self.steps = 0
         self.equil = 0
@@ -473,7 +438,16 @@ class TimingParam(DLPData):
         :param args: Values to assign
 
         """
-        if check_arg(key, "close", "steps", "equil", "maxdis", "mindis", "mxstep", "job", "collect", "dump"):
+        if check_arg(key,
+                     "close",
+                     "steps",
+                     "equil",
+                     "maxdis",
+                     "mindis",
+                     "mxstep",
+                     "job",
+                     "collect",
+                     "dump"):
             setattr(self, key, args)
         if check_arg(key, "timestep", "variable"):
             if isinstance(args, (list, tuple)):
@@ -483,8 +457,7 @@ class TimingParam(DLPData):
             else:
                 word1 = ""
 
-            if ((key == "timestep" and word1 == "variable") or
-                    (key == "variable" and word1 == "timestep")):
+            if (key, word1) in (("timestep", "variable"), ("variable", "timestep")):
                 self.variable = True
                 self.timestep = args
             elif key == "variable":
@@ -493,8 +466,8 @@ class TimingParam(DLPData):
                 self.timestep = word1
 
     def __str__(self):
-        outStr = ""
-        return outStr
+        out_str = ""
+        return out_str
 
 
 class Control(DLPData):
@@ -503,13 +476,16 @@ class Control(DLPData):
         :param source: File to parse
     """
     def __init__(self, source=None):
-        DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "r_rout": bool,
+        DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "l_rout": bool,
                                 "l_rin": bool, "l_tor": bool, "l_dis": int, "unit_test": bool,
-                                "l_vdw": bool, "l_fast": bool, "ana": Analysis, "app_test": bool, "currents": bool,
+                                "l_vdw": bool, "l_fast": bool, "ana": Analysis,
+                                "app_test": bool, "currents": bool,
                                 "binsize": float, "cap": float,
                                 "densvar": float, "eps": float, "exclu": bool,
-                                "heat_flux": bool, "rdf": int, "coord": (int, int, int), "adf": (int, float),
-                                "zden": int, "vaf": bool, "mult": int, "mxshak": int, "pres": (float, ...),
+                                "heat_flux": bool, "rdf": int,
+                                "coord": (int, int, int), "adf": (int, float),
+                                "zden": int, "vaf": bool,
+                                "mult": int, "mxshak": int, "pres": (float, ...),
                                 "regaus": int, "replay": str, "restart": str, "quaternion": float,
                                 "rlxtol": float, "scale": int, "slab": bool, "shake": float,
                                 "stack": int, "temp": float, "yml_statis": bool, "yml_rdf": bool,
@@ -523,10 +499,16 @@ class Control(DLPData):
                                 "time_depth": int, "time_per_mpi": bool, "dftb_driver": bool,
                                 "disp": (int, int, float), "traj": (int, int, int),
                                 "defe": (int, int, float, str), "evb": int})
+
         self.temp = 300.0
         self.title = "no title"
         self.l_scr = False
         self.l_tor = False
+        self.l_eng = False
+        self.l_rin = False
+        self.l_rout = False
+        self.l_dis = False
+        self.l_fast = False
         self.io = IOParam(control=source)
         self.ignore = Ignore()
         self.print = Print()
@@ -564,9 +546,9 @@ class Control(DLPData):
         :param filename: File to read
 
         """
-        with open(filename, "r") as inFile:
-            self["title"] = inFile.readline()
-            for line in inFile:
+        with open(filename, "r", encoding="utf-8") as in_file:
+            self["title"] = in_file.readline()
+            for line in in_file:
                 line = line.strip()
                 if line == "finish":
                     break
@@ -599,9 +581,9 @@ class Control(DLPData):
 
         """
         def output(*args):
-            print(file=outFile, *args)
+            print(file=out_file, *args)
 
-        with open(filename, "w") as outFile:
+        with open(filename, "w", encoding="utf-8") as out_file:
             output(self.title)
             for key, val in self.__dict__.items():
                 if key in ("title", "filename") or key.startswith("_"):
@@ -612,9 +594,9 @@ class Control(DLPData):
                             output(f"{keyt} time {valt}")
                         elif keyt == "timestep":
                             if self.timing.variable:
-                                print("variable", keyt, valt, file=outFile)
+                                print("variable", keyt, valt, file=out_file)
                             else:
-                                print(keyt, valt, file=outFile)
+                                print(keyt, valt, file=out_file)
                         elif keyt == "variable":
                             continue
                         elif keyt in ("dump", "mindis", "maxdix", "mxstep") and valt > 0:
@@ -642,10 +624,10 @@ class Control(DLPData):
         :rtype: NewControl
 
         """
-        newControl = NewControl()
+        new_control = NewControl()
 
         def output(key, *vals):
-            newControl[key] = vals
+            new_control[key] = vals
 
         output("title", self.title)
         for key, val in self.__dict__.items():
@@ -757,11 +739,11 @@ class Control(DLPData):
 
             elif key == "ffield":
                 if val.vdw and not self.ignore.vdw:
-                    if "direct" in val.vdwParams:
+                    if "direct" in val.vdw_params:
                         output("vdw_method", "direct")
-                    if "mix" in val.vdwParams:
-                        output("vdw_mix_method", val.vdwParams["mix"])
-                    if "shift" in val.vdwParams:
+                    if "mix" in val.vdw_params:
+                        output("vdw_mix_method", val.vdw_params["mix"])
+                    if "shift" in val.vdw_params:
                         output("vdw_force_shift", "ON")
 
                 if val.rvdw:
@@ -773,19 +755,19 @@ class Control(DLPData):
                     output("cutoff", val.rcut, "ang")
 
                 if val.elec:
-                    output("coul_method", val.elecMethod)
-                    if check_arg(val.elecMethod, "ewald", "spme"):
+                    output("coul_method", val.elec_method)
+                    if check_arg(val.elec_method, "ewald", "spme"):
 
-                        if check_arg(val.elecParams[0], "precision"):
-                            output("ewald_precision", val.elecParams[1])
-                            if len(val.elecParams) > 2:
-                                output("ewald_nsplines", val.elecParams[2])
+                        if check_arg(val.elec_params[0], "precision"):
+                            output("ewald_precision", val.elec_params[1])
+                            if len(val.elec_params) > 2:
+                                output("ewald_nsplines", val.elec_params[2])
 
                         else:
-                            if check_arg(val.elecParams[0], "sum"):
-                                parms = list(val.elecParams[1:])
+                            if check_arg(val.elec_params[0], "sum"):
+                                parms = list(val.elec_params[1:])
                             else:
-                                parms = list(val.elecParams)
+                                parms = list(val.elec_params)
 
                             output("ewald_alpha", parms.pop(0), "ang^-1")
                             if len(parms) >= 3:
@@ -795,9 +777,9 @@ class Control(DLPData):
                             if parms:
                                 output("ewald_nsplines", parms.pop(0))
 
-                if val.metalStyle == "sqrtrho":
+                if val.metal_style == "sqrtrho":
                     output("metal_sqrtrho", "ON")
-                elif val.metalStyle == "direct":
+                elif val.metal_style == "direct":
                     output("metal_direct", "ON")
 
             elif key == "ensemble":
@@ -808,7 +790,8 @@ class Control(DLPData):
                 if val.ensemble == "nvt":
                     if check_arg(val.means, "evans"):
                         continue
-                    elif check_arg(val.means, "langevin"):
+
+                    if check_arg(val.means, "langevin"):
                         output("ensemble_thermostat_friction", val.args[0], "ps^-1")
                     elif check_arg(val.means, "andersen"):
                         output("ensemble_thermostat_coupling", val.args[0], "ps")
@@ -819,13 +802,14 @@ class Control(DLPData):
                         output("ensemble_thermostat_coupling", val.args[0], "ps")
                         output("ensemble_thermostat_friction", val.args[1], "ps^-1")
                     elif check_arg(val.means, "dpd"):
-                        output("ensemble_dpd_order", val.dpdOrder)
+                        output("ensemble_dpd_order", val.dpd_order)
                         if val.args:
                             output("ensemble_dpd_drag", val.args[0], 'Da/ps')
                     elif check_arg(val.means, "ttm"):
                         output("ttm_e-phonon_friction", val.args[0], "ps^-1")
                         output("ttm_e-stopping_friction", val.args[1], "ps^-1")
                         output("ttm_e-stopping_velocity", val.args[2], "ang/ps")
+
                 if val.ensemble in ("npt", "nst"):
                     if check_arg(val.means, "langevin"):
                         output("ensemble_thermostat_friction", val.args[0], "ps^-1")
@@ -833,6 +817,7 @@ class Control(DLPData):
                     elif check_arg(val.means, "berendsen", "hoover", "mtk"):
                         output("ensemble_thermostat_coupling", val.args[0], "ps")
                         output("ensemble_barostat_coupling", val.args[1], "ps")
+
                 if val.ensemble == "nst":
                     if val.area:
                         output('ensemble_semi_isotropic', 'area')
@@ -931,16 +916,16 @@ class Control(DLPData):
 
                 if check_arg(crit, "forc"):
                     output("minimisation_criterion", "force")
-                    critUnit = "internal_f"
+                    criterion_unit = "internal_f"
                 elif check_arg(crit, "ener"):
                     output("minimisation_criterion", "energy")
-                    critUnit = "internal_e"
+                    criterion_unit = "internal_e"
                 elif check_arg(crit, "dist"):
                     output("minimisation_criterion", "distance")
-                    critUnit = "internal_l"
+                    criterion_unit = "internal_l"
 
                 if tol:
-                    output("minimisation_tolerance", tol, critUnit)
+                    output("minimisation_tolerance", tol, criterion_unit)
                 if freq:
                     output("minimisation_frequency", freq, "steps")
                 if step:
@@ -1023,7 +1008,7 @@ class Control(DLPData):
                 output("coord_interval", val[2], "steps")
                 output("coord_start", val[1], "steps")
 
-        return newControl
+        return new_control
 
 
 if __name__ == "__main__":

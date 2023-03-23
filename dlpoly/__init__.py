@@ -17,8 +17,7 @@ if sys.version_info[0] == 2:
     raise ImportError('dlpoly-py requires Python3. This is Python2.')
 
 if LooseVersion(np.__version__) < '1.5':
-    raise ImportError(
-        'dlpoly-py needs NumPy-1.5.0 or later. You have: {:s}'.format(np.__version__))
+    raise ImportError(f'dlpoly-py needs NumPy-1.5.0 or later. You have: {np.__version__}')
 
 
 # from https://stackoverflow.com/questions/1057431
@@ -30,6 +29,6 @@ __version__ = '0.3.10'
 
 try:
     from .dlpoly import DLPoly
-    print("Supported DL_POLY version {}".format(DLPoly.__version__))
-except ImportError:
-    raise ImportError('error importing dlpoly')
+    print(f"Supported DL_POLY version {DLPoly.__version__}")
+except ImportError as err:
+    raise ImportError('error importing dlpoly') from err

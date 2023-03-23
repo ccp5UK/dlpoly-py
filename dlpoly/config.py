@@ -9,6 +9,11 @@ import numpy as np
 from .utility import DLPData
 
 
+def _format_3vec(list_in):
+    "Format 3-vector for printing"
+    return f"{list_in[0]:20.10f}{list_in[1]:20.10f}{list_in[2]:20.10f}\n"
+
+
 class Atom(DLPData):
     """ Class defining a DLPOLY atom type
 
@@ -44,60 +49,67 @@ class Atom(DLPData):
         :param level: Print level ; 1 = Pos, 2 = Vel, 3 = Forces
 
         """
+
         if level == 0:
-            return "{:8s}{:10d}\n{:20.10f}" "{:20.10f}{:20.10f}".format(
-                self.element, self.index, *self.pos
-            )
+            return (f"{self.element:8s}{self.index:10d}\n" +
+                    _format_3vec(self.pos))
 
         if level == 1:
-            return (
-                "{:8s}{:10d}\n"
-                "{:20.10f}{:20.10f}{:20.10f}\n"
-                "{:20.10f}{:20.10f}{:20.10f}"
-            ).format(self.element, self.index, *self.pos, *self.vel)
+            return (f"{self.element:8s}{self.index:10d}\n" +
+                    _format_3vec(self.pos),
+                    _format_3vec(self.vel))
+
         if level == 2:
-            return (
-                "{:8s}{:10d}\n"
-                "{:20.10f}{:20.10f}{:20.10f}\n"
-                "{:20.10f}{:20.10f}{:20.10f}\n"
-                "{:20.10f}{:20.10f}{:20.10f}"
-            ).format(self.element, self.index, *self.pos, *self.vel, *self.forces)
+            return (f"{self.element:8s}{self.index:10d}\n" +
+                    _format_3vec(self.pos),
+                    _format_3vec(self.vel),
+                    _format_3vec(self.forces))
+
         raise ValueError(f"Invalid print level {level} in Config.write")
 
     def __str__(self):
-        return (
-            "{:8s}{:10d}\n"
-            "{:20.10f}{:20.10f}{:20.10f}\n"
-            "{:20.10f}{:20.10f}{:20.10f}\n"
-            "{:20.10f}{:20.10f}{:20.10f}\n"
-        ).format(self.element, self.index, *self.pos, *self.vel, *self.forces)
+        return (f"{self.element:8s}{self.index:10d}\n" +
+                _format_3vec(self.pos) +
+                _format_3vec(self.vel) +
+                _format_3vec(self.forces))
 
-    def read(self, fileHandle, level, i):
+    @classmethod
+    def read(cls, file_handle, level, i):
         """ Reads info for one atom
 
-        :param fileHandle: File to read
+        :param file_handle: File to read
         :param level: Level to readd
         :param i: Index
 
         """
-        line = fileHandle.readline()
+        line = file_handle.readline()
         if not line:
             return False
-        ei = line.split()
-        if len(ei) == 1:
-            self.element = ei[0]
+
+        elem_ind = line.split()
+
+        if len(elem_ind) == 1:
+            element = elem_ind[0]
             # there is no index in the file, we shall ignore
             # probably breaking hell loose somewhere else
-            self.index = i
-        if len(ei) == 2:
-            self.element = ei[0]
-            self.index = int(ei[1])
-        self.pos = [float(i) for i in fileHandle.readline().split()]
+            index = i
+        elif len(elem_ind) == 2:
+            element = elem_ind[0]
+            index = int(elem_ind[1])
+
+        pos = np.array(file_handle.readline().split(), dtype=float)
+
         if level > 0:
-            self.vel = [float(i) for i in fileHandle.readline().split()]
-            if level > 1:
-                self.forces = [float(i) for i in fileHandle.readline().split()]
-        return self
+            vel = np.array(file_handle.readline().split(), dtype=float)
+        else:
+            vel = None
+
+        if level > 1:
+            forces = np.array(file_handle.readline().split(), dtype=float)
+        else:
+            forces = None
+
+        return cls(element, pos, vel, forces, index)
 
 
 class Config:
@@ -138,20 +150,15 @@ class Config:
 
         """
         self.level = level
-        with open(filename, "w") as outFile:
-            outFile.write("{0:72s}\n".format(self.title if title is None else title))
-            outFile.write(
-                "{0:10d}{1:10d}{2:10d}\n".format(level, self.pbc, self.natoms)
-            )
+        with open(filename, "w", encoding="utf-8") as out_file:
+            print(f"{title if title else self.title:72s}", file=out_file)
+            print(f"{level:10d}{self.pbc:10d}{self.natoms:10d}", file=out_file)
             if self.pbc > 0:
-                for j in range(3):
-                    outFile.write(
-                        "{0:20.10f}{1:20.10f}{2:20.10f}\n".format(
-                            self.cell[j, 0], self.cell[j, 1], self.cell[j, 2]
-                        )
-                    )
+                for row in self.cell:
+                    print(_format_3vec(row), file=out_file)
+
             for atom in self.atoms:
-                print(atom.write(self.level), file=outFile)
+                print(atom.write(self.level), file=out_file)
 
     def add_atoms(self, other):
         """ Add two Configs together to make one bigger config
@@ -159,14 +166,16 @@ class Config:
         :param other: Config to add
 
         """
-        lastIndex = self.natoms
+        last_index = self.natoms
+
         if isinstance(other, Config):
-            self.atoms += [copy.copy(atom) for atom in other.atoms]
-        elif isinstance(other, (list, tuple)):
-            self.atoms += [copy.copy(atom) for atom in other]
+            other = other.atoms
+
+        self.atoms.extend(copy.copy(atom) for atom in other)
+
         # Shift new atoms' indices to reflect place in new config
-        for i in range(lastIndex, self.natoms):
-            self.atoms[i].index += lastIndex
+        for atom in self.atoms[last_index:]:
+            atom.index += last_index
 
     def read(self, filename="CONFIG"):
         """ Read file into Config
@@ -175,35 +184,26 @@ class Config:
 
         """
 
-        try:
-            fileIn = open(filename, "r")
-        except IOError:
-            print("File {0:s} does not exist!".format(filename))
-            return []
+        with open(filename, "r", encoding="utf-8") as in_file:
+            self.title = in_file.readline().strip()
+            line = in_file.readline().split()
+            self.level = int(line[0])
+            self.pbc = int(line[1])
 
-        self.title = fileIn.readline().strip()
-        line = fileIn.readline().split()
-        self.level = int(line[0])
-        self.pbc = int(line[1])
-        if self.pbc > 0:
-            for j in range(3):
-                line = fileIn.readline().split()
-                for i in range(3):
+            if self.pbc > 0:
+                for j in range(3):
+                    line = in_file.readline().split()
                     try:
-                        self.cell[j, i] = float(line[i])
-                    except ValueError:
-                        raise RuntimeError("Error reading cell")
+                        self.cell[j, :] = np.array(line, dtype=float)
+                    except ValueError as exc:
+                        raise RuntimeError("Error reading cell") from exc
 
-        self.atoms = []
-        i = 0
-        while True:
-            i += 1
-            atom = Atom().read(fileIn, self.level, i)
-            if not atom:
-                break
-            self.atoms.append(atom)
+            self.atoms = []
+            i = 0
+            while atom := Atom.read(in_file, self.level, i):
+                i += 1
+                self.atoms.append(atom)
 
-        fileIn.close()
         return self
 
 

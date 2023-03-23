@@ -10,7 +10,7 @@ from .control import Control
 from .config import Config
 from .field import Field
 from .statis import Statis
-from .rdf import rdf
+from .rdf import RDF
 from .cli import get_command_args
 from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 
@@ -50,13 +50,13 @@ class DLPoly:
         if output is not None:
             self.control.io_file_output = output
 
-    controlFile = property(*file_get_set_factory("control"))
-    fieldFile = property(*file_get_set_factory("field"))
-    vdwFile = property(*file_get_set_factory("tabvdw"))
-    eamFile = property(*file_get_set_factory("tabeam"))
-    configFile = property(*file_get_set_factory("config"))
-    statisFile = property(*file_get_set_factory("statis"))
-    rdfFile = property(*file_get_set_factory("rdf"))
+    control_file = property(*file_get_set_factory("control"))
+    field_file = property(*file_get_set_factory("field"))
+    vdw_file = property(*file_get_set_factory("tabvdw"))
+    eam_file = property(*file_get_set_factory("tabeam"))
+    config_file = property(*file_get_set_factory("config"))
+    statis_file = property(*file_get_set_factory("statis"))
+    rdf_file = property(*file_get_set_factory("rdf"))
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -66,7 +66,7 @@ class DLPoly:
             direc = Path(direc).absolute()
 
         # Set the path to be: direc/filename, stripping off all unnecessary pathing
-        self.control.io_file_statis = str(direc / self.statisFile.name)
+        self.control.io_file_statis = str(direc / self.statis_file.name)
         self.control.io_file_revive = str(direc / Path(self.control.io_file_revive).name)
         self.control.io_file_revcon = str(direc / Path(self.control.io_file_revcon).name)
 
@@ -105,22 +105,22 @@ class DLPoly:
             direc = self.workdir
 
         try:
-            shutil.copy(self.fieldFile, direc)
+            shutil.copy(self.field_file, direc)
         except shutil.SameFileError:
             pass
 
         if self.dest_config is None:
-            self.configFile = self._update_file(direc, self.configFile)
+            self.config_file = self._update_file(direc, self.config_file)
 
         else:
-            self.configFile = self._update_file(direc, self.configFile, self.dest_config)
+            self.config_file = self._update_file(direc, self.config_file, self.dest_config)
 
-        self.fieldFile = self._update_file(direc, self.fieldFile)
+        self.field_file = self._update_file(direc, self.field_file)
 
-        if self.vdwFile:
-            self.vdwFile = self._update_file(direc, self.vdwFile)
-        if self.eamFile:
-            self.eamFile = self._update_file(direc, self.eamFile)
+        if self.vdw_file:
+            self.vdw_file = self._update_file(direc, self.vdw_file)
+        if self.eam_file:
+            self.eam_file = self._update_file(direc, self.eam_file)
         if self.control.io_file_tabbnd:
             self.control.io_file_tabbnd = self._update_file(direc, self.control.io_file_tabbnd)
         if self.control.io_file_tabang:
@@ -133,16 +133,16 @@ class DLPoly:
     def write(self, control=True, config=True, field=True, prefix='', suffix=''):
         """ Write each of the components to file """
         if control:
-            self.control.write(prefix+self.controlFile+suffix)
+            self.control.write(prefix+self.control_file+suffix)
         if config and self.config:
-            self.config.write(prefix+self.configFile+suffix)
+            self.config.write(prefix+self.config_file+suffix)
         if field and self.field:
-            self.field.write(prefix+self.fieldFile+suffix)
+            self.field.write(prefix+self.field_file+suffix)
 
     def load_control(self, source=None):
         """ Load control file into class """
         if source is None:
-            source = self.controlFile
+            source = self.control_file
 
         source = Path(source)
 
@@ -151,59 +151,59 @@ class DLPoly:
                 self.control = NewControl(source)
             else:
                 self.control = Control(source).to_new()
-            self.controlFile = source
+            self.control_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 
     def load_field(self, source=None):
         """ Load field file into class """
         if source is None:
-            source = self.fieldFile
+            source = self.field_file
 
         source = Path(source)
 
         if source.is_file():
             self.field = Field(source)
-            self.fieldFile = source
+            self.field_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 
     def load_config(self, source=None):
         """ Load config file into class """
         if source is None:
-            source = self.configFile
+            source = self.config_file
 
         source = Path(source)
 
         if source.is_file():
             self.config = Config(source)
-            self.configFile = source
+            self.config_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 
     def load_statis(self, source=None):
         """ Load statis file into class """
         if source is None:
-            source = self.statisFile
+            source = self.statis_file
 
         source = Path(source)
 
         if source.is_file():
             self.statis = Statis(source)
-            self.statisFile = source
+            self.statis_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 
     def load_rdf(self, source=None):
         """ Load statis file into class """
         if source is None:
-            source = self.rdfFile
+            source = self.rdf_file
 
         source = Path(source)
 
         if source.is_file():
-            self.rdf = rdf(source)
-            self.rdfFile = source
+            self.rdf = RDF(source)
+            self.rdf_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 
@@ -229,7 +229,9 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-            proc = subprocess.Popen([self.exe, '-h'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen([self.exe, '-h'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
             result, _ = proc.communicate()
             if f"Usage: {self.exe}" not in result.decode("utf-8"):
                 print(f"{self.exe.absolute()} is not DLPoly, run may not work")
@@ -268,7 +270,7 @@ class DLPoly:
         if executable is None:
             dlpexe = self.exe
 
-        control_file = self.workdir / self.controlFile.name
+        control_file = self.workdir / self.control_file.name
         self.copy_input()
         self.redir_output()
         self.control.write(control_file)
