@@ -284,7 +284,7 @@ class IOParam(DLPData):
             files = self.dlp_files - {"control"}
 
             files_in = {file: true_control_path / files_in[file]
-                        for file in self.dlp_files}
+                        for file in files}
 
         for file in ('control', 'field', 'config', 'statis',
                      'output', 'revive', 'revcon'):
