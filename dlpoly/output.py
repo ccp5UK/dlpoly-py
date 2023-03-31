@@ -12,20 +12,20 @@ class Output():
 
     def __init__(self, source=None):
 
-        self.vdwEnergy = None
-        self.vdwPressure = None
+        self.vdw_energy = None
+        self.vdw_pressure = None
         self.steps = None
-        self.averageSteps = None
+        self.average_steps = None
         self.time = None  # in ps
-        self.averageTime = None
-        self.runTime = None
-        self.runTps = None
+        self.average_time = None
+        self.run_time = None
+        self.run_tps = None
         self.average = None
         self.pressure = None
-        self.pressureTensor = None
-        self.pressureTensorRms = None
-        self.averageCell = None
-        self.averageCellRms = None
+        self.pressure_tensor = None
+        self.pressure_tensor_rms = None
+        self.average_cell = None
+        self.average_cell_rms = None
         self.diffusion = None
 
         if source is not None:
@@ -33,49 +33,56 @@ class Output():
             self.read(source)
 
     @staticmethod
-    def type_3x3(label, a):
+    def type_3x3(label, data):
         """Print as 3x3 block
 
         :param label: Label to print
         :param a: Value stored
 
         """
-        out = "{}: \n".format(label)
+        out = f"{label}: \n"
         for i in range(3):
-            out += "{:16.8e} {:16.8e} {:16.8e}\n".format(a[i, 0], a[i, 1], a[i, 2])
+            out += f"{data[i, 0]:16.8e} {data[i, 1]:16.8e} {data[i, 2]:16.8e}\n"
         return out
 
     def __str__(self):
-        outStr = ''
-        if self.vdwEnergy is not None:
-            outStr += "long range vdw energy correction: {} donkeys\n".format(self.vdwEnergy)
-            outStr += "long range vdw pressure correction: {} donkeys\n".format(self.vdwPressure)
-        outStr += "runtime for md loop: {} s\n".format(self.runTime)
-        outStr += "time per md step: {} s\n".format(self.runTps)
-        outStr += "md steps: {}\n".format(self.steps)
-        outStr += "md steps for average: {}\n".format(self.averageSteps)
-        outStr += "md simulation time: {} ps\n".format(self.time)
-        outStr += "md simulation time for average: {} ps\n".format(self.averageTime)
+        out_str = ''
+        if self.vdw_energy is not None:
+            out_str += f"long range vdw energy correction: {self.vdw_energy} donkeys\n"
+            out_str += f"long range vdw pressure correction: {self.vdw_pressure} donkeys\n"
+
+        out_str += f"runtime for md loop: {self.run_time} s\n"
+        out_str += f"time per md step: {self.run_tps} s\n"
+        out_str += f"md steps: {self.steps}\n"
+        out_str += f"md steps for average: {self.average_steps}\n"
+        out_str += f"md simulation time: {self.time} ps\n"
+        out_str += f"md simulation time for average: {self.average_time} ps\n"
+
         if self.average is not None:
-            outStr += "Averages: \n"
-            outStr += "#{:16s} {:>16s} {:>16s} \n".format("name", "value", "rms")
-            for k, v in self.average.items():
-                outStr += " {:16s} {:16.8e} {:16.8e}\n".format(k, *v)
-            outStr += "\n"
+            out_str += "Averages: \n"
+            out_str += f"#{'name':16s} {'value':>16s} {'rms':>16s}\n"
+            for key, value in self.average.items():
+                out_str += f" {key:16s} {value[0]:16.8e} {value[1]:16.8e}\n"
+            out_str += "\n"
+
         if self.diffusion is not None:
-            outStr += "Approximate 3D Diffusion Coefficients and square root of MSDs:\n"
-            outStr += "#{:16s} {:>20s} {:>16s} \n".format("Specie", "DC [10^-9 m^2 s^-1]", "Sqrt(MSD) [Å]")
-            for k, v in self.diffusion.items():
-                outStr += " {:16s}     {:16.8e} {:16.8e}\n".format(k, *v)
-            outStr += "\n"
-        if self.pressureTensor is not None:
-            outStr += self.type_3x3("Average pressure tensor [katm]: ", self.pressureTensor)
-            outStr += self.type_3x3("Average pressure tensor rms [katm]: ", self.pressureTensorRms)
-            outStr += "pressure (trace/3) [katm]: {}\n".format(self.pressure)
-        if self.averageCell is not None:
-            outStr += self.type_3x3("Average cell vectors [Å]: ", self.averageCell)
-            outStr += self.type_3x3("Average cell vectors rms [Å]: ", self.averageCellRms)
-        return outStr
+            out_str += "Approximate 3D Diffusion Coefficients and square root of MSDs:\n"
+            out_str += f"#{'Species':16s} {'DC [10^-9 m^2 s^-1]':>20s} {'Sqrt(MSD) [Å]':>16s} \n"
+            for key, value in self.diffusion.items():
+                out_str += " {key:16s}     {value[0]:16.8e} {value[1]:16.8e}\n"
+            out_str += "\n"
+
+        if self.pressure_tensor is not None:
+            out_str += self.type_3x3("Average pressure tensor [katm]: ",
+                                     self.pressure_tensor)
+            out_str += self.type_3x3("Average pressure tensor rms [katm]: ",
+                                     self.pressure_tensor_rms)
+            out_str += f"pressure (trace/3) [katm]: {self.pressure}\n"
+
+        if self.average_cell is not None:
+            out_str += self.type_3x3("Average cell vectors [Å]: ", self.average_cell)
+            out_str += self.type_3x3("Average cell vectors rms [Å]: ", self.average_cell_rms)
+        return out_str
 
     def read(self, source="OUTPUT"):
         """ Read an OUTPUT file into memory
@@ -83,71 +90,73 @@ class Output():
         :param source: File to read
 
         """
-        with open(source, 'r') as f:
-            line = f.readline()
-            while line:
-                line = f.readline()
-                a = line.strip().split()
-                if len(a) == 0:
+        with open(source, 'r', encoding="utf-8") as in_file:
+            to_read = iter(in_file)
+            to_read = map(lambda line: line.strip().split(), to_read)
+
+            for line in to_read:
+                if not line:
                     continue
-                if a[0] == 'vdw':
-                    if a[1] == 'energy':
-                        self.vdwEnergy = float(a[2])
-                    if a[1] == 'pressure':
-                        self.vdwPressure = float(a[2])
-                    continue
-                if a[0] == 'run':
-                    self.steps = int(a[3])
-                    self.time = float(a[6])
-                    self.averageSteps = int(a[12])
-                    self.averageTime = float(a[15])
-                    dline = f.readline()
-                    h = []
+
+                key, *values = line
+
+                if key == 'vdw':
+                    typ, val, *_ = values
+                    if typ == 'energy':
+                        self.vdw_energy = float(val)
+                    elif typ == 'pressure':
+                        self.vdw_pressure = float(val)
+
+                elif key == 'run':
+                    self.steps = int(values[2])
+                    self.time = float(values[5])
+                    self.average_steps = int(values[11])
+                    self.average_time = float(values[14])
+                    next(to_read)
+
+                    headers = [val for _, arr in zip(range(3), to_read) for val in arr]
+                    del headers[19]
+                    next(to_read)
+
+                    vals = [float(val) for _, arr in zip(range(3), to_read) for val in arr[1:]]
+                    next(to_read)
+
+                    rmss = [float(val) for _, arr in zip(range(3), to_read) for val in arr[1:]]
+
+                    self.average = {header: (val, rms)
+                                    for (header, val, rms) in zip(headers, vals, rmss)}
+
+                elif key == 'Loop':
+                    self.run_time = float(values[5])
+                    self.run_tps = float(values[10])
+
+                elif key == 'Pressure':
+                    next(to_read)
+
+                    self.pressure_tensor = np.zeros((3, 3))
+                    self.pressure_tensor_rms = np.zeros((3, 3))
                     for i in range(3):
-                        h += f.readline().strip().split()[1:]
-                    h = h[0:18] + h[20:]
-                    dline = f.readline()
-                    v = []
+                        values = np.array(next(to_read), dtype=float)
+                        self.pressure_tensor[i, :] = values[0:3]
+                        self.pressure_tensor_rms[i, :] = values[3:6]
+
+                    self.pressure = float(next(to_read)[1])
+
+                elif key == 'Approximate':
+                    next(to_read)
+                    data = []
+                    while line := next(to_read):
+                        data.append(line)
+
+                    self.diffusion = {atom: (float(x), float(y)) for atom, x, y in data}
+
+                elif key == 'Average':
+                    self.average_cell = np.zeros((3, 3))
+                    self.average_cell_rms = np.zeros((3, 3))
                     for i in range(3):
-                        v += [float(j) for j in f.readline().strip().split()[1:]]
-                    dline = f.readline()
-                    rms = []
-                    for i in range(3):
-                        rms += [float(j) for j in f.readline().strip().split()[1:]]
-                    self.average = {l: (a, b) for (l, a, b) in zip(h, v, rms)}
-                    continue
-                if a[0] == 'Loop':
-                    self.runTime = float(a[6])
-                    self.runTps = float(a[11])
-                    continue
-                if a[0] == 'Pressure':
-                    dline = f.readline()
-                    self.pressureTensor = np.zeros((3, 3))
-                    self.pressureTensorRms = np.zeros((3, 3))
-                    for i in range(3):
-                        a = [float(j) for j in f.readline().strip().split()]
-                        self.pressureTensor[i, :] = np.array(a[0:3])
-                        self.pressureTensorRms[i, :] = np.array(a[3:6])
-                    self.pressure = float(f.readline().strip().split()[1])
-                    continue
-                if a[0] == 'Approximate':
-                    dline = f.readline()
-                    h = []
-                    while True:
-                        dline = f.readline().strip().split()
-                        if len(dline) == 0:
-                            break
-                        h += [dline]
-                    self.diffusion = {e[0]: (float(e[1]), float(e[2])) for e in h}
-                    continue
-                if a[0] == 'Average':
-                    self.averageCell = np.zeros((3, 3))
-                    self.averageCellRms = np.zeros((3, 3))
-                    for i in range(3):
-                        a = [float(j) for j in f.readline().strip().split()]
-                        self.averageCell[i, :] = np.array(a[0:3])
-                        self.averageCellRms[i, :] = np.array(a[3:6])
-                    continue
+                        values = np.array(next(to_read), dtype=float)
+                        self.average_cell[i, :] = values[0:3]
+                        self.average_cell_rms[i, :] = values[3:6]
 
 
 if __name__ == '__main__':

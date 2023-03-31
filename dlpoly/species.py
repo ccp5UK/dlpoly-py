@@ -28,5 +28,4 @@ class Species(DLPData):
         self.repeats = repeats
 
     def __str__(self):
-        return "{0:8s} {1:f} {2:f} {3:d} {4:d}".format(self.element, self.mass, self.charge,
-                                                       self.repeats, self.frozen)
+        return f"{self.element:8s} {self.mass:f} {self.charge:f} {self.repeats:d} {self.frozen:d}"

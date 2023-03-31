@@ -297,17 +297,17 @@ class NewControl(DLPData):
         :param filename: File to read
 
         """
-        with open(filename, "r") as in_file:
+        with open(filename, "r", encoding="utf-8") as in_file:
             for line in in_file:
-                line = line.split('#')[0]
-                line = line.split('!')[0]
+                line = line.split("#")[0]
+                line = line.split("!")[0]
                 line = line.strip()
                 if not line:
                     continue
                 key, *args = line.split()
                 # Special case to handle string
-                if key == 'title':
-                    self[key] = ' '.join(args)
+                if key == "title":
+                    self[key] = " ".join(args)
                     continue
                 self[key] = args
 
@@ -330,7 +330,7 @@ class NewControl(DLPData):
                 if len(lvals) > 1:
                     print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=out_file)
                 else:
-                    if unit == 'steps':
+                    if unit == "steps":
                         print(key, *(f" {int(val)}" for val in lvals), unit, file=out_file)
                     else:
                         print(key, *(f" {val}" for val in lvals), unit, file=out_file)
@@ -345,7 +345,7 @@ class NewControl(DLPData):
             else:
                 print(key, vals, file=out_file)
 
-        with open(filename, "w") as out_file:
+        with open(filename, "w", encoding="utf-8") as out_file:
             output("title", self["title"])
             for key, vals in self.__dict__.items():
                 if (key in ("title", "filename", "io_file_control") or key.startswith("_") or
@@ -356,14 +356,14 @@ class NewControl(DLPData):
 
 def is_new_control(filename):
     """ Determine if file is in old or new format """
-    with open(filename, 'r') as in_file:
+    with open(filename, "r", encoding="utf-8") as in_file:
         for line in in_file:
-            line = line[0:line.find('#')]
-            line = line[0:line.find('!')]
+            line = line[0:line.find("#")]
+            line = line[0:line.find("!")]
             line = line.strip()
 
             if not line:
                 continue
 
             key = line.split()[0].lower()
-            return key == 'title'
+            return key == "title"

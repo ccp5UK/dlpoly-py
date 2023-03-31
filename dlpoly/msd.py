@@ -11,8 +11,8 @@ class msd():
     """
 
     def __init__(self, source=None):
-        self.nFrames = 0
-        self.nAtoms = 0
+        self.n_frames = 0
+        self.n_atoms = 0
         self.data = None
         self.latom = []
         self.timestep = 0
@@ -20,7 +20,7 @@ class msd():
         self.time = None
         self.title = ""
         self.species = None
-        self.nspecies = property(lambda self: len(self.species))
+        self.n_species = property(lambda self: len(self.species))
 
         if source is not None:
             self.source = source
@@ -33,14 +33,14 @@ class msd():
         :rtype: np.ndarray
 
         """
-        self.species = list(set(self.latom))
-        d = np.zeros((self.nFrames, len(self.species), 2))
-        for i in range(self.nFrames):
-            for j, s in enumerate(self.species):
-                m = list(map(lambda x: x == s, self.latom))
-                d[i, j, 0] = np.average(self.data[i, m, 0])
-                d[i, j, 1] = np.average(self.data[i, m, 1])
-        return d
+        data = np.zeros((self.n_frames, self.n_species, 2))
+        for i in range(self.n_frames):
+            for j, species in enumerate(self.species):
+                m = [x == species for x in self.latom]
+                data[i, j, 0] = np.average(self.data[i, m, 0])
+                data[i, j, 1] = np.average(self.data[i, m, 1])
+
+        return data
 
     def read(self, filename="MSDTMP"):
         """Read an MSDTMP file
@@ -49,35 +49,33 @@ class msd():
 
         """
 
-        try:
-            fileIn = open(filename, 'r')
-        except IOError:
-            print('File {0:s} does not exist!'.format(filename))
-            return []
+        with open(filename, "r", encoding="utf-8") as in_file:
+            data_in = map(lambda x: x.strip().split(), iter(in_file))
 
-        self.title = fileIn.readline().strip()
-        self.nAtoms, self.nFrames, _ = map(int, fileIn.readline().strip().split())
-        self.data = np.zeros((self.nFrames, self.nAtoms, 2))
-        self.step = np.zeros(self.nFrames)
-        self.time = np.zeros(self.nFrames)
-        for i in range(self.nFrames):
-            d = fileIn.readline().strip().split()
-            self.step[i] = int(d[1])
-            self.timestep = float(d[3])
-            self.time[i] = float(d[4])
-            for j in range(self.nAtoms):
-                if i > 0:
-                    _, _, m, t = fileIn.readline().strip().split()
-                    self.data[i, j, :] = float(m)**2, float(t)
-                else:
-                    s, _, m, t = fileIn.readline().strip().split()
-                    self.data[i, j, :] = float(m)**2, float(t)
-                    self.latom.append(s)
+            self.title = next(data_in)[0]
+            self.n_atoms, self.n_frames, _ = map(int, next(data_in))
 
-        fileIn.close()
+            self.data = np.zeros((self.n_frames, self.n_atoms, 2))
+            self.step = np.zeros(self.n_frames)
+            self.time = np.zeros(self.n_frames)
+
+            for i in range(self.n_frames):
+                header = next(data_in)
+                self.step[i] = int(header[1])
+                self.timestep = float(header[3])
+                self.time[i] = float(header[4])
+
+                for j in range(self.n_atoms):
+                    species, _, mean_sq, t = next(data_in)
+                    self.data[i, j, :] = float(mean_sq)**2, float(t)
+                    if i > 0:
+                        self.latom.append(species)
+
+        self.species = set(self.latom)
+
         return self
 
 
 if __name__ == '__main__':
     MSD = msd().read()
-    print("number of frames {} ".format(MSD.nFrames))
+    print(f"number of frames {MSD.n_frames}")

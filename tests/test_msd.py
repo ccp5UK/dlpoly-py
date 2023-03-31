@@ -14,9 +14,9 @@ class MSDTest(unittest.TestCase):
         cls.msd = msd(source="tests/MSDTMP")
 
     def test_msd_init(self):
-        self.assertEqual(self.msd.nAtoms, 99120,
+        self.assertEqual(self.msd.n_atoms, 99120,
                          'incorrect number of atoms')
-        self.assertEqual(self.msd.nFrames, 3,
+        self.assertEqual(self.msd.n_frames, 3,
                          'incorrect number of frames')
 
 
