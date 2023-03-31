@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from dlpoly.rdf import rdf
+from dlpoly.rdf import RDF
 
 
 class RDFTest(unittest.TestCase):
@@ -11,14 +11,14 @@ class RDFTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(RDFTest, cls).setUpClass()
-        cls.rdf = rdf(source="tests/RDFDAT")
+        cls.rdf = RDF(source="tests/RDFDAT")
 
     def test_rdf_nrdf(self):
-        self.assertEqual(self.rdf.nRDF, 190,
+        self.assertEqual(self.rdf.n_rdf, 190,
                          'incorrect number of rdfs')
 
     def test_rdf_npoints(self):
-        self.assertEqual(self.rdf.nPoints, 160,
+        self.assertEqual(self.rdf.n_points, 160,
                          'incorrect number of points')
 
     def test_rdf_label(self):

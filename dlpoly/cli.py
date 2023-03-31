@@ -35,11 +35,8 @@ class StoreDictKeyPair(arg.Action):
         :param optionString: Extra options
 
         """
-        newDict = {}
-        for keyVal in values.split(","):
-            key, value = keyVal.split("=")
-            newDict[key] = value
-        setattr(namespace, self.dest, newDict)
+        new_dict = dict((key_val.split('=') for key_val in values.split(',')))
+        setattr(namespace, self.dest, new_dict)
 
 
 _PARSER = arg.ArgumentParser(

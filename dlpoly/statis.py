@@ -34,7 +34,7 @@ class Statis():
 
         :param arg: Label to add
         """
-        self.labels.append("{0:d}-{1:d} {2:s}".format(*self._labelPos, arg))
+        self.labels.append(f"{self._labelPos[0]:d}-{self._labelPos[1]:d} {arg}")
 
     def read(self, filename="STATIS"):
         """Read and parse a STATIS file
@@ -42,23 +42,22 @@ class Statis():
         :param filename: File to read
         :returns: Parsed statis
         """
-        with open(filename, 'r') as f:
-            a = f.readline().split()[0]
-            if a == "%YAML":
-                self.is_yaml = True
+        with open(filename, "r", encoding="utf-8") as in_file:
+            first_word = in_file.readline().split()[0]
+            self.is_yaml = first_word == "%YAML"
+
         if self.is_yaml:
-            y = YAML()
-            d = None
-            with open(filename, 'rb') as f:
-                d = y.load(f)
-            self.labels = d['labels'][0]
-            self.data = np.array(d['timesteps'])
+            yaml_parser = YAML()
+            with open(filename, "rb") as in_file:
+                data = yaml_parser.load(in_file)
+            self.labels = data["labels"][0]
+            self.data = np.array(data["timesteps"])
             self.columns = len(self.labels)
             self.rows = len(self.data)
         else:
-            with open(filename, 'r') as f:
-                h1, h2, s = f.read().split('\n', 2)
-                self.data = np.array(s.split(), dtype=float)
+            with open(filename, "r", encoding="utf-8") as in_file:
+                _, _, data = in_file.read().split("\n", 2)
+                self.data = np.array(data.split(), dtype=float)
                 self.columns = int(self.data[2])
                 self.rows = self.data.size//(self.columns + 3)
                 self.data.shape = self.rows, self.columns + 3
@@ -113,7 +112,7 @@ class Statis():
 
         if control:
             # Never true as yet
-            if getattr(control, 'l_msd', False) and config:
+            if getattr(control, "l_msd", False) and config:
                 for i in range(config.natoms):
                     self.add_label("Mean Squared Displacement")
                     self.add_label("Velocity . Velocity")
@@ -121,7 +120,8 @@ class Statis():
                 for i in range(9):
                     self.add_label("Cell Dimensions")
                 self.add_label("Instantaneous PV")
-                if any(key in control.ensemble.args for key in ("area", "tens", "semi", "orth")):
+                if any(key in control.ensemble.args
+                       for key in ("area", "tens", "semi", "orth")):
                     self.add_label("H_Z")
                     self.add_label("vol/h_z")
                     if any(key in control.ensemble.args for key in ("tens", "semi")):
@@ -130,12 +130,12 @@ class Statis():
 
         # Catch Remainder
         for i in range(len(self.labels)+1, self.columns+1):
-            self.add_label("col_{0:d}".format(i))
-        self.labels = ['iter', 'time', 'vars'] + self.labels
+            self.add_label(f"col_{i:d}")
+        self.labels = ["iter", "time", "vars"] + self.labels
 
     def flatten(self):
         """FIXME! briefly describe function"""
         for i in range(self.columns-3):
-            with open(self.labels[i], 'w') as f:
+            with open(self.labels[i], "w", encoding="utf-8") as out_file:
                 for j in range(self.rows):
-                    f.write("{} {}\n".format(self.data[j, 1], self.data[j, i+3]))
+                    out_file.write(f"{self.data[j, 1]} {self.data[j, i+3]}\n")
