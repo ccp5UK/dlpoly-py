@@ -18,9 +18,9 @@ class FieldTest(unittest.TestCase):
                          'incorrect units')
 
     def test_field_mol(self):
-        self.assertEqual(self.field.molecules['Gramicidin A'].nMols, 8,
+        self.assertEqual(self.field.molecules['Gramicidin A'].n_mols, 8,
                          'incorrect number of gramidicin')
-        self.assertEqual(self.field.molecules['Gramicidin A'].nAtoms, 354,
+        self.assertEqual(self.field.molecules['Gramicidin A'].n_atoms, 354,
                          'incorrect number of atoms in gramidicin')
 
 
