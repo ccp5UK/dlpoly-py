@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from setuptools import setup
-from sphinx.setup_command import BuildDoc
+#from sphinx.setup_command import BuildDoc
 import re
 
 with open("README.rst", "r") as fh:
@@ -10,7 +10,7 @@ with open("README.rst", "r") as fh:
 with open('dlpoly/__init__.py') as fd:
     version = re.search("__version__ = '(.*)'", fd.read()).group(1)
 
-cmdclass = {'build_sphinx': BuildDoc}
+#cmdclass = {'build_sphinx': BuildDoc}
 
 
 install_requires = [
