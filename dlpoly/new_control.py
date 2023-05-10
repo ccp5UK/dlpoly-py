@@ -126,6 +126,7 @@ class NewControl(DLPData):
             "io_file_revold": str,
             "io_file_revcon": str,
             "io_file_rdf": str,
+            "io_file_cor": str,
             "io_file_msd": str,
             "io_file_tabbnd": str,
             "io_file_tabang": str,
@@ -264,6 +265,7 @@ class NewControl(DLPData):
         self.io_file_revold = "REVOLD"
         self.io_file_revcon = "REVCON"
         self.io_file_rdf = "RDFDAT"
+        self.io_file_cor = "COR"
         self.io_file_msd = "MSDTMP"
         self.io_file_tabbnd = "TABBND" if Path("TABVDW").exists() else ""
         self.io_file_tabang = "TABANG" if Path("TABBND").exists() else ""

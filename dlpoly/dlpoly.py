@@ -62,7 +62,7 @@ class DLPoly:
     config_file = property(*file_get_set_factory("config"))
     statis_file = property(*file_get_set_factory("statis"))
     rdf_file = property(*file_get_set_factory("rdf"))
-    # correlations_file = property(*file_get_set_factory("correlations"))
+    correlations_file = property(*file_get_set_factory("cor"))
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -97,6 +97,10 @@ class DLPoly:
         if getattr(self.control, "rdf_print", False):
             self.control.io_file_rdf = str(
                 direc / Path(get_file_def("io_file_rdf", "RDFDAT")).name)
+
+        if getattr(self.control, "correlation_observable", False):
+            self.control.io_file_cor = str(
+                direc / Path(get_file_def("io_file_cor", "COR")).name)
 
         if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
             self.control.io_file_msd = str(
