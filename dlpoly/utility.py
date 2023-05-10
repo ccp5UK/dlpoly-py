@@ -243,6 +243,11 @@ class DLPData(ABC):
             if isinstance(vals, (int, float, str)):
                 vals = (vals,)
 
+            # to parse e.g new_controls' random_seed [2017,2018,2019] - requires
+            #   removal of [, and ]
+            if key != "correlation_observable":
+                vals = [v.replace("[", "").replace("]", "") if isinstance(v, str) else v for v in vals]
+
             try:
                 if ... in datatype:
                     loc = datatype.index(...)
@@ -268,7 +273,6 @@ class DLPData(ABC):
                     return None
 
                 raise TypeError(message) from err
-
         elif isinstance(vals, datatype):  # Already right type
             val = vals
         elif datatype is bool:  # If present true unless explicitly false
