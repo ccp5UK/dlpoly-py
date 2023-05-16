@@ -13,6 +13,7 @@ from .statis import Statis
 from .rdf import RDF
 from .cli import get_command_args
 from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
+from .correlations import Correlations
 
 
 class DLPoly:
@@ -20,7 +21,8 @@ class DLPoly:
     __version__ = "5.0"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 dest_config=None, rdf=None, workdir=None, default_name=None, exe=None):
+                 dest_config=None, rdf=None, correlations=None, workdir=None,
+                 default_name=None, exe=None):
         # Default to having a control
         self.control = NewControl()
         self.config = None
@@ -29,6 +31,7 @@ class DLPoly:
         self.field = None
         self.statis = None
         self.rdf = None
+        self.correlations = None
         self.exe = exe
         self.workdir = workdir
 
@@ -45,6 +48,8 @@ class DLPoly:
             self.load_statis(statis)
         if rdf is not None:
             self.load_rdf(rdf)
+        if correlations is not None:
+            self.load_correlations(correlations)
 
         # Override output
         if output is not None:
@@ -57,6 +62,7 @@ class DLPoly:
     config_file = property(*file_get_set_factory("config"))
     statis_file = property(*file_get_set_factory("statis"))
     rdf_file = property(*file_get_set_factory("rdf"))
+    correlations_file = property(*file_get_set_factory("cor"))
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -91,6 +97,10 @@ class DLPoly:
         if getattr(self.control, "rdf_print", False):
             self.control.io_file_rdf = str(
                 direc / Path(get_file_def("io_file_rdf", "RDFDAT")).name)
+
+        if getattr(self.control, "correlation_observable", False):
+            self.control.io_file_cor = str(
+                direc / Path(get_file_def("io_file_cor", "COR")).name)
 
         if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
             self.control.io_file_msd = str(
@@ -211,6 +221,19 @@ class DLPoly:
         if source.is_file():
             self.rdf = RDF(source)
             self.rdf_file = source
+        else:
+            print(f"Unable to find file: {source.absolute()}")
+
+    def load_correlations(self, source=None):
+        """ Load correlations file into class """
+        if source is None:
+            source = self.correlations_file
+
+        source = Path(source)
+
+        if source.is_file():
+            self.correlations = Correlations(source)
+            self.correlations_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 

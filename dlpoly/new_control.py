@@ -74,6 +74,10 @@ class NewControl(DLPData):
             "rdf_binsize": float,
             "rdf_error_analysis": str,
             "rdf_error_analysis_blocks": int,
+            "correlation_observable": (str, ...),
+            "correlation_blocks": (int, ...),
+            "correlation_block_points": (int, ...),
+            "correlation_window": (int, ...),
             "zden_calculate": bool,
             "zden_print": bool,
             "zden_frequency": (float, str),
@@ -122,6 +126,7 @@ class NewControl(DLPData):
             "io_file_revold": str,
             "io_file_revcon": str,
             "io_file_rdf": str,
+            "io_file_cor": str,
             "io_file_msd": str,
             "io_file_tabbnd": str,
             "io_file_tabang": str,
@@ -129,6 +134,7 @@ class NewControl(DLPData):
             "io_file_tabinv": str,
             "io_file_tabvdw": str,
             "io_file_tabeam": str,
+            "io_statis_yaml": bool,
             "output_energy": bool,
             "ignore_config_indices": bool,
             "print_topology_info": bool,
@@ -259,6 +265,7 @@ class NewControl(DLPData):
         self.io_file_revold = "REVOLD"
         self.io_file_revcon = "REVCON"
         self.io_file_rdf = "RDFDAT"
+        self.io_file_cor = "COR"
         self.io_file_msd = "MSDTMP"
         self.io_file_tabbnd = "TABBND" if Path("TABVDW").exists() else ""
         self.io_file_tabang = "TABANG" if Path("TABBND").exists() else ""
