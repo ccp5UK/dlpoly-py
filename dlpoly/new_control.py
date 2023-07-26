@@ -328,13 +328,15 @@ class NewControl(DLPData):
 
             if isinstance(vals, (list, tuple)):
                 lvals = None
+                # correlation_blocks and block_points can be singleton vectors
+                is_correlation_option = (key == "correlation_blocks") or (key == "correlation_block_points")
                 if isinstance(vals[-1], str):
                     unit = vals[-1]
                     lvals = vals[:-1]
                 else:
                     unit = ""
                     lvals = vals
-                if len(lvals) > 1:
+                if len(lvals) > 1 or is_correlation_option:
                     print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=out_file)
                 else:
                     if unit == "steps":

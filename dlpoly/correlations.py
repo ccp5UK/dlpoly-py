@@ -20,6 +20,7 @@ class Correlations():
         self.lags = None
         self.labels = None
         self.source = source
+        self.derived = None
         self.is_yaml = False
         self.n_correlations = 0
 
@@ -60,6 +61,7 @@ class Correlations():
             self.points_per_block = []
             self.labels = []
             self.lags = []
+            self.derived = []
 
         for i in range(self.n_correlations):
             cor = data['correlations'][i]
@@ -70,6 +72,9 @@ class Correlations():
             self.points_per_block.append(cor['parameters']['points_per_block'])
             self.labels.append(cor['name'])
             self.lags.append(cor['lags'])
+
+            if ('derived' in cor.keys()):
+                self.derived.append(cor['derived'])
 
     def _read_plaintext(self, source):
         # unimplemented in dlpoly
