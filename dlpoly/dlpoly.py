@@ -11,6 +11,7 @@ from .config import Config
 from .field import Field
 from .statis import Statis
 from .rdf import RDF
+from .msd import MSD
 from .cli import get_command_args
 from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 from .correlations import Correlations
@@ -21,7 +22,7 @@ class DLPoly:
     __version__ = "5.0"  # which version of dlpoly supports
 
     def __init__(self, control=None, config=None, field=None, statis=None, output=None,
-                 dest_config=None, rdf=None, correlations=None, workdir=None,
+                 dest_config=None, rdf=None, msd=None, correlations=None, workdir=None,
                  default_name=None, exe=None):
         # Default to having a control
         self.control = NewControl()
@@ -30,6 +31,7 @@ class DLPoly:
         self.default_name = default_name
         self.field = None
         self.statis = None
+        self.msd = None
         self.rdf = None
         self.correlations = None
         self.exe = exe
@@ -48,6 +50,8 @@ class DLPoly:
             self.load_statis(statis)
         if rdf is not None:
             self.load_rdf(rdf)
+        if msd is not None:
+            self.load_msd(msd)
         if correlations is not None:
             self.load_correlations(correlations)
 
@@ -62,6 +66,7 @@ class DLPoly:
     config_file = property(*file_get_set_factory("config"))
     statis_file = property(*file_get_set_factory("statis"))
     rdf_file = property(*file_get_set_factory("rdf"))
+    msd_file = property(*file_get_set_factory("msd"))
     correlations_file = property(*file_get_set_factory("cor"))
 
     def redir_output(self, direc=None):
@@ -221,6 +226,19 @@ class DLPoly:
         if source.is_file():
             self.rdf = RDF(source)
             self.rdf_file = source
+        else:
+            print(f"Unable to find file: {source.absolute()}")
+
+    def load_msd(self, source=None):
+        """Load msd file into class"""
+        if source is None:
+            source = self.msd_file
+
+        source = Path(source)
+
+        if source.is_file():
+            self.msd = MSD(source)
+            self.msd_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 

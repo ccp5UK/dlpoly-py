@@ -4,7 +4,7 @@ Module to handle MSDTMP config files
 import numpy as np
 
 
-class msd():
+class MSD():
     """Class relating to MSD data
 
     :param source: File to read
@@ -20,13 +20,16 @@ class msd():
         self.time = None
         self.title = ""
         self.species = None
-        self.n_species = property(lambda self: len(self.species))
 
         if source is not None:
             self.source = source
             self.read(source)
 
-    def per_specie(self):
+    @property
+    def n_species(self):
+        return len(self.species)
+
+    def per_species(self):
         """List by species
 
         :returns: List of species averages
@@ -36,7 +39,7 @@ class msd():
         data = np.zeros((self.n_frames, self.n_species, 2))
         for i in range(self.n_frames):
             for j, species in enumerate(self.species):
-                m = [x == species for x in self.latom]
+                m = [x == species for x in self.latom[i]]
                 data[i, j, 0] = np.average(self.data[i, m, 0])
                 data[i, j, 1] = np.average(self.data[i, m, 1])
 
@@ -64,18 +67,15 @@ class msd():
                 self.step[i] = int(header[1])
                 self.timestep = float(header[3])
                 self.time[i] = float(header[4])
-
+                frame_species = []
                 for j in range(self.n_atoms):
                     species, _, mean_sq, t = next(data_in)
                     self.data[i, j, :] = float(mean_sq)**2, float(t)
-                    if i > 0:
-                        self.latom.append(species)
-
-        self.species = set(self.latom)
+                    frame_species.append(species)
+                self.latom.append(np.sort(frame_species))
+        # nb now np.sort(np.unique()), as set() can have non-deterministic behaviour on
+        #   non deterministic input (an issue for unit tests)
+        #   https://stackoverflow.com/questions/51927850/is-set-deterministic
+        self.species = np.sort(np.unique(self.latom[0]))
 
         return self
-
-
-if __name__ == '__main__':
-    MSD = msd().read()
-    print(f"number of frames {MSD.n_frames}")
