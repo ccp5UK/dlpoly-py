@@ -71,7 +71,7 @@ class NewControl(DLPData):
             "rdf_calculate": bool,
             "rdf_print": bool,
             "rdf_frequency": (float, str),
-            "rdf_binsize": float,
+            "rdf_binsize": (float, str),
             "rdf_error_analysis": str,
             "rdf_error_analysis_blocks": int,
             "correlation_observable": (str, ...),
