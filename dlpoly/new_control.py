@@ -305,6 +305,7 @@ class NewControl(DLPData):
 
         """
         with open(filename, "r", encoding="utf-8") as in_file:
+            def strip_braces(x): return x.strip('[').strip(']') if x is not None and isinstance(x, str) else x
             for line in in_file:
                 line = line.split("#")[0]
                 line = line.split("!")[0]
@@ -312,6 +313,7 @@ class NewControl(DLPData):
                 if not line:
                     continue
                 key, *args = line.split()
+                args = [strip_braces(arg) for arg in args]
                 # Special case to handle string
                 if key == "title":
                     self[key] = " ".join(args)
@@ -329,8 +331,10 @@ class NewControl(DLPData):
             if isinstance(vals, (list, tuple)):
                 lvals = None
                 # correlation_blocks and block_points can be singleton vectors
-                is_correlation_option = (key == "correlation_blocks") or (key == "correlation_block_points")
-                if isinstance(vals[-1], str):
+                is_correlation_option = (key == 'correlation_blocks')
+                is_correlation_option = is_correlation_option or (key == 'correlation_block_points')
+                is_correlation_option = is_correlation_option or (key == 'correlation_observable')
+                if not is_correlation_option and isinstance(vals[-1], str):
                     unit = vals[-1]
                     lvals = vals[:-1]
                 else:

@@ -1,0 +1,57 @@
+title 8xGRAMICIDIN A WITH WATER SOLVATING (99120 ATOMS)
+
+io_file_config CONFIG
+io_file_field FIELD
+io_file_statis STATIS
+io_file_revive REVIVE
+io_file_revcon REVCON
+io_file_cor COR
+
+temperature  300.0 K
+
+initial_minimum_separation  0.0 ang
+
+print_frequency  5 steps
+stats_frequency  5 steps
+
+correlation_observable [v-v s-s heat_flux-heat_flux]
+correlation_block_points [5000 5000 5000]
+
+rdf_print ON
+rdf_calculate ON
+rdf_frequency  5 steps
+
+vdw_cutoff  8.0 ang
+cutoff  8.0 ang
+
+coul_method ewald
+ewald_precision 1e-06
+
+ensemble npt
+ensemble_method hoover
+ensemble_thermostat_coupling  0.5 ps
+ensemble_barostat_coupling  1.0 ps
+
+time_run  20 steps
+time_equilibration  10 steps
+time_job  7200.0 s
+time_close  100.0 s
+
+record_equilibration ON
+
+timestep_variable ON
+
+timestep  0.001 ps
+
+pressure_hydrostatic  0.001 katm
+
+rescale_frequency  3 steps
+
+equilibration_force_cap  1000.0 k_B.temp/ang
+
+msd_calculate ON
+msd_start  10 steps
+
+msd_frequency  5 steps
+shake_tolerance  1e-06 ang
+random_seed [1 2 3]
