@@ -314,6 +314,7 @@ class NewControl(DLPData):
                     continue
                 key, *args = line.split()
                 args = [strip_braces(arg) for arg in args]
+                args = list(filter(lambda x: x != '', args))
                 # Special case to handle string
                 if key == "title":
                     self[key] = " ".join(args)
