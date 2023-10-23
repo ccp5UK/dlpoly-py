@@ -141,6 +141,7 @@ class NewControl(DLPData):
             "print_level": int,
             "time_depth": int,
             "timer_per_mpi": bool,
+            "timer_yaml_file": bool,
             "timestep": (float, str),
             "timestep_variable": bool,
             "timestep_variable_min_dist": (float, str),
