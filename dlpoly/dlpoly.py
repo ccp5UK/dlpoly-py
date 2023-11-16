@@ -15,6 +15,7 @@ from .msd import MSD
 from .cli import get_command_args
 from .utility import (copy_file, next_file, is_mpi, file_get_set_factory)
 from .correlations import Correlations
+from .currents import Currents
 
 
 class DLPoly:
@@ -34,6 +35,7 @@ class DLPoly:
         self.msd = None
         self.rdf = None
         self.correlations = None
+        self.currents = None
         self.exe = exe
         self.workdir = workdir
 
@@ -68,6 +70,7 @@ class DLPoly:
     rdf_file = property(*file_get_set_factory("rdf"))
     msd_file = property(*file_get_set_factory("msd"))
     correlations_file = property(*file_get_set_factory("cor"))
+    currents_file = property(*file_get_set_factory("currents"))
 
     def redir_output(self, direc=None):
         """ Redirect output to direc and update self for later parsing """
@@ -252,6 +255,19 @@ class DLPoly:
         if source.is_file():
             self.correlations = Correlations(source)
             self.correlations_file = source
+        else:
+            print(f"Unable to find file: {source.absolute()}")
+
+    def load_currents(self, source=None):
+        """Load currents file into class"""
+        if source is None:
+            source = self.currents_file
+
+        source = Path(source)
+
+        if source.is_file():
+            self.currents = Currents(source)
+            self.currents_file = source
         else:
             print(f"Unable to find file: {source.absolute()}")
 

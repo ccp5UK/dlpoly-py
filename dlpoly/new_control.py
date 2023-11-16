@@ -125,6 +125,7 @@ class NewControl(DLPData):
             "io_file_revive": str,
             "io_file_revold": str,
             "io_file_revcon": str,
+            "io_file_currents": str,
             "io_file_rdf": str,
             "io_file_cor": str,
             "io_file_msd": str,
@@ -268,6 +269,7 @@ class NewControl(DLPData):
         self.io_file_rdf = "RDFDAT"
         self.io_file_cor = "COR"
         self.io_file_msd = "MSDTMP"
+        self.io_file_currents = "CURRENTS" if Path("CURRENTS").exists() else ""
         self.io_file_tabbnd = "TABBND" if Path("TABVDW").exists() else ""
         self.io_file_tabang = "TABANG" if Path("TABBND").exists() else ""
         self.io_file_tabdih = "TABDIH" if Path("TABANG").exists() else ""
