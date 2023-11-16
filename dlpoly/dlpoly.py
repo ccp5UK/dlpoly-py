@@ -300,7 +300,7 @@ class DLPoly:
 
     def run(self, executable=None, modules=(),
             numProcs=1, mpi='mpirun -n', outputFile=None,
-            pre_run="", post_run="", run_check=30):
+            pre_run="", post_run="", run_check=30, debug=False):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -361,6 +361,12 @@ class DLPoly:
             proc = subprocess.Popen(run_command.split(),
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
+
+            if (debug):
+                if proc.stdout is not None:
+                    print("STDOUT: \n{}".format(proc.stdout.read().decode("utf-8")))
+                if proc.stderr is not None:
+                    print("STDERR: \n{}".format(proc.stderr.read().decode("utf-8")))
 
             _, error_code = proc.communicate()
 
