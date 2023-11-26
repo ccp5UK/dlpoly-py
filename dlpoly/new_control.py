@@ -78,6 +78,7 @@ class NewControl(DLPData):
             "correlation_blocks": (int, ...),
             "correlation_block_points": (int, ...),
             "correlation_window": (int, ...),
+            "correlation_dump_frequency": (float, str),
             "zden_calculate": bool,
             "zden_print": bool,
             "zden_frequency": (float, str),
