@@ -1,25 +1,35 @@
-Silicalite simulation : Sauer model sans shell + Benzene                        
-no strict
-delr 	        5.0000E-01                     
-temperature             3.0000E+02                     
-pressure	        0.0000E+00                     
-ensemble nvt hoover     1.0000E+00                     
-steps		        2000                       
-equilibration	        500                       
-scale		        200                       
-print		        500                       
-stack		        100                       
-stats		        10                       
-trajectory	        500  10  0   
-rdf		        1                       
-timestep	        1.2000E-03                     
-cutoff		        6.5000E+00                     
-ewald precision	        1.0000E-06                     
-cap		        1.0000E+04                     
-shake tolerance	        1.0000E-05                     
-quaternion tolerance	        1.0000E-05                     
-print rdf	                                       
-job time	        14000
-close time	        100
-finish
+title Silicalite simulation : Sauer model sans shell + Benzene                        
 
+io_file_config CONFIG
+io_file_field FIELD
+io_file_statis STATIS
+io_file_revive REVIVE
+io_file_revcon REVCON
+temperature  300.0 K
+strict_checks ON
+print_frequency  500 steps
+stats_frequency  10 steps
+rdf_print ON
+rdf_calculate ON
+rdf_frequency  1 steps
+padding  0.125 ang
+cutoff  6.5 ang
+coul_method ewald
+ewald_precision 1e-06
+ensemble nvt
+ensemble_method hoover
+ensemble_thermostat_coupling  1.0 ps
+time_run  2000 steps
+time_equilibration  500 steps
+time_job  14000.0 s
+time_close  100.0 s
+timestep  0.0012 ps
+pressure_hydrostatic  0.0 katm
+rescale_frequency  200 steps
+stack_size  100 steps
+traj_calculate ON
+traj_start  500 steps
+traj_interval  10 steps
+traj_key pos
+equilibration_force_cap  10000.0 k_B.temp/ang
+shake_tolerance  1e-05 ang

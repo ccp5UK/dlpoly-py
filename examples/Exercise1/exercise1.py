@@ -21,8 +21,8 @@ showrdf("w40/RDFDAT")
 
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w20")
-dlPoly.control['pressure'] = 12
-dlPoly.control['temp'] = 500
+dlPoly.control['pressure_hydrostatic'] = (12,'katm')
+dlPoly.control['temperature'] = (500, 'K')
 dlPoly.run(numProcs = 1)
 showrdf("w20/RDFDAT")
 plt.show()
