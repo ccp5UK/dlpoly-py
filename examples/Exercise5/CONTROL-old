@@ -1,0 +1,31 @@
+Potential of mean force on K+ in water                                          
+
+no strict
+delr              0.2000E+00
+
+temperature       3.0000E+02
+pressure          0.0000E+00
+
+ensemble pmf
+steps             1000
+equilibration     300
+multiple          1
+scale             10
+print             10
+stack             100
+stats             10
+rdf               1
+
+timestep          2.0000E-03
+primary           8.0000E+00
+cutoff            7.4633E+00
+rvdw              7.4633E+00
+ewald precision   1.0000E-06
+shake tolerance   1.0000E-08
+quaternion tolerance  1.0000E-05
+print rdf
+
+job time          1.8000E+03
+close time        2.0000E+01
+
+finish

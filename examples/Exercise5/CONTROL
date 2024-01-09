@@ -1,0 +1,31 @@
+title Potential of mean force on K+ in water                                          
+
+io_file_config CONFIG
+io_file_field FIELD
+io_file_statis STATIS
+io_file_revive REVIVE
+io_file_revcon REVCON
+io_file_cor COR
+temperature  300.0 K
+initial_minimum_separation  0.0 ang
+strict_checks ON
+print_frequency  10 steps
+stats_frequency  10 steps
+rdf_print ON
+rdf_calculate ON
+rdf_frequency  1 steps
+vdw_cutoff  7.4633 ang
+padding  0.05 ang
+cutoff  7.4633 ang
+coul_method ewald
+ewald_precision 1e-06
+ensemble pmf
+time_run  1000 steps
+time_equilibration  300 steps
+time_job  1800.0 s
+time_close  20.0 s
+timestep  0.002 ps
+pressure_hydrostatic  0.0 katm
+rescale_frequency  10 steps
+stack_size  100 steps
+shake_tolerance  1e-08 ang
