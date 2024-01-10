@@ -2,15 +2,18 @@
 
 from dlpoly import DLPoly
 
-dlp="/your/home/bin/DLPOLY.Z"
+dlp = "/your/home/bin/DLPOLY.Z"
+dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
 
-dlPoly = DLPoly(control="Ar.control", config="Ar.config",
-                field="Ar.field", workdir="argon")
-dlPoly.run(executable=dlp,numProcs = 4)
+Ts = range(1,601,50)
+for i,T in enumerate(Ts):
+    print(f"Heat at {T=} K")
+    if i == 0:
+        c = "Ar.config"
+    else:
+        c = f"argon-T{Ts[i-1]}/REVCON"
 
-for T in range(200,601,50):
-    print("Process T = {}".format(T))
-    dlPoly = DLPoly(control="Ar.control", config="Ar.config",
-                field="Ar.field", workdir="argon-T{}".format(T))
+    dlPoly = DLPoly(control="Ar.control", config=c,
+                field="Ar.field", workdir=f"argon-T{T}")
     dlPoly.control['temperature'] = (T, 'K')
     dlPoly.run(executable=dlp,numProcs = 1, debug=True)
