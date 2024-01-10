@@ -1,29 +1,32 @@
-DL_POLY: ar-kr
-temperature  300
-pressure 0.001
-steps 10000
-equilibration 000
-#traj 10000 10 1
-seed 2019 2020
-timestep   0.001
-#ensemble npt lang 1.0 1.0
+title DL_POLY: ar-kr
+
+io_file_config Ar-Kr.config
+io_file_field Ar-Kr.field
+io_file_statis statis.yml
+io_file_revive REVIVE
+io_file_revcon REVCON
+io_file_cor COR
+temperature  300.0 K
+initial_minimum_separation  0.0 ang
+coul_method OFF
+print_frequency  100 steps
+stats_frequency  100 steps
+rdf_print ON
+rdf_calculate ON
+rdf_frequency  10 steps
+cutoff  12.0 ang
 ensemble nve
-cutoff   12
-no elec
-msdtmp 1000 100
-#ewald precision 0.00001
-io field Ar-Kr.field
-io config Ar-Kr.config
-#io config Arb.config
-io statis statis.yml
-yml_statis
-yml_rdf
-rdf 10
-print rdf
-trajectory 1000 100 2
-print 100
-stats 100
-#l_scr
-job time  10000000
-close time  100
-finish
+time_run  10000 steps
+time_equilibration  0 steps
+time_job  10000000.0 s
+time_close  100.0 s
+timestep  0.001 ps
+pressure_hydrostatic  0.001 katm
+random_seed [  2019  2020  2021 ] 
+msd_calculate ON
+msd_start  1000 steps
+msd_frequency  100 steps
+traj_calculate ON
+traj_start  1000 steps
+traj_interval  100 steps
+traj_key pos-vel-force

@@ -2,10 +2,10 @@
 
 from dlpoly import DLPoly
 
-dlp="/home/drFaustroll/playground/dlpoly/dl-poly-alin/build-mxatms/bin/DLPOLY.Z"
+dlp="/path_to_dlpoly/bin/DLPOLY.Z"
 
 dlPoly = DLPoly(control="Ar-Kr.control", config="Ar-Kr.config",
                 field="Ar-Kr.field", workdir="arkr")
-dlPoly.control.timing['steps'] = 1000
+dlPoly.control.time_run = (1000, 'steps')
 
-dlPoly.run(executable=dlp,numProcs = 4)
+dlPoly.run(executable=dlp,numProcs = 1)
