@@ -8,4 +8,4 @@ dlPoly = DLPoly(control="Ar-Kr.control", config="Ar-Kr.config",
                 field="Ar-Kr.field", workdir="arkr")
 dlPoly.control.time_run = (1000, 'steps')
 
-dlPoly.run(executable=dlp,numProcs = 1, debug=True)
+dlPoly.run(executable=dlp,numProcs = 1)
