@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from dlpoly import DLPoly
-from dlpoly.rdf import rdf
+from dlpoly.rdf import RDF
 
 dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w40")

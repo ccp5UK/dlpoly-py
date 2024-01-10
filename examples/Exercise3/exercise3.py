@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 from dlpoly import DLPoly
-from dlpoly.rdf import rdf
+from dlpoly.rdf import RDF
 from dlpoly.output import Output
 import matplotlib
 import matplotlib.pyplot as plt
 
 
 def showrdf(loc):
-    m = rdf(loc)
+    m = RDF(loc)
     for i in range(len(m.labels)):
         plt.plot(m.x, m.data[i,:,0],label = "-".join(m.labels[i]))
     plt.xlabel("r [Å])")
