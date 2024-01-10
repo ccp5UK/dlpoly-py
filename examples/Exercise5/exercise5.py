@@ -2,7 +2,6 @@
 
 from dlpoly import DLPoly
 from dlpoly.rdf import RDF
-from dlpoly.output import output
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -22,9 +21,6 @@ dlPoly = DLPoly(control="CONTROL", config="CONFIG",
                 field="FIELD", workdir="w40")
 
 dlPoly.run(executable=dlp,numProcs = 1)
-
-out = output("w40/OUTPUT")
-print(out)
 
 showrdf("w40/RDFDAT")
 plt.show()
