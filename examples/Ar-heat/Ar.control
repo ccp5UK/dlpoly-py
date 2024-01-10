@@ -1,20 +1,22 @@
-DL_POLY: ar
-temperature  1
-pressure 0.0
-steps 300
-equilibration 0
-#traj 10000 10 1
-seed 2019 2020
-timestep   0.001
+title DL_POLY: ar
+
+io_file_config Ar.control
+io_file_field Ar.field
+io_file_statis STATIS
+io_file_revive REVIVE
+io_file_revcon REVCON
+io_file_cor COR
+temperature  1.0 K
+initial_minimum_separation  0.0 ang
+coul_method OFF
+print_frequency  10 steps
+stats_frequency  10 steps
+cutoff  12.0 ang
 ensemble nve
-cutoff   12
-no elec
-#ewald precision 0.00001
-io field Ar.field
-io config Ar.config
-stats 10 
-print 10 
-#l_scr
-job time  10000000
-close time  100
-finish
+time_run  300 steps
+time_equilibration  0 steps
+time_job  10000000.0 s
+time_close  100.0 s
+timestep  0.001 ps
+pressure_hydrostatic  0.0 katm
+random_seed [ 2019 2020 2021 ] 
