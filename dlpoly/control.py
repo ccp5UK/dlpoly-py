@@ -755,6 +755,10 @@ class Control(DLPData):
                     output("cutoff", val.rcut, "ang")
 
                 if val.elec:
+
+                    if val.elec_method == "shift":
+                        val.elec_method = "force_shifted"
+
                     output("coul_method", val.elec_method)
                     if check_arg(val.elec_method, "ewald", "spme"):
 
