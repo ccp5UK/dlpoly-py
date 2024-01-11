@@ -1,9 +1,11 @@
 """
 Module to handle new DLPOLY control files
 """
-
 from pathlib import Path
+from typing import Any, Dict
+
 from .utility import DLPData
+from .types import PathLike, OptPath
 
 
 class NewControl(DLPData):
@@ -13,7 +15,7 @@ class NewControl(DLPData):
     :param override: Set keys manually on init
 
     """
-    def __init__(self, source=None, **override):
+    def __init__(self, source: OptPath = None, **override):
         DLPData.__init__(self, {
             "title": str,
             "random_seed": (int, int, int),
@@ -285,7 +287,7 @@ class NewControl(DLPData):
             self[key] = val
 
     @staticmethod
-    def from_dict(in_dict, strict=True):
+    def from_dict(in_dict: Dict[str, Any], strict: bool = True):
         """ Create a control file from a dictionary ignoring invalid options in dictionary
 
         :param in_dict: Dictionary to read
@@ -296,20 +298,19 @@ class NewControl(DLPData):
             for key, val in in_dict.items():
                 new_control[key] = val
         else:
-            for key, val in in_dict:
+            for key, val in in_dict.items():
                 if key in new_control.keys:
                     new_control[key] = val
 
         return new_control
 
-    def read(self, filename):
+    def read(self, filename: PathLike):
         """ Read a control file
 
         :param filename: File to read
 
         """
         with open(filename, "r", encoding="utf-8") as in_file:
-            def strip_braces(x): return x.strip('[').strip(']') if x is not None and isinstance(x, str) else x
             for line in in_file:
                 line = line.split("#")[0]
                 line = line.split("!")[0]
@@ -317,49 +318,50 @@ class NewControl(DLPData):
                 if not line:
                     continue
                 key, *args = line.split()
-                args = [strip_braces(arg) for arg in args]
-                args = list(filter(lambda x: x != '', args))
                 # Special case to handle string
                 if key == "title":
                     self[key] = " ".join(args)
                     continue
-                self[key] = args
 
-    def write(self, filename="new_control"):
+                self[key] = [stripped_arg for arg in args
+                             if (stripped_arg := arg.strip("[]"))]
+
+    def write(self, filename: PathLike = "new_control"):
         """ Write a new control file
 
         :param filename: Name to write to
 
         """
-        def output(key, vals):
+        def output(key: str, vals: Any):
 
             if isinstance(vals, (list, tuple)):
                 lvals = None
                 # correlation_blocks and block_points can be singleton vectors
-                is_correlation_option = (key == 'correlation_blocks')
-                is_correlation_option = is_correlation_option or (key == 'correlation_block_points')
-                is_correlation_option = is_correlation_option or (key == 'correlation_observable')
+                is_correlation_option = key in ('correlation_blocks',
+                                                'correlation_block_points',
+                                                'correlation_observable')
+
                 if not is_correlation_option and isinstance(vals[-1], str):
-                    unit = vals[-1]
-                    lvals = vals[:-1]
+                    lvals, unit = vals[:-1], vals[-1]
                 else:
-                    unit = ""
-                    lvals = vals
+                    lvals, unit = vals, ""
+
+                if unit == "steps":
+                    lvals = list(map(int, lvals))
+
+                out = " ".join(map(str, lvals))
+
                 if len(lvals) > 1 or is_correlation_option:
-                    print(key, "[", *(f" {val}" for val in lvals), "]", unit, file=out_file)
-                else:
-                    if unit == "steps":
-                        print(key, *(f" {int(val)}" for val in lvals), unit, file=out_file)
-                    else:
-                        print(key, *(f" {val}" for val in lvals), unit, file=out_file)
+                    out = f"[{out}]"
+
+                print(key, out, unit, file=out_file)
 
             elif isinstance(vals, bool):
-                if vals:
-                    print(key, "ON", file=out_file)
-                else:
-                    print(key, "OFF", file=out_file)
+                print(key, "ON" if vals else "OFF", file=out_file)
+
             elif isinstance(vals, str) and not vals:
                 return
+
             else:
                 print(key, vals, file=out_file)
 
@@ -372,7 +374,7 @@ class NewControl(DLPData):
                 output(key, vals)
 
 
-def is_new_control(filename):
+def is_new_control(filename: PathLike):
     """ Determine if file is in old or new format """
     with open(filename, "r", encoding="utf-8") as in_file:
         for line in in_file:

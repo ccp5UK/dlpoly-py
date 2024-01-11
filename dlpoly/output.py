@@ -1,5 +1,9 @@
 """ Module containing data related to parsing output """
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
+
+from .types import ThreeByThree, OptPath, PathLike
 
 
 class Output():
@@ -10,30 +14,30 @@ class Output():
      """
     __version__ = "0"
 
-    def __init__(self, source=None):
+    def __init__(self, source: OptPath = None):
 
-        self.vdw_energy = None
-        self.vdw_pressure = None
-        self.steps = None
-        self.average_steps = None
-        self.time = None  # in ps
-        self.average_time = None
-        self.run_time = None
-        self.run_tps = None
-        self.average = None
-        self.pressure = None
-        self.pressure_tensor = None
-        self.pressure_tensor_rms = None
-        self.average_cell = None
-        self.average_cell_rms = None
-        self.diffusion = None
+        self.vdw_energy: Optional[float] = None
+        self.vdw_pressure: Optional[float] = None
+        self.steps: Optional[float] = None
+        self.average_steps: Optional[float] = None
+        self.time: Optional[float] = None  # in ps
+        self.average_time: Optional[float] = None
+        self.run_time: Optional[float] = None
+        self.run_tps: Optional[float] = None
+        self.pressure: Optional[float] = None
+        self.pressure_tensor: Optional[ThreeByThree] = None
+        self.pressure_tensor_rms: Optional[ThreeByThree] = None
+        self.average_cell: Optional[ThreeByThree] = None
+        self.average_cell_rms: Optional[ThreeByThree] = None
+        self.diffusion: Optional[Dict[str, Tuple[float, float]]] = None
+        self.average: Optional[Dict[str, Tuple[float, float]]] = None
 
         if source is not None:
             self.source = source
             self.read(source)
 
     @staticmethod
-    def type_3x3(label, data):
+    def type_3x3(label: str, data: ThreeByThree) -> str:
         """Print as 3x3 block
 
         :param label: Label to print
@@ -84,20 +88,20 @@ class Output():
             out_str += self.type_3x3("Average cell vectors rms [Å]: ", self.average_cell_rms)
         return out_str
 
-    def read(self, source="OUTPUT"):
+    def read(self, source: PathLike = "OUTPUT"):
         """ Read an OUTPUT file into memory
 
         :param source: File to read
 
         """
         with open(source, 'r', encoding="utf-8") as in_file:
-            to_read = iter(in_file)
-            to_read = map(lambda line: line.strip().split(), to_read)
+            to_read = map(lambda line: line.strip().split(), in_file)
 
             for line in to_read:
                 if not line:
                     continue
 
+                values: Any
                 key, *values = line
 
                 if key == 'vdw':

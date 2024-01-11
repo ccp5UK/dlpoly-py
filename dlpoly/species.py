@@ -16,7 +16,13 @@ class Species(DLPData):
         :param repeats: Number of occurences
 
         """
-    def __init__(self, name="X", index=1, charge=0.0, mass=1.0, frozen=0, repeats=1):
+    def __init__(self,
+                 name: str = "X",
+                 index: int = 1,
+                 charge: float = 0.0,
+                 mass: float = 1.0,
+                 frozen: int = 0,
+                 repeats: int = 1):
 
         DLPData.__init__(self, {'element': str, 'index': int, 'charge': float,
                                 'mass': float, 'frozen': int, 'repeats': int})
