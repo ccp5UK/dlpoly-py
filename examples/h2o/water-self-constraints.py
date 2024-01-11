@@ -10,8 +10,7 @@ from dlpoly.species import Species
 dlp = "/your/home/bin/DLPOLY.Z"
 dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
 
-water = read("water.config")
-# if you read any other format
+water = read("water-constraints.config")
 write("water-self.config",water,format='dlp4')
 nH2O = len([x.symbol for x in water if x.symbol == 'O'])
 
@@ -33,6 +32,8 @@ ctl.time_equilibration = (100,'fs')
 ctl.time_job = (10000,'s')
 ctl.time_close = (10,'s')
 ctl.data_dump_frequency = (5000,'steps')
+ctl.shake_tolerance = (1.0e-6,'Ang')
+ctl.shake_max_iter = 100
 ctl.io_file_config = 'water-self.config'
 
 # you can also do it dictionary style
@@ -46,16 +47,20 @@ fld.header = "water spce"
 fld.units = "kcal/mole"
 m = Molecule()
 m.name="H2O"
-m.n_atoms = 3
-m.species = {1: Species(name="O",index=1,mass=15.9994,charge=-0.8472,frozen=0,repeats=1),
-             2: Species(name="H",index=2,mass=1.008,charge=0.4236,frozen=0,repeats=2)}
-m.add_potential('1',Bond('bonds',['harm','1','2','2000.0','1.0']))
-m.add_potential('2',Bond('bonds',['harm','1','3','2000.0','1.0']))
-m.add_potential('3',Bond('angles',['harm','2','1','3','200.0','109.47']))
-fld.add_molecule(m)
-m.n_mols = nH2O
+m.n_atoms = 6
+m.species = {1: Species(name="O",index=1,mass=15.9994,charge=-0.730,frozen=0,repeats=2),
+             2: Species(name="H",index=2,mass=1.008,charge=0.365,frozen=0,repeats=4)}
+m.add_potential('1',Bond('constraints',['1','3','1.0']))
+m.add_potential('2',Bond('constraints',['1','4','1.0']))
+m.add_potential('3',Bond('constraints',['3','4','1.633283']))
+m.add_potential('4',Bond('constraints',['2','5','1.0']))
+m.add_potential('5',Bond('constraints',['2','6','1.0']))
+m.add_potential('6',Bond('constraints',['5','6','1.633283']))
 
-fld.add_potential("O",Potential("vdw",['lj','O','O','0.16', '3.196']))
+fld.add_molecule(m)
+m.n_mols = nH2O//2
+
+fld.add_potential("O",Potential("vdw",['lj','O','O','0.15535', '3.166']))
 fld.write("spce-self.field")
 
 dlpoly = DLPoly()
