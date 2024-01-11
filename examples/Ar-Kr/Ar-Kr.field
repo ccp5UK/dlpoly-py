@@ -1,7 +1,7 @@
 DL_POLY : Ar/Kr 
 units kj
 molecules 1
-Argon
+Ar Kr
 nummols     432
 atoms 2
 Ar             39.950         0.0    1    0  
