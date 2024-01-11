@@ -9,7 +9,6 @@ from dlpoly.species import Species
 
 
 dlp = "/your/home/bin/DLPOLY.Z"
-dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
 
 a = bulk('NaCl', 'rocksalt', a=5.64,cubic=True)*(4,4,4)
 write("NaCl.config",a,format='dlp4')
