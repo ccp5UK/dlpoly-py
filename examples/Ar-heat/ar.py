@@ -3,7 +3,6 @@
 from dlpoly import DLPoly
 
 dlp = "/your/home/bin/DLPOLY.Z"
-dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
 
 Ts = range(1,601,50)
 for i,T in enumerate(Ts):
