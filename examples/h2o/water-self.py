@@ -22,7 +22,9 @@ ctl.timestep = ( 1, 'fs')
 ctl.ensemble = 'nve'
 ctl.padding = (0.5, 'Ang')
 ctl.vdw_method = 'direct'
-ctl.cutoff = (7.0,'Ang')
+ctl.cutoff = (10.0,'Ang')
+ctl.coul_method = 'spme'
+ctl.ewald_precision = 1.0e-6
 ctl.stats_frequency = (100,'steps')
 ctl.print_frequency = (100,'steps')
 ctl.stack_size = (10,'steps')
@@ -41,16 +43,17 @@ ctl.write("water-self.control")
 fld = Field()
 
 fld.header = "water spce"
-fld.units = "kJ"
+fld.units = "kcal/mole"
 m = Molecule()
 m.name="H2O"
 m.n_atoms = 3
 m.species = {1: Species(name="O",index=1,mass=15.9994,charge=-0.8472,frozen=0,repeats=1),
              2: Species(name="H",index=2,mass=1.008,charge=0.4236,frozen=0,repeats=2)}
-m.add_potential('1',Potential('bond',['harm','1','2','2000.0','1.0']))
+m.add_potential('1',Bond('bonds',['harm','1','2','2000.0','1.0']))
+m.add_potential('2',Bond('bonds',['harm','1','3','2000.0','1.0']))
+m.add_potential('3',Bond('angles',['harm','2','1','3','200.0','109.47']))
 fld.add_molecule(m)
 m.n_mols = nH2O
-
 
 fld.add_potential("O",Potential("vdw",['lj','O','O','0.15535', '3.166']))
 fld.write("spce-self.field")
