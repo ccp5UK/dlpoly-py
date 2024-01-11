@@ -1,0 +1,18 @@
+title water
+
+temperature  300.0 K
+io_file_field spce.field
+io_file_config water.config
+print_frequency  10 steps
+stats_frequency  10 steps
+vdw_method direct
+cutoff  10.0 ang
+coul_method spme
+ewald_precision 1e-06
+ensemble nve
+time_run 200.0 fs
+time_equilibration 50.0 fs
+time_job  1000000.0 s
+time_close  100.0 s
+timestep  2.0 fs
+stack_size  10 steps
