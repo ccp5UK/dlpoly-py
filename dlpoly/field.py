@@ -376,11 +376,11 @@ class Field(PotHaver):
                 pot = Potential("ters-cross", args)
                 self.add_potential(pot.atoms, pot)
 
-    def add_molecule(self, molecule):
+    def add_molecule(self, molecule, count: int = 1):
         """ Add molecule to self """
         if molecule.name not in self.molecules:
             self.molecules[molecule.name] = molecule
-        self.molecules[molecule.name].n_mols += 1
+        self.molecules[molecule.name].n_mols += count
 
         return molecule.name, self.molecules[molecule.name].n_mols
 
