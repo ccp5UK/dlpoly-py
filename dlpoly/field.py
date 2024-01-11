@@ -264,11 +264,11 @@ class Field(PotHaver):
     def _read_tersoff(self, field_file, n_pots):
         """ Read a tersoff set (different to standard block) """
 
-    def add_molecule(self, molecule):
+    def add_molecule(self, molecule, count: int = 1):
         """ Add molecule to self """
         if molecule.name not in self.molecules:
             self.molecules[molecule.name] = molecule
-        self.molecules[molecule.name].n_mols += 1
+        self.molecules[molecule.name].n_mols += count
 
         return molecule.name, self.molecules[molecule.name].n_mols
 
