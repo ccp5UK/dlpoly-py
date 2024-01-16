@@ -1,7 +1,11 @@
 '''
 Module to handle MSDTMP config files
 '''
+
+from typing import Optional, Any, List
 import numpy as np
+
+from .types import OptPath, PathLike
 
 
 class MSD():
@@ -10,16 +14,16 @@ class MSD():
     :param source: File to read
     """
 
-    def __init__(self, source=None):
+    def __init__(self, source: OptPath = None):
         self.n_frames = 0
         self.n_atoms = 0
-        self.data = None
-        self.latom = []
-        self.timestep = 0
-        self.step = None
-        self.time = None
+        self.latom: List[List[str]] = []
+        self.timestep = 0.
+        self.data: Optional[np.typing.NDArray[np.float64]] = None
+        self.step: Optional[np.typing.NDArray[np.float64]] = None
+        self.time: Optional[np.typing.NDArray[np.float64]] = None
         self.title = ""
-        self.species = None
+        self.species: Optional[np.typing.NDArray[Any]] = None
 
         if source is not None:
             self.source = source
@@ -45,7 +49,7 @@ class MSD():
 
         return data
 
-    def read(self, filename="MSDTMP"):
+    def read(self, filename: PathLike = "MSDTMP"):
         """Read an MSDTMP file
 
         :param filename: File to read

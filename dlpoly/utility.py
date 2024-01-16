@@ -2,20 +2,25 @@
 Module containing utility functions supporting the DLPOLY Python Workflow
 '''
 
-import math
+import glob
 import itertools
+import math
+import re
+import shutil
+import sys
 from abc import ABC
 from pathlib import Path
-import shutil
-import re
-import glob
-import sys
+from typing import Any, Dict, Iterator, Literal, Tuple, Union, TextIO
+
 import numpy as np
+
+from .types import PathLike
+
 
 COMMENT_CHAR = '#'
 
 
-def copy_file(inpf, outd):
+def copy_file(inpf: PathLike, outd: PathLike):
     """ Copy a file in a folder, avoiding same file error
 
     :param inpf: input file to copy
@@ -27,7 +32,7 @@ def copy_file(inpf, outd):
         pass
 
 
-def next_file(filename):
+def next_file(filename: PathLike):
     """ Get the name of the next available file
 
     :param filename: filename to check
@@ -37,8 +42,8 @@ def next_file(filename):
     files = glob.glob(f"{filename}*")
     if files:
         # Get last dir number
-        idx = (int(re.search('([0-9]+)$', file).group(0)) for file in files
-               if re.search('([0-9]+)$', file))
+        idx = (int(match.group(0)) for file in files
+               if (match := re.search('([0-9]+)$', file)))
 
         new_num = max(idx, default=1) + 1
 
@@ -49,7 +54,7 @@ def next_file(filename):
     return outfile
 
 
-def file_get_set_factory(name):
+def file_get_set_factory(name: str):
     """ Creates getters and setters for standard access to control from DLPoly
 
     :param name: Name of file as given by control
@@ -66,7 +71,7 @@ def file_get_set_factory(name):
     return getter, setter
 
 
-def peek(iterable):
+def peek(iterable: Iterator[Any]):
     """ Test generator without modifying (creates new generator)
 
     :param iterable: Generator to test
@@ -81,7 +86,7 @@ def peek(iterable):
     return itertools.chain([first], iterable)
 
 
-def parse_line(line):
+def parse_line(line: str):
     """ Handle comment chars and whitespace
 
     :param line: line to parse
@@ -90,23 +95,23 @@ def parse_line(line):
     return line.split(COMMENT_CHAR)[0].strip()
 
 
-def read_line(in_file):
+def read_line(in_file: TextIO):
     """ Read a line, stripping comments and blank lines
 
     :param in_file: File to read
 
     """
-    line = None
+
     for line in in_file:
         line = parse_line(line)
         if line:
-            break
-    else:
-        line = None
-    return line
+            return line
+
+    return None
 
 
-def build_3d_rotation_matrix(alpha=0., beta=0., gamma=0., units="rad"):
+def build_3d_rotation_matrix(alpha: float = 0., beta: float = 0., gamma: float = 0.,
+                             units: Literal["deg", "rad"] = "rad"):
     """ Build a rotation matrix in degrees or radians
 
     :param alpha: Angle XY
@@ -133,7 +138,7 @@ class DLPData(ABC):
 
      """
 
-    def __init__(self, datatypes: dict, strict: bool = False):
+    def __init__(self, datatypes: Dict[str, Union[type, Tuple[type, ...]]], strict: bool = False):
         self._datatypes = datatypes
         self._strict = strict
 
@@ -153,7 +158,7 @@ class DLPData(ABC):
         """ Whether should throw if bad keys supplied """
         return self._strict
 
-    def __setattr__(self, key, val):
+    def __setattr__(self, key: str, val: Any):
         if key == "_datatypes":  # Protect datatypes
 
             if not hasattr(self, "_datatypes"):
@@ -181,12 +186,12 @@ class DLPData(ABC):
         val = self._map_types(key, val)
         self.__dict__[key] = val
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         """ Fuzzy matching on get/set item """
         key = check_arg(key, *self.keys)
         return getattr(self, str(key))
 
-    def __setitem__(self, key_in, val):
+    def __setitem__(self, key_in: str, val: Any):
         """ Fuzzy matching on get/set item """
         if not self.strict:
             key = check_arg(key_in, *self.keys)
@@ -196,7 +201,7 @@ class DLPData(ABC):
             key = key_in
         setattr(self, key, val)
 
-    def is_set(self, key):
+    def is_set(self, key: str):
         """ Check if key is set in this object
 
         :param key: Key to check
@@ -211,7 +216,7 @@ class DLPData(ABC):
             if not self.is_set(key):
                 self[key] = val
 
-    def _map_types(self, key, vals):
+    def _map_types(self, key: str, vals: Any) -> Any:
         """ Map argument types to their respective types according to datatypes.
 
         :param key: Key to set
@@ -219,22 +224,25 @@ class DLPData(ABC):
 
         """
         datatype = self._datatypes[key]
-        if isinstance(vals, (tuple, list)) and \
-           not isinstance(datatype, (tuple, bool)) and \
-           datatype is not tuple:
+        val: Any
+
+        if all((isinstance(vals, (tuple, list)),          # Given a list but datatype
+                not isinstance(datatype, (tuple, bool)),  # is some scalar non-boolean
+                datatype is not tuple)):
 
             if not vals:
                 pass
             elif len(vals) == 1:
                 vals = vals[0]
             else:
-                for arg in vals:
+                for arg in vals:  # Take first arg
                     try:
                         vals = arg
                         break
                     except TypeError:
                         pass
                 else:
+                    assert isinstance(datatype, type)
                     raise TypeError(f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
                                     f"for key {key} valid, must be castable to {datatype.__name__}")
 
@@ -246,21 +254,21 @@ class DLPData(ABC):
             # to parse e.g new_controls' random_seed [2017,2018,2019] - requires
             #   removal of [, and ]
             if key != "correlation_observable":
-                vals = [v.replace("[", "").replace("]", "") if isinstance(v, str) else v for v in vals]
+                vals = [v.strip("[] ") if isinstance(v, str) else v for v in vals]
 
             try:
                 if ... in datatype:
                     loc = datatype.index(...)
-                    if loc != len(datatype)-1:
-                        pre, ellided, post = datatype[:loc], datatype[loc-1], datatype[loc+1:]
-                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
-                               [ellided(item) for item in vals[loc:-len(post)]] +
-                               [target_type(item)
-                                for item, target_type in zip(vals[-len(post):], post)])
-                    else:
-                        pre, ellided = datatype[:loc], datatype[loc-1]
-                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
-                               [ellided(item) for item in vals[loc:]])
+                    pre: Tuple[type, ...] = datatype[:loc]
+                    post: Tuple[type, ...] = datatype[loc+1:]
+                    ellided: itertools.repeat = itertools.repeat(datatype[loc-1], len(post) - loc)
+
+                    val_iter = iter(vals)
+
+                    transf = itertools.chain(zip(val_iter, pre),
+                                             zip(val_iter, ellided),
+                                             zip(val_iter, post))
+                    val = [target_type(item) for item, target_type in transf]
 
                 else:
                     val = [target_type(item) for item, target_type in zip(vals, datatype)]
@@ -278,9 +286,9 @@ class DLPData(ABC):
         elif datatype is bool:  # If present true unless explicitly false
             val = vals not in (0, False)
 
-        else:
+        elif isinstance(datatype, type):
             try:
-                val = self._datatypes[key](vals)
+                val = datatype(vals)
             except TypeError as err:
                 message = (f"Type of {vals} ({type(vals).__name__}) not valid, "
                            f"must be castable to {datatype.__name__}")
@@ -295,7 +303,7 @@ class DLPData(ABC):
         return val
 
 
-def check_arg(key, *args):
+def check_arg(key: str, *args: str):
     """ Perform fuzzy match against potential arguments
 
     :param key: Key supplied
@@ -309,7 +317,7 @@ def check_arg(key, *args):
     return False
 
 
-def is_mpi():
+def is_mpi() -> bool:
     """ Checks whether MPI is active and available
 
     :returns: True/False if mpi available and active
