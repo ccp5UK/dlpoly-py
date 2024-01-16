@@ -2,8 +2,14 @@
 File containing methods for loading statistics data from DL_POLY_4
 """
 
+from typing import Optional
+
 import numpy as np
 from ruamel.yaml import YAML
+
+from .config import Config
+from .control import Control
+from .types import PathLike, OptPath
 
 
 class Statis():
@@ -16,10 +22,13 @@ class Statis():
     """
     __version__ = "0"
 
-    def __init__(self, source=None, control=None, config=None):
+    def __init__(self,
+                 source: OptPath = None,
+                 control: Optional[Control] = None,
+                 config: Optional[Config] = None):
         self.rows = 0
         self.columns = 0
-        self.data = None
+        self.data = np.array([])
         self.is_yaml = False
         if source is not None:
             self.source = source
@@ -29,14 +38,14 @@ class Statis():
 
     _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels) % 5+1))
 
-    def add_label(self, arg):
+    def add_label(self, arg: str):
         """Add a label to the list of labels
 
         :param arg: Label to add
         """
         self.labels.append(f"{self._labelPos[0]:d}-{self._labelPos[1]:d} {arg}")
 
-    def read(self, filename="STATIS"):
+    def read(self, filename: PathLike = "STATIS"):
         """Read and parse a STATIS file
 
         :param filename: File to read
@@ -65,7 +74,9 @@ class Statis():
                 self.columns += 2
         return self
 
-    def gen_labels(self, control=None, config=None):
+    def gen_labels(self,
+                   control: Optional[Control] = None,
+                   config: Optional[Config] = None):
         """Generate labels for headers in STATIS file
 
         :param control: Control file relating to statis
@@ -116,7 +127,7 @@ class Statis():
                 for i in range(config.natoms):
                     self.add_label("Mean Squared Displacement")
                     self.add_label("Velocity . Velocity")
-            if control and control.ensemble.ensemble in ("npt", "nst"):
+            if control.ensemble.ensemble in ("npt", "nst"):
                 for i in range(9):
                     self.add_label("Cell Dimensions")
                 self.add_label("Instantaneous PV")

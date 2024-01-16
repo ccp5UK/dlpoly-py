@@ -2,10 +2,17 @@
 Module containing data relating to DLPOLY field files
 """
 
-from collections import defaultdict
 from abc import ABC
+from collections import defaultdict
+from typing import Dict, Literal, Optional, Sequence, TextIO, Tuple
+
 from .species import Species
-from .utility import read_line, peek
+from .types import OptPath
+from .utility import peek, read_line
+
+BondTypes = Literal["atoms", "bonds", "constraints",
+                    "angles", "dihedrals", "inversions", "rigid"]
+PotentialTypes = Literal["extern", "vdw", "metal", "rdf", "tbp", "fbp"]
 
 
 class Interaction(ABC):
@@ -13,7 +20,7 @@ class Interaction(ABC):
     def __init__(self):
         self._pot_class = None
 
-    n_atoms = {}
+    n_atoms: Dict[str, int] = {}
 
     @property
     def pot_class(self):
@@ -21,7 +28,7 @@ class Interaction(ABC):
         return self._pot_class
 
     @pot_class.setter
-    def pot_class(self, pot_class):
+    def pot_class(self, pot_class: str):
         if pot_class not in self.pot_classes:
             raise IOError(f"Unrecognised {type(self).__name__} class {pot_class}. "
                           f"Must be one of {', '.join(self.pot_classes)}")
@@ -41,7 +48,7 @@ class Bond(Interaction):
                "rigid": -1
                }
 
-    def __init__(self, pot_class=None, params=None):
+    def __init__(self, pot_class: BondTypes, params: Sequence[float] = ()):
         Interaction.__init__(self)
         self.pot_class = pot_class
         # In bonds key comes first...
@@ -59,7 +66,7 @@ class Potential(Interaction):
     """ Class containing information regarding potentials """
     n_atoms = {"extern": 0, "vdw": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4}
 
-    def __init__(self, pot_class=None, params=None):
+    def __init__(self, pot_class: PotentialTypes, params: Sequence[float] = ()):
         Interaction.__init__(self)
         self.pot_class = pot_class
         # In potentials atoms come first...
@@ -94,7 +101,11 @@ class PotHaver(ABC):
                 self.pots[old_pot.atoms][i] = new_pot
                 return
 
-    def get_pot(self, species=None, pot_class=None, pot_type=None, quiet=False):
+    def get_pot(self,
+                species: Optional[Tuple[str, ...]] = None,
+                pot_class: Optional[str] = None,
+                pot_type: Optional[str] = None,
+                quiet: bool = False):
         """ Return all pots for a given pot type """
 
         tests = (("atoms", species), ("pot_class", pot_class), ("pot_type", pot_type))
@@ -109,27 +120,27 @@ class PotHaver(ABC):
             out = ()
         return out
 
-    def get_pot_by_species(self, species, quiet=False):
+    def get_pot_by_species(self, species: Tuple[str, ...], quiet: bool = False):
         """ Return all pots for a given pot species """
         return self.get_pot(species=species, quiet=quiet)
 
-    def get_pot_by_class(self, pot_class, quiet=False):
+    def get_pot_by_class(self, pot_class: str, quiet: bool = False):
         """ Return all pots for a given pot class """
         return self.get_pot(pot_class=pot_class, quiet=quiet)
 
-    def get_pot_by_type(self, pot_type, quiet=False):
+    def get_pot_by_type(self, pot_type: str, quiet: bool = False):
         """ Return all pots for a given pot type """
         return self.get_pot(pot_type=pot_type, quiet=quiet)
 
-    def get_num_pot_by_species(self, species, quiet=False):
+    def get_num_pot_by_species(self, species: Tuple[str, ...], quiet: bool = False):
         """ Return all pots for a given pot species """
         return len(list(self.get_pot_by_species(species, quiet)))
 
-    def get_num_pot_by_class(self, pot_class, quiet=False):
+    def get_num_pot_by_class(self, pot_class: str, quiet: bool = False):
         """ Return all pots for a given pot class """
         return len(list(self.get_pot_by_class(pot_class, quiet)))
 
-    def get_num_pot_by_type(self, pot_type, quiet=False):
+    def get_num_pot_by_type(self, pot_type: str, quiet: bool = False):
         """ Return all pots for a given pot type """
         return len(list(self.get_pot_by_type(pot_type, quiet)))
 
@@ -146,7 +157,7 @@ class Molecule(PotHaver):
     activeBonds = property(lambda self: (name for name in Bond.n_atoms
                                          if self.get_num_pot_by_class(name)))
 
-    def read(self, field_file):
+    def read(self, field_file: TextIO):
         """ Read a single molecule into class and return itself """
         self.name = read_line(field_file).strip()
         self.n_mols = int(read_line(field_file).split()[1])
@@ -169,7 +180,7 @@ class Molecule(PotHaver):
         charges = [[spec.charge] * spec.repeats for spec in self.species.values()]
         return charges
 
-    def write(self, out_file):
+    def write(self, out_file: TextIO):
         """ Write self to out_file (called by Field) """
         print(self.name, file=out_file)
         print(f"nummols {self.n_mols}", file=out_file)
@@ -184,19 +195,22 @@ class Molecule(PotHaver):
                 print(pot, file=out_file)
         print("finish", file=out_file)
 
-    def _read_block(self, field_file, pot_class, n_pots):
+    def _read_block(self,
+                    field_file: TextIO,
+                    pot_class: BondTypes,
+                    n_pots: int):
         """ Read a potentials block """
         if pot_class.lower() == "atoms":
             self.n_atoms = n_pots
             self._read_atoms(field_file, n_pots)
             return
 
-        for pot in range(n_pots):
+        for _ in range(n_pots):
             args = read_line(field_file).split()
             pot = Bond(pot_class, args)
             self.add_potential(pot.atoms, pot)
 
-    def _read_atoms(self, field_file, n_atoms):
+    def _read_atoms(self, field_file: TextIO, n_atoms: int):
         atom = 0
         index = 0
         while atom < n_atoms:
@@ -215,11 +229,11 @@ class Molecule(PotHaver):
 class Field(PotHaver):
     """ Class containing field data """
 
-    def __init__(self, source=None):
+    def __init__(self, source: OptPath = None):
         PotHaver.__init__(self)
         self.header = ""
         self.units = "internal"
-        self.molecules = {}
+        self.molecules: Dict[str, Molecule] = {}
         if source is not None:
             self.source = source
             self.read(self.source)

@@ -4,8 +4,15 @@ Module to handle DLPOLY control files
 """
 
 from pathlib import Path
+from typing import Any, List, Literal, Sequence, Tuple, Union
+
 from .new_control import NewControl
+from .types import OptPath, PathLike
 from .utility import DLPData, check_arg
+
+EnsembleTypes = Literal["nve", "nvt", "npt", "nst"]
+MeansTypes = Literal["evans", "langevin", "andersen", "berendsen",
+                     "hoover", "gst", "ttm", "dpd", "mtk", None]
 
 
 class FField(DLPData):
@@ -39,7 +46,7 @@ class FField(DLPData):
                                          "coulomb", "rpad", "delr", "padding", "cutoff", "rcut",
                                          "cut", "rvdw", "metal", "vdw", "polar", "ewald_vdw"))
 
-    def parse(self, key, vals):
+    def parse(self, key: str, vals: Any):
         """ Handle key-vals for FField types
 
         :param key: Key to parse
@@ -125,7 +132,7 @@ class Ignore(DLPData):
 
     keysHandled = property(lambda self: ("no",))
 
-    def parse(self, _key, args):
+    def parse(self, _key: None, args: Any):
         """ Parse disable/ignores
 
         :param _key: "NO", ignored
@@ -158,7 +165,7 @@ class Analysis(DLPData):
 
     keysHandled = property(lambda self: ("ana",))
 
-    def parse(self, args):
+    def parse(self, args: Tuple[str, ...]):
         """ Parse analysis line
 
         :param args: Args to parse
@@ -209,7 +216,7 @@ class Print(DLPData):
 
     keysHandled = property(lambda self: ("print", "rdf", "zden", "stats", "analyse", "vaf"))
 
-    def parse(self, key, args):
+    def parse(self, key: str, args: Tuple[Any, ...]):
         """ Parse a split print line and see what it actually says
 
         :param key: Key to parse
@@ -265,21 +272,22 @@ class IOParam(DLPData):
                                        "historf", "revive", "revcon", "revold", "rdf", "msd",
                                        "tabvdw", "tabbnd", "tabang", "tabdih", "tabinv", "tabeam"})
 
-    def __init__(self, **files_in):
+    def __init__(self, **files_in: PathLike):
 
         DLPData.__init__(self, {file_type: str for file_type in self.dlp_files})
 
-        control_defined = 'control' in files_in
+        control_defined = 'control' in files_in and files_in['control']
 
         # Set defaults
-        files_in = {file: files_in.get(file, file.upper())
-                    for file in self.dlp_files}
+        for file in self.dlp_files:
+            files_in.setdefault(file, file.upper())
 
         # Get control's path
         if control_defined:
             control = files_in['control']
 
             true_control_path = Path(control).absolute().parent
+
             # Make other paths relative to control (i.e. load them correctly)
             # files = self.dlp_files - {"control"}
 
@@ -299,7 +307,7 @@ class IOParam(DLPData):
 
     keysHandled = property(lambda self: ("io",))
 
-    def parse(self, _key, args):
+    def parse(self, _key: None, args: Tuple[str, Any]):
         """ Parse an IO line
 
         :param _key: "IO", ignored
@@ -317,7 +325,7 @@ class IOParam(DLPData):
 
 class EnsembleParam:
     """ Class containing ensemble data """
-    validMeans = {"nve": (None), "pmf": (None),
+    validMeans = {"nve": (None,), "pmf": (None,),
                   "nvt": ("evans", "langevin", "andersen", "berendsen",
                           "hoover", "gst", "ttm", "dpd"),
                   "npt": ("langevin", "berendsen", "hoover", "mtk"),
@@ -371,7 +379,7 @@ class EnsembleParam:
         return self._ensemble
 
     @ensemble.setter
-    def ensemble(self, ensemble):
+    def ensemble(self, ensemble: EnsembleTypes):
         """ Set ensemble and check if valid """
         if ensemble not in EnsembleParam.validMeans:
             raise ValueError(f"Cannot set ensemble to be {ensemble}. "
@@ -386,10 +394,10 @@ class EnsembleParam:
         return self._means
 
     @means.setter
-    def means(self, means):
+    def means(self, means: MeansTypes):
         if means not in EnsembleParam.validMeans[self.ensemble]:
             raise ValueError(f"Cannot set means to be {means}. "
-                             f"Valid means {', '.join(EnsembleParam.validMeans[self.ensemble])}.")
+                             f"Valid means {', '.join(map(str, EnsembleParam.validMeans[self.ensemble]))}.")
         self.args = []
         self._means = means
 
@@ -431,7 +439,7 @@ class TimingParam(DLPData):
     keysHandled = property(lambda self: ("close", "steps", "equil", "timestep", "variable",
                                          "maxdis", "mindis", "mxstep", "job", "collect", "dump"))
 
-    def parse(self, key, args):
+    def parse(self, key: str, args: Union[Any, Sequence[Any]]):
         """ Parse a split timing line and see what it actually says
 
         :param key: Key to parse
@@ -451,7 +459,7 @@ class TimingParam(DLPData):
             setattr(self, key, args)
         if check_arg(key, "timestep", "variable"):
             if isinstance(args, (list, tuple)):
-                word1 = args.pop(0)
+                word1, *args = args
             elif args:
                 word1 = args
             else:
@@ -475,7 +483,7 @@ class Control(DLPData):
 
         :param source: File to parse
     """
-    def __init__(self, source=None):
+    def __init__(self, source: OptPath = None):
         DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "l_rout": bool,
                                 "l_rin": bool, "l_tor": bool, "l_dis": int, "unit_test": bool,
                                 "l_vdw": bool, "l_fast": bool, "ana": Analysis,
@@ -509,7 +517,7 @@ class Control(DLPData):
         self.l_rout = False
         self.l_dis = False
         self.l_fast = False
-        self.io = IOParam(control=source)
+        self.io = IOParam(control=source or "CONTROL")
         self.ignore = Ignore()
         self.print = Print()
         self.ffield = FField()
@@ -531,7 +539,7 @@ class Control(DLPData):
         return (self.io, self.ignore, self.print, self.ffield, self.timing, self.ana)
 
     @staticmethod
-    def _strip_crap(args):
+    def _strip_crap(args: Sequence[str]) -> List[str]:
 
         return [arg for arg in args if
                 not check_arg(arg, "constant", "every", "sampl", "tol",
@@ -540,7 +548,7 @@ class Control(DLPData):
                               "nbins", "rmax")
                 or check_arg(arg, "timestep")]
 
-    def read(self, filename):
+    def read(self, filename: PathLike):
         """ Read a control file
 
         :param filename: File to read
@@ -557,7 +565,7 @@ class Control(DLPData):
                 key, *args = line.split()
                 args = self._strip_crap(args)
                 if not args:
-                    args = ""
+                    args = []
                 key = key.lower()
 
                 for handler in self._handlers:
@@ -574,13 +582,13 @@ class Control(DLPData):
 
         return self
 
-    def write(self, filename="CONTROL"):
+    def write(self, filename: PathLike = "CONTROL"):
         """ Write the control out to a file
 
         :param filename: Output file
 
         """
-        def output(*args):
+        def output(*args: Any):
             print(file=out_file, *args)
 
         with open(filename, "w", encoding="utf-8") as out_file:
@@ -626,7 +634,7 @@ class Control(DLPData):
         """
         new_control = NewControl()
 
-        def output(key, *vals):
+        def output(key: str, *vals: Tuple[Any, ...]):
             new_control[key] = vals
 
         output("title", self.title)

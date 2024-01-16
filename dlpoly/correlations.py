@@ -3,6 +3,7 @@ Module to read correlation functions from DL_POLY_5
 """
 
 from ruamel.yaml import YAML
+from .types import OptPath, PathLike
 
 
 class Correlations():
@@ -12,22 +13,22 @@ class Correlations():
 
     """
 
-    def __init__(self, source=None):
-        self.components = None
-        self.blocks = None
-        self.averaging_window = None
-        self.points_per_block = None
-        self.lags = None
-        self.labels = None
+    def __init__(self, source: OptPath = None):
         self.source = source
-        self.derived = None
+        self.components = []
+        self.blocks = []
+        self.averaging_window = []
+        self.points_per_block = []
+        self.lags = []
+        self.labels = []
+        self.derived = []
         self.is_yaml = False
         self.n_correlations = 0
 
         if source is not None:
             self.read(source)
 
-    def read(self, source="COR"):
+    def read(self, source: PathLike = "COR"):
         """ Read a COR file into components
 
             :param source: File to read
@@ -41,7 +42,7 @@ class Correlations():
         else:
             self._read_plaintext(source)
 
-    def _read_yaml(self, source):
+    def _read_yaml(self, source: PathLike):
         """ Read a YAML format COR into components
 
         :param source: File to read
@@ -54,18 +55,7 @@ class Correlations():
 
         self.n_correlations = len(data['correlations'])
 
-        if self.n_correlations > 0:
-            self.components = []
-            self.blocks = []
-            self.averaging_window = []
-            self.points_per_block = []
-            self.labels = []
-            self.lags = []
-            self.derived = []
-
-        for i in range(self.n_correlations):
-            cor = data['correlations'][i]
-
+        for cor in data['correlations']:
             self.components.append(cor['components'])
             self.blocks.append(cor['parameters']['number_of_blocks'])
             self.averaging_window.append(cor['parameters']['window_size'])
@@ -73,7 +63,7 @@ class Correlations():
             self.labels.append(cor['name'])
             self.lags.append(cor['lags'])
 
-            if ('derived' in cor.keys()):
+            if 'derived' in cor.keys():
                 self.derived.append(cor['derived'])
 
     def _read_plaintext(self, source):

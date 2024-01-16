@@ -1,9 +1,11 @@
 """
-Module containing classes for loading rdf data from DL_POLY_4
+Module containing classes for loading rdf data from DL_POLY_4+
 """
 
 import numpy as np
 from ruamel.yaml import YAML
+
+from .types import OptPath, PathLike
 
 
 class RDF():
@@ -14,7 +16,7 @@ class RDF():
         """
     __version__ = "0"
 
-    def __init__(self, source=None):
+    def __init__(self, source: OptPath = None):
         self.n_rdf = 0
         self.n_points = 0
         self.x = None
@@ -26,7 +28,7 @@ class RDF():
         if source is not None:
             self.read(source)
 
-    def read(self, source="RDFDAT"):
+    def read(self, source: PathLike = "RDFDAT"):
         """ Read an RDF file into data
 
         :param source: File to read
@@ -41,7 +43,7 @@ class RDF():
         else:
             self._read_plaintext(source)
 
-    def _read_yaml(self, source):
+    def _read_yaml(self, source: PathLike):
         """ Read a YAML format RDF into data
 
         :param source: File to read
@@ -62,7 +64,7 @@ class RDF():
             self.data[i, :, 0] = data['rdfs'][i]['gofr']
             self.data[i, :, 1] = data['rdfs'][i]['nofr']
 
-    def _read_plaintext(self, source):
+    def _read_plaintext(self, source: PathLike):
         """ Read a plaintext format RDF into data
 
         :param source: File to read

@@ -3,13 +3,16 @@ Module to handle DLPOLY config files
 """
 
 import copy
+from typing import Literal, Optional, TextIO
+
 import numpy as np
 
 # from dlpoly-py.species import Species
 from .utility import DLPData
+from .types import ThreeVec
 
 
-def _format_3vec(list_in):
+def _format_3vec(list_in: ThreeVec):
     "Format 3-vector for printing"
     return f"{list_in[0]:20.10f}{list_in[1]:20.10f}{list_in[2]:20.10f}\n"
 
@@ -25,7 +28,11 @@ class Atom(DLPData):
 
      """
 
-    def __init__(self, element="", pos=None, vel=None, forces=None, index=1):
+    def __init__(self,
+                 element: str = "",
+                 pos: Optional[ThreeVec] = None,
+                 vel: Optional[ThreeVec] = None,
+                 forces: Optional[ThreeVec] = None, index: int = 1):
         DLPData.__init__(
             self,
             {
@@ -38,15 +45,15 @@ class Atom(DLPData):
             },
         )
         self.element = element
-        self.pos = np.zeros(3) if pos is None else pos
-        self.vel = np.zeros(3) if vel is None else vel
-        self.forces = np.zeros(3) if forces is None else forces
+        self.pos = pos if pos is not None else np.zeros(3)
+        self.vel = vel if vel is not None else np.zeros(3)
+        self.forces = forces if forces is not None else np.zeros(3)
         self.index = index
 
-    def write(self, level):
+    def write(self, level: Literal[0, 1, 2]):
         """ Print own data to file w.r.t config print level
 
-        :param level: Print level ; 1 = Pos, 2 = Vel, 3 = Forces
+        :param level: Print level ; 0 = Pos, 1 = Vel, 2 = Forces
 
         """
 
@@ -74,7 +81,8 @@ class Atom(DLPData):
                 _format_3vec(self.forces))
 
     @classmethod
-    def read(cls, file_handle, level, i):
+    def read(cls, file_handle: TextIO,
+             level: Literal[0, 1, 2], i: int):
         """ Reads info for one atom
 
         :param file_handle: File to read
