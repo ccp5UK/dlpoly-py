@@ -216,7 +216,11 @@ class Molecule(PotHaver):
         while atom < n_atoms:
             name, mass, charge, *repeats_frozen = read_line(field_file).split()
             if repeats_frozen:
-                repeats, frozen, *_ = repeats_frozen
+                if len(repeats_frozen) == 1:
+                    repeats = repeats_frozen[0]
+                    frozen = 0
+                else:
+                    repeats, frozen, *_ = repeats_frozen
             else:
                 repeats, frozen = 1, 0
             repeats = int(repeats)
