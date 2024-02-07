@@ -1,5 +1,4 @@
-image: registry.hub.docker.com/drfaustroll/dlpoly:5.1.0-44-gad8acad1148-tumbleweed
-
+image: registry.gitlab.com/ccp5/dlpoly-py:latest
 before_script:
   - python3 --version
   - python3 -m pip install -r requirements.txt
