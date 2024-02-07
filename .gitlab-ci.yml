@@ -1,7 +1,8 @@
 image: registry.gitlab.com/ccp5/dlpoly-py:latest
 before_script:
-  - python3 --version
-  - python3 -m pip install -r requirements.txt
+  - python3 -m venv py-ci && source ./py-ci/bin/activate
+  - python --version
+  - python -m pip install -r requirements.txt
 
 stages:
   - test
@@ -29,8 +30,9 @@ flake8:
 tests:
   stage: test
   script:
-    - python3 ./setup.py build
-    - python3 ./setup.py install --user
+    - source ./py-ci/bin/activate
+    - python ./setup.py build
+    - python ./setup.py install --user
       #    - python -m unittest discover -s tests -p 'test_*.py'
     - source ~/.bashrc
     - module load dl_poly
