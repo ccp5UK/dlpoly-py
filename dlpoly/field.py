@@ -12,7 +12,7 @@ from .utility import peek, read_line
 
 BondTypes = Literal["atoms", "bonds", "constraints",
                     "angles", "dihedrals", "inversions", "rigid"]
-PotentialTypes = Literal["extern", "vdw", "metal", "rdf", "tbp", "fbp"]
+PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf", "tbp", "fbp"]
 
 
 class Interaction(ABC):
@@ -64,7 +64,7 @@ class Bond(Interaction):
 
 class Potential(Interaction):
     """ Class containing information regarding potentials """
-    n_atoms = {"extern": 0, "vdw": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4}
+    n_atoms = {"extern": 0, "vdw": 2, "vdwtab": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4}
 
     def __init__(self, pot_class: PotentialTypes, params: Sequence[float] = ()):
         Interaction.__init__(self)
@@ -245,6 +245,7 @@ class Field(PotHaver):
             self.read(self.source)
 
     vdws = property(lambda self: list(self.get_pot_by_class("vdw")))
+    vdwstab = property(lambda self: list(self.get_pot_by_class("vdwtab")))
     metals = property(lambda self: list(self.get_pot_by_class("metal")))
     rdfs = property(lambda self: list(self.get_pot_by_class("rdf")))
     tersoffs = property(lambda self: list(self.get_pot_by_class("tersoff")))
@@ -254,6 +255,7 @@ class Field(PotHaver):
 
     nMolecules = property(lambda self: len(self.molecules))
     nVdws = property(lambda self: len(self.vdws))
+    nVdwsTab = property(lambda self: len(self.vdwstab))
     nMetals = property(lambda self: len(self.metals))
     nRdfs = property(lambda self: len(self.rdfs))
     nTersoffs = property(lambda self: len(self.tersoffs))
@@ -276,6 +278,8 @@ class Field(PotHaver):
         if pot_class == "tersoff":
             self._read_tersoff(field_file, n_pots)
             return
+        if 'vdwtab' in pot_class:
+            pot_class = 'vdwtab'
         for pot in range(n_pots):
             args = field_file.readline().split()
             pot = Potential(pot_class, args)
@@ -297,7 +301,11 @@ class Field(PotHaver):
         with open(field_file, "r", encoding="utf-8") as in_file:
             # Header *must* be first line?
             self.header = in_file.readline().strip()
-            key, self.units = read_line(in_file).split()
+            units = read_line(in_file).split()
+            if len(units) != 2:
+                key, self.units = 'UNITS', 'internal'
+            else:
+                key, self.units = units
             line = read_line(in_file)
             while line.lower() != "close":
                 key, *n_vals = line.lower().split()
