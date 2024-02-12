@@ -236,11 +236,11 @@ class NewControl(DLPData):
             "coul_extended_exclusion": bool,
             "coul_method": str,
             "coul_precision": float,
-            "ewald_precision": float,
-            "ewald_alpha": (float, str),
-            "ewald_kvec": (int, int, int),
-            "ewald_kvec_spacing": (float, str),
-            "ewald_nsplines": int,
+            "spme_precision": float,
+            "spme_alpha": (float, str),
+            "spme_kvec": (int, int, int),
+            "spme_kvec_spacing": (float, str),
+            "spme_nsplines": int,
             "polarisation_model": str,
             "polarisation": float,
             "metal_direct": bool,
@@ -322,6 +322,11 @@ class NewControl(DLPData):
                 if key == "title":
                     self[key] = " ".join(args)
                     continue
+
+                if key.startswith("ewald"):
+                    corrected_key = key.replace("ewald", "spme")
+                    print(f"Warning {key} used in control, should be {corrected_key} (applying correction)", flush=True)
+                    key = corrected_key
 
                 self[key] = [stripped_arg for arg in args
                              if (stripped_arg := arg.strip("[]"))]

@@ -767,13 +767,16 @@ class Control(DLPData):
                     if val.elec_method == "shift":
                         val.elec_method = "force_shifted"
 
+                    if val.elec_method == "ewald":
+                        val.elec_method = "spme"
+
                     output("coul_method", val.elec_method)
                     if check_arg(val.elec_method, "ewald", "spme"):
 
                         if check_arg(val.elec_params[0], "precision"):
-                            output("ewald_precision", val.elec_params[1])
+                            output("spme_precision", val.elec_params[1])
                             if len(val.elec_params) > 2:
-                                output("ewald_nsplines", val.elec_params[2])
+                                output("spme_nsplines", val.elec_params[2])
 
                         else:
                             if check_arg(val.elec_params[0], "sum"):
@@ -781,13 +784,13 @@ class Control(DLPData):
                             else:
                                 parms = list(val.elec_params)
 
-                            output("ewald_alpha", parms.pop(0), "ang^-1")
+                            output("spme_alpha", parms.pop(0), "ang^-1")
                             if len(parms) >= 3:
-                                output("ewald_kvec", parms.pop(0), parms.pop(0), parms.pop(0))
+                                output("spme_kvec", parms.pop(0), parms.pop(0), parms.pop(0))
                             else:
                                 continue
                             if parms:
-                                output("ewald_nsplines", parms.pop(0))
+                                output("spme_nsplines", parms.pop(0))
 
                 if val.metal_style == "sqrtrho":
                     output("metal_sqrtrho", "ON")
