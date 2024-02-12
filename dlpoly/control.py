@@ -270,7 +270,7 @@ class IOParam(DLPData):
 
     dlp_files = property(lambda self: {"control", "field", "config", "statis", "output", "history",
                                        "historf", "revive", "revcon", "revold", "rdf", "msd",
-                                       "tabvdw", "tabbnd", "tabang", "tabdih", "tabinv", "tabeam"})
+                                       "tabvdw", "tabbnd", "tabang", "tabdih", "tabinv", "tabeam", "cor"})
 
     def __init__(self, **files_in: PathLike):
 
@@ -298,7 +298,7 @@ class IOParam(DLPData):
                      'output', 'revive', 'revcon'):
             setattr(self, file, files_in[file])
 
-        for file in ('history', 'historf', 'revold', 'rdf', 'msd'):
+        for file in ('history', 'historf', 'revold', 'rdf', 'msd', 'cor'):
             setattr(self, file, "")
 
         for file in ('tabvdw', 'tabbnd', 'tabang', 'tabdih', 'tabinv', 'tabeam'):
