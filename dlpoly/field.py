@@ -309,7 +309,7 @@ class Field(PotHaver):
             line = read_line(in_file)
             while line.lower() != "close":
                 key, *n_vals = line.lower().split()
-                n_vals = int(n_vals[-1])
+                n_vals = int(n_vals[-1]) if len(n_vals) else 1
                 if key.startswith("molecul"):
                     for _ in range(n_vals):
                         mol = Molecule().read(in_file)
