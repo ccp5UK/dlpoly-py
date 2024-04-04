@@ -12,7 +12,7 @@ from .utility import peek, read_line
 
 BondTypes = Literal["atoms", "bonds", "constraints",
                     "angles", "dihedrals", "inversions", "rigid"]
-PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf", "tbp", "fbp"]
+PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf", "tbp", "fbp", "ters", "kihs", "ters-cross"]
 
 
 class Interaction(ABC):
@@ -64,7 +64,8 @@ class Bond(Interaction):
 
 class Potential(Interaction):
     """ Class containing information regarding potentials """
-    n_atoms = {"extern": 0, "vdw": 2, "vdwtab": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4}
+    n_atoms = {"extern": 0, "vdw": 2, "vdwtab": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4,
+               "ters": 1, "ters-cross": 2, "kihs": 2}
 
     def __init__(self, pot_class: PotentialTypes, params: Sequence[float] = ()):
         Interaction.__init__(self)
@@ -77,9 +78,23 @@ class Potential(Interaction):
             self.atoms = sorted(self.atoms)
 
     def __str__(self):
-        return " ".join((self.pot_type,
-                         " ".join(self.atoms),
-                         " ".join(self.params)))
+        if self.pot_class == "ters":
+            line = " ".join(self.atoms) + " ters"
+            line = line + " ".join(self.params[0:min(5, len(self.params))])
+            line = line + "\n" + " ".join(self.params[0:min(11, len(self.params))])
+
+        if self.pot_class == "kihs":
+            line = " ".join(self.atoms) + " kihs"
+            line = line + "\n" + " ".join(self.params[0:min(5, len(self.params))])
+            line = line + "\n" + " ".join(self.params[0:min(11, len(self.params))])
+            line = line + "\n" + " ".join(self.params[0:min(16, len(self.params))])
+        elif self.pot_class == "ters-cross":
+            return " ".join((self.atoms,
+                            " ".join(self.params)))
+        else:
+            return " ".join((self.pot_type,
+                             " ".join(self.atoms),
+                             " ".join(self.params)))
 
 
 class PotHaver(ABC):
@@ -248,7 +263,9 @@ class Field(PotHaver):
     vdwstab = property(lambda self: list(self.get_pot_by_class("vdwtab")))
     metals = property(lambda self: list(self.get_pot_by_class("metal")))
     rdfs = property(lambda self: list(self.get_pot_by_class("rdf")))
-    tersoffs = property(lambda self: list(self.get_pot_by_class("tersoff")))
+    tersoffs = property(lambda self: list(self.get_pot_by_class("ters")))
+    kihss = property(lambda self: list(self.get_pot_by_class("kihs")))
+    tersoffcrosses = property(lambda self: list(self.get_pot_by_class("ters-cross")))
     tbps = property(lambda self: list(self.get_pot_by_class("tbp")))
     fbps = property(lambda self: list(self.get_pot_by_class("fbp")))
     externs = property(lambda self: list(self.get_pot_by_class("extern")))
@@ -259,6 +276,8 @@ class Field(PotHaver):
     nMetals = property(lambda self: len(self.metals))
     nRdfs = property(lambda self: len(self.rdfs))
     nTersoffs = property(lambda self: len(self.tersoffs))
+    nTersoffCrosses = property(lambda self: len(self.tersoffcrosses))
+    nKihss = property(lambda self: len(self.kihss))
     nTbps = property(lambda self: len(self.tbps))
     nFbps = property(lambda self: len(self.fbps))
     nExterns = property(lambda self: len(self.externs))
@@ -287,6 +306,34 @@ class Field(PotHaver):
 
     def _read_tersoff(self, field_file, n_pots):
         """ Read a tersoff set (different to standard block) """
+        tersoff_type = None
+        # must have n entries for kihs or ters
+        for i in range(n_pots):
+            record_1 = field_file.readline().split()
+            record_2 = field_file.readline().split()
+            if tersoff_type is None:
+                tersoff_type = record_1[1]
+            elif tersoff_type != record_1[1]:
+                raise Exception("Mixed or incorrect tersoff types, expect one of ters or kihs")
+
+            args = [arg for arg in record_1 if arg != tersoff_type]
+            for arg in record_2:
+                args.append(arg)
+
+            if tersoff_type == "kihs":
+                record_3 = field_file.readline().split()
+                for arg in record_3:
+                    args.append(arg)
+
+            pot = Potential(tersoff_type, args)
+            self.add_potential(pot.atoms, pot)
+        # now handle ters's cross terms
+        if tersoff_type == "ters":
+            count = int(n_pots * (n_pots + 1) / 2)
+            for i in range(count):
+                args = field_file.readline().split()
+                pot = Potential("ters-cross", args)
+                self.add_potential(pot.atoms, pot)
 
     def add_molecule(self, molecule):
         """ Add molecule to self """
