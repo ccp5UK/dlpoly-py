@@ -12,7 +12,9 @@ from .utility import peek, read_line
 
 BondTypes = Literal["atoms", "bonds", "constraints",
                     "angles", "dihedrals", "inversions", "rigid"]
-PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf", "tbp", "fbp", "ters", "kihs", "ters-cross"]
+PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf",
+                         "tbp", "fbp", "ters", "kihs", "ters-cross",
+                         "teth", "shell", "pmf"]
 
 
 class Interaction(ABC):
@@ -45,16 +47,28 @@ class Bond(Interaction):
                "angles": 3,
                "dihedrals": 4,
                "inversions": 4,
-               "rigid": -1
+               "rigid": -1,
+               "teth": 1,
+               "shell": 2,
+               "pmf": 1
                }
 
     def __init__(self, pot_class: BondTypes, params: Sequence[float] = ()):
         Interaction.__init__(self)
         self.pot_class = pot_class
         # In bonds key comes first...
-        self.pot_type, params = params[0], params[1:]
-        self.atoms, self.params = (params[0:self.n_atoms[pot_class]],
-                                   params[self.n_atoms[pot_class]:])
+        if pot_class in ["shell", "constraints"]:
+            # except for shell, which has none and two atoms...
+            self.atoms, self.params = params[0:2], params[2:]
+            self.pot_type = "shell"
+        elif pot_class == "pmf":
+            # or pmf which has one atom
+            self.atoms, self.params = params[0], params[1]
+            self.pot_type = "pmf"
+        else:
+            self.pot_type, params = params[0], params[1:]
+            self.atoms, self.params = (params[0:self.n_atoms[pot_class]],
+                                       params[self.n_atoms[pot_class]:])
 
     def __str__(self):
         return " ".join((self.pot_type,
@@ -72,7 +86,9 @@ class Potential(Interaction):
         self.pot_class = pot_class
         # In potentials atoms come first...
         self.atoms, params = params[0:self.n_atoms[pot_class]], params[self.n_atoms[pot_class]:]
-        self.pot_type, self.params = params[0], params[1:]
+        if pot_class != "rdf":
+            # rdf is just a pair of atoms
+            self.pot_type, self.params = params[0], params[1:]
         if params is not None:
             # Atoms always in alphabetical/numerical order
             self.atoms = sorted(self.atoms)
@@ -168,6 +184,7 @@ class Molecule(PotHaver):
         self.n_mols = 0
         self.n_atoms = 0
         self.species = {}
+        self.pmf_mean_bondlength = None
 
     activeBonds = property(lambda self: (name for name in Bond.n_atoms
                                          if self.get_num_pot_by_class(name)))
@@ -178,10 +195,14 @@ class Molecule(PotHaver):
         self.n_mols = int(read_line(field_file).split()[1])
         line = read_line(field_file)
         while line.lower() != "finish":
-            pot_class, n_pots = line.split()
-            pot_class = pot_class.lower()
-            n_pots = int(n_pots)
-            self._read_block(field_file, pot_class, n_pots)
+            if line.lower().split()[0] == "pmf":
+                self.pmf_mean_bondlength = float(line.split()[1])
+                self._read_pmf(field_file)
+            else:
+                pot_class, n_pots = line.split()
+                pot_class = pot_class.lower()
+                n_pots = int(n_pots)
+                self._read_block(field_file, pot_class, n_pots)
             line = read_line(field_file)
         return self
 
@@ -224,6 +245,29 @@ class Molecule(PotHaver):
             args = read_line(field_file).split()
             pot = Bond(pot_class, args)
             self.add_potential(pot.atoms, pot)
+
+    def _read_pmf(self, field_file: TextIO):
+        """Reads the two pmf unit blocks"""
+        unit_1 = read_line(field_file).lower().split()
+        n_atoms = int(unit_1[2])
+        self._read_pmf_unit(field_file, n_atoms)
+
+        unit_2 = read_line(field_file).lower().split()
+        n_atoms = int(unit_2[2])
+        self._read_pmf_unit(field_file, n_atoms)
+
+    def _read_pmf_unit(self, field_file: TextIO, n_atoms: int):
+        """Reads an individual pmf unit block"""
+        atom = 0
+        while atom < n_atoms:
+            # weight may be omitted
+            site, *weight = read_line(field_file).split()
+            args = [site]
+            weight = [0.0] if len(weight) == 0 else weight
+            [args.append(w) for w in weight]
+            pot = Bond("pmf", args)
+            self.add_potential(pot.atoms, pot)
+            atom += 1
 
     def _read_atoms(self, field_file: TextIO, n_atoms: int):
         atom = 0
