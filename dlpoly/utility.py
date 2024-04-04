@@ -284,7 +284,7 @@ class DLPData(ABC):
         elif isinstance(vals, datatype):  # Already right type
             val = vals
         elif datatype is bool:  # If present true unless explicitly false
-            val = vals not in (0, False)
+            val = vals not in (0, False, "off", "OFF")
 
         elif isinstance(datatype, type):
             try:
