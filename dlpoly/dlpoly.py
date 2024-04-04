@@ -132,6 +132,10 @@ class DLPoly:
             self.control.io_file_cor = str(
                 direc / Path(get_file_def("cor", "COR")).name)
 
+        if getattr(self.control, "currents_calculate", False) == "On":
+            self.control.io_file_currents = str(
+                direc / Path(get_file_def("currents", "CURRENTS")).name)
+
         if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
             self.control.io_file_msd = str(
                 direc / Path(get_file_def("msd", "MSDTMP")).name)
