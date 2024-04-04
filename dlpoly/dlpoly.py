@@ -19,6 +19,7 @@ from .new_control import NewControl, is_new_control
 from .rdf import RDF
 from .statis import Statis
 from .utility import copy_file, file_get_set_factory, is_mpi, next_file
+from .input import VDW, EAM, BND, ANG, DIH, INV
 from .types import OptPath
 
 FileTypes = Literal["field", "config", "statis", "history",
@@ -30,13 +31,18 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "5.0"  # which version of dlpoly supports
 
-    def __init__(self, control: OptPath = None, config: OptPath = None,
+    def __init__(self, *,
+                 control: OptPath = None, config: OptPath = None,
                  field: OptPath = None, statis: OptPath = None,
                  output: OptPath = None, dest_config: OptPath = None,
                  rdf: OptPath = None, msd: OptPath = None,
                  correlations: OptPath = None, currents: OptPath = None,
-                 workdir: OptPath = None,
-                 default_name: str = "dlprun", exe: OptPath = None):
+                 workdir: OptPath = None, default_name: str = "dlprun",
+                 exe: OptPath = None, vdw_file: OptPath = None,
+                 eam_file: OptPath = None, bnd_file: OptPath = None,
+                 ang_file: OptPath = None, dih_file: OptPath = None,
+                 inv_file: OptPath = None):
+
         # Default to having a control
         self.control = NewControl()
         self.dest_config = dest_config
@@ -51,22 +57,22 @@ class DLPoly:
         self.exe = exe
         self.workdir = workdir
 
-        if control is not None:
-            self.load_control(control)
-        if config is not None:
-            self.load_config(config)
-        if field is not None:
-            self.load_field(field)
-        if statis is not None:
-            self.load_statis(statis)
-        if rdf is not None:
-            self.load_rdf(rdf)
-        if msd is not None:
-            self.load_msd(msd)
-        if correlations is not None:
-            self.load_correlations(correlations)
-        if currents is not None:
-            self.load_currents(currents)
+        self.load_control(control)
+        self.load_config(config)
+        self.load_field(field)
+        self.load_statis(statis)
+        self.load_rdf(rdf)
+        self.load_msd(msd)
+        self.load_correlations(correlations)
+        self.load_currents(currents)
+
+        for (cls, source) in [(VDW, vdw_file),
+                              (EAM, eam_file),
+                              (BND, bnd_file),
+                              (ANG, ang_file),
+                              (DIH, dih_file),
+                              (INV, inv_file)]:
+            self.load_file(cls, source)
 
         # Override output
         if output is not None:
@@ -76,6 +82,10 @@ class DLPoly:
     field_file = property(*file_get_set_factory("field"))
     vdw_file = property(*file_get_set_factory("tabvdw"))
     eam_file = property(*file_get_set_factory("tabeam"))
+    bnd_file = property(*file_get_set_factory("tabbnd"))
+    ang_file = property(*file_get_set_factory("tabang"))
+    dih_file = property(*file_get_set_factory("tabdih"))
+    inv_file = property(*file_get_set_factory("tabinv"))
     config_file = property(*file_get_set_factory("config"))
     statis_file = property(*file_get_set_factory("statis"))
     rdf_file = property(*file_get_set_factory("rdf"))
@@ -158,14 +168,14 @@ class DLPoly:
             self.vdw_file = self._update_file(direc, self.vdw_file)
         if self.eam_file:
             self.eam_file = self._update_file(direc, self.eam_file)
-        if self.control.io_file_tabbnd:
-            self.control.io_file_tabbnd = self._update_file(direc, self.control.io_file_tabbnd)
-        if self.control.io_file_tabang:
-            self.control.io_file_tabang = self._update_file(direc, self.control.io_file_tabang)
-        if self.control.io_file_tabdih:
-            self.control.io_file_tabdih = self._update_file(direc, self.control.io_file_tabdih)
-        if self.control.io_file_tabinv:
-            self.control.io_file_tabinv = self._update_file(direc, self.control.io_file_tabinv)
+        if self.bnd_file:
+            self.bnd_file = self._update_file(direc, self.bnd_file)
+        if self.ang_file:
+            self.ang_file = self._update_file(direc, self.ang_file)
+        if self.dih_file:
+            self.dih_file = self._update_file(direc, self.dih_file)
+        if self.inv_file:
+            self.inv_file = self._update_file(direc, self.inv_file)
 
     def write(self,
               control: bool = True, config: bool = True, field: bool = True,
