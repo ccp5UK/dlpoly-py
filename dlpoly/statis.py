@@ -3,6 +3,7 @@ File containing methods for loading statistics data from DL_POLY_4
 """
 
 from typing import Optional
+from functools import singledispatchmethod
 
 import numpy as np
 from ruamel.yaml import YAML
@@ -20,14 +21,12 @@ class Statis():
     :param config: Associated CONFIG
 
     """
-    __version__ = "0"
+    __version__ = "0.1"
 
     def __init__(self,
                  source: OptPath = None,
                  control: Optional[Control] = None,
                  config: Optional[Config] = None):
-        self.rows = 0
-        self.columns = 0
         self.data = np.array([])
         self.is_yaml = False
         if source is not None:
@@ -36,14 +35,56 @@ class Statis():
         if not self.is_yaml:
             self.gen_labels(control, config)
 
-    _labelPos = property(lambda self: (len(self.labels)//5+1, len(self.labels) % 5+1))
+    @singledispatchmethod
+    def __getitem__(self, val):
+        raise NotImplementedError(
+            f"Unsupported get type ({type(val).__name__})"
+        )
+
+    # 1 indexed slicing
+    @__getitem__.register(int)
+    def _(self, val):
+        return self.data[:, val-1]
+
+    @__getitem__.register(slice)
+    def _(self, val):
+        val = slice(val.start-1, val.stop-1, val.step)
+        return self.data[:, val]
+
+    # Look up key
+    @__getitem__.register(str)
+    def _(self, val):
+        if pos := next((i
+                        for i, key in enumerate(self.labels)
+                        if val.lower() in key.lower()
+                        ), None):
+            if val != self.labels[pos]:
+                print(self.labels[pos])
+            return self.data[:, pos]
+
+        raise KeyError(f"Key {val} not found in statis")
+
+    @property
+    def rows(self):
+        """Number of rows in data"""
+        return self.data.shape[0]
+
+    @property
+    def columns(self):
+        """Number of columns in data"""
+        return self.data.shape[1]
+
+    @property
+    def _next_label(self):
+        row, col = divmod(len(self.labels), 5)
+        return row+1, col+1
 
     def add_label(self, arg: str):
         """Add a label to the list of labels
 
         :param arg: Label to add
         """
-        self.labels.append(f"{self._labelPos[0]:d}-{self._labelPos[1]:d} {arg}")
+        self.labels.append(f"{arg}")
 
     def read(self, filename: PathLike = "STATIS"):
         """Read and parse a STATIS file
@@ -61,17 +102,15 @@ class Statis():
                 data = yaml_parser.load(in_file)
             self.labels = data["labels"][0]
             self.data = np.array(data["timesteps"])
-            self.columns = len(self.labels)
-            self.rows = len(self.data)
         else:
             with open(filename, "r", encoding="utf-8") as in_file:
                 _, _, data = in_file.read().split("\n", 2)
                 self.data = np.array(data.split(), dtype=float)
-                self.columns = int(self.data[2])
-                self.rows = self.data.size//(self.columns + 3)
-                self.data.shape = self.rows, self.columns + 3
-                np.delete(self.data, 2, axis=1)
-                self.columns += 2
+                columns = int(self.data[2])
+                rows = self.data.size // (columns + 3)
+                self.data.shape = rows, columns + 3
+                self.data = np.delete(self.data, 2, axis=1)
+
         return self
 
     def gen_labels(self,
@@ -83,43 +122,43 @@ class Statis():
         :param config: Config file relating to statis
         :returns: Set labels for further reference
         """
-        self.labels = ["1-1 Total Extended System Energy",
-                       "1-2 System Temperature",
-                       "1-3 Configurational Energy",
-                       "1-4 Short Range Potential Energy",
-                       "1-5 Electrostatic Energy",
-                       "2-1 Chemical Bond Energy",
-                       "2-2 Valence Angle And 3-Body Potential Energy",
-                       "2-3 Dihedral, Inversion, And 4-Body Potential Energy",
-                       "2-4 Tethering Energy",
-                       "2-5 Enthalpy (Total Energy + Pv)",
-                       "3-1 Rotational Temperature",
-                       "3-2 Total Virial",
-                       "3-3 Short-Range Virial",
-                       "3-4 Electrostatic Virial",
-                       "3-5 Bond Virial",
-                       "4-1 Valence Angle And 3-Body Virial",
-                       "4-2 Constraint Bond Virial",
-                       "4-3 Tethering Virial",
-                       "4-4 Volume",
-                       "4-5 Core-Shell Temperature",
-                       "5-1 Core-Shell Potential Energy",
-                       "5-2 Core-Shell Virial",
-                       "5-3 Md Cell Angle Α",
-                       "5-4 Md Cell Angle Β",
-                       "5-5 Md Cell Angle Γ",
-                       "6-1 Pmf Constraint Virial",
-                       "6-2 Pressure",
-                       "6-3 External Degree Of Freedom",
-                       "6-4 stress xx",
-                       "6-5 stress xy",
-                       "7-1 stress xz",
-                       "7-2 stress yx",
-                       "7-3 stress yy",
-                       "7-4 stress yz",
-                       "7-5 stress zx",
-                       "8-1 stress zy",
-                       "8-2 stress zz"]
+        self.labels = ["Total Extended System Energy",
+                       "System Temperature",
+                       "Configurational Energy",
+                       "Short Range Potential Energy",
+                       "Electrostatic Energy",
+                       "Chemical Bond Energy",
+                       "Valence Angle And 3-Body Potential Energy",
+                       "Dihedral, Inversion, And 4-Body Potential Energy",
+                       "Tethering Energy",
+                       "Enthalpy (Total Energy + Pv)",
+                       "Rotational Temperature",
+                       "Total Virial",
+                       "Short-Range Virial",
+                       "Electrostatic Virial",
+                       "Bond Virial",
+                       "Valence Angle And 3-Body Virial",
+                       "Constraint Bond Virial",
+                       "Tethering Virial",
+                       "Volume",
+                       "Core-Shell Temperature",
+                       "Core-Shell Potential Energy",
+                       "Core-Shell Virial",
+                       "Md Cell Angle Α",
+                       "Md Cell Angle Β",
+                       "Md Cell Angle Γ",
+                       "Pmf Constraint Virial",
+                       "Pressure",
+                       "External Degree Of Freedom",
+                       "stress xx",
+                       "stress xy",
+                       "stress xz",
+                       "stress yx",
+                       "stress yy",
+                       "stress yz",
+                       "stress zx",
+                       "stress zy",
+                       "stress zz"]
 
         if control:
             # Never true as yet
@@ -142,7 +181,7 @@ class Statis():
         # Catch Remainder
         for i in range(len(self.labels)+1, self.columns+1):
             self.add_label(f"col_{i:d}")
-        self.labels = ["iter", "time", "vars"] + self.labels
+        self.labels = ["iter", "time"] + self.labels
 
     def flatten(self):
         """FIXME! briefly describe function"""
@@ -150,3 +189,13 @@ class Statis():
             with open(self.labels[i], "w", encoding="utf-8") as out_file:
                 for j in range(self.rows):
                     out_file.write(f"{self.data[j, 1]} {self.data[j, i+3]}\n")
+
+    def __str__(self):
+        return (f"statis: {self.source} with {self.columns} columns: \n" +
+                ("\n".join(f"{i} {label}" for i, label in enumerate(self.labels, 1)))
+                )
+
+    def __repr__(self):
+        return (f"statis: {self.source} with {self.columns} columns: \n" +
+                (", ".join(f"{i} {label}" for i, label in enumerate(self.labels, 1)))
+                )
