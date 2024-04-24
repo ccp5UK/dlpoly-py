@@ -400,8 +400,8 @@ class Field(PotHaver):
                 n_vals = int(n_vals[-1]) if len(n_vals) else 1
                 if key.startswith("molecul"):
                     for _ in range(n_vals):
-                        mol = Molecule().read(in_file)
-                        self.molecules[mol.name] = mol
+                        # Molecule sets its own count
+                        self.add_molecule(Molecule().read(in_file), 0)
                 else:
                     self._read_block(in_file, key, n_vals)
                 line = read_line(in_file)
