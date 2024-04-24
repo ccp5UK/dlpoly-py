@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from os import PathLike
 from pathlib import Path
-from typing import Sequence, Type, Literal
+from typing import Literal, Optional, Sequence, Type
 
 from .cli import get_command_args
 from .config import Config
@@ -14,13 +14,13 @@ from .control import Control
 from .correlations import Correlations
 from .currents import Currents
 from .field import Field
+from .input import ANG, BND, DIH, EAM, INV, VDW
 from .msd import MSD
 from .new_control import NewControl, is_new_control
 from .rdf import RDF
 from .statis import Statis
-from .utility import copy_file, file_get_set_factory, is_mpi, next_file
-from .input import VDW, EAM, BND, ANG, DIH, INV
 from .types import OptPath
+from .utility import copy_file, file_get_set_factory, is_mpi, next_file
 
 FileTypes = Literal["field", "config", "statis", "history",
                     "historf", "revive", "revcon", "revold",
@@ -58,20 +58,20 @@ class DLPoly:
         self.workdir = workdir
 
         self.load_control(control)
-        self.load_config(config)
-        self.load_field(field)
-        self.load_statis(statis)
-        self.load_rdf(rdf)
-        self.load_msd(msd)
-        self.load_correlations(correlations)
-        self.load_currents(currents)
 
-        for (cls, source) in [(VDW, vdw_file),
+        for (cls, source) in ((Config, config),
+                              (Field, field),
+                              (Statis, statis),
+                              (RDF, rdf),
+                              (MSD, msd),
+                              (Correlations, correlations),
+                              (Currents, currents),
+                              (VDW, vdw_file),
                               (EAM, eam_file),
                               (BND, bnd_file),
                               (ANG, ang_file),
                               (DIH, dih_file),
-                              (INV, inv_file)]:
+                              (INV, inv_file)):
             self.load_file(cls, source)
 
         # Override output
@@ -192,8 +192,11 @@ class DLPoly:
         if field and self.field:
             self.field.write(prefix+self.field_file+suffix)
 
-    def load_control(self, source: OptPath = None):
+    def load_control(self, source: OptPath = None, quiet: Optional[bool] = None):
         """ Load control file into class """
+        if quiet is None:  # If we haven't defined quiet or a source, should be quiet
+            quiet = source is None
+
         if source is None:
             source = self.control_file
 
@@ -205,13 +208,16 @@ class DLPoly:
             else:
                 self.control = Control(source).to_new()
             self.control_file = source
-        else:
+        elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_file(self, cls: Type, source: OptPath = None):
+    def load_file(self, cls: Type, source: OptPath = None, quiet: Optional[bool] = None):
         """ Load general file """
         cls_name = cls.__name__.lower()
         fld_name = cls_name+"_file"
+        if quiet is None:  # If we haven't defined quiet or a source, should be quiet
+            quiet = source is None
+
         if source is None:
             source = getattr(self, fld_name)
 
@@ -219,36 +225,36 @@ class DLPoly:
         if source.is_file():
             setattr(self, cls_name, cls(source))
             setattr(self, fld_name, source)
-        else:
+        elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_field(self, source: OptPath = None):
+    def load_field(self, source: OptPath = None, quiet: bool = False):
         """ Load field file into class """
-        self.load_file(Field, source)
+        self.load_file(Field, source, quiet)
 
-    def load_config(self, source: OptPath = None):
+    def load_config(self, source: OptPath = None, quiet: bool = False):
         """ Load config file into class """
-        self.load_file(Config, source)
+        self.load_file(Config, source, quiet)
 
-    def load_statis(self, source: OptPath = None):
+    def load_statis(self, source: OptPath = None, quiet: bool = False):
         """ Load statis file into class """
-        self.load_file(Statis, source)
+        self.load_file(Statis, source, quiet)
 
-    def load_rdf(self, source: OptPath = None):
+    def load_rdf(self, source: OptPath = None, quiet: bool = False):
         """ Load statis file into class """
-        self.load_file(RDF, source)
+        self.load_file(RDF, source, quiet)
 
-    def load_msd(self, source: OptPath = None):
+    def load_msd(self, source: OptPath = None, quiet: bool = False):
         """Load msd file into class"""
-        self.load_file(MSD, source)
+        self.load_file(MSD, source, quiet)
 
-    def load_correlations(self, source: OptPath = None):
+    def load_correlations(self, source: OptPath = None, quiet: bool = False):
         """ Load correlations file into class """
-        self.load_file(Correlations, source)
+        self.load_file(Correlations, source, quiet)
 
-    def load_currents(self, source: OptPath = None):
+    def load_currents(self, source: OptPath = None, quiet: bool = False):
         """Load currents file into class"""
-        self.load_file(Currents, source)
+        self.load_file(Currents, source, quiet)
 
     @property
     def exe(self):

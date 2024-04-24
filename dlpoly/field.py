@@ -144,10 +144,11 @@ class PotHaver(ABC):
                    all(getattr(pot, prop) == val for prop, val in tests if val is not None)
                    )
 
-        if out is None and not quiet:
-            for name, val in tests:
-                if val is not None:
-                    print(f"No potentials for {name} {val} found")
+        if out is None:
+            if not quiet:
+                for name, val in tests:
+                    if val is not None:
+                        print(f"No potentials for {name} {val} found")
             out = ()
         return out
 
@@ -186,8 +187,8 @@ class Molecule(PotHaver):
         self.species = {}
         self.pmf_mean_bondlength = None
 
-    activeBonds = property(lambda self: (name for name in Bond.n_atoms
-                                         if self.get_num_pot_by_class(name)))
+    activeBonds = property(lambda self:
+                           (name for name in Bond.n_atoms if self.get_num_pot_by_class(name, quiet=True)))
 
     def read(self, field_file: TextIO):
         """ Read a single molecule into class and return itself """
@@ -225,7 +226,7 @@ class Molecule(PotHaver):
             print(element, file=out_file)
 
         for pot_class in self.activeBonds:
-            pots = list(self.get_pot_by_class(pot_class))
+            pots = list(self.get_pot_by_class(pot_class, quiet=True))
             print(f"{pot_class} {len(pots)}", file=out_file)
             for pot in pots:
                 print(pot, file=out_file)
@@ -327,7 +328,7 @@ class Field(PotHaver):
     nExterns = property(lambda self: len(self.externs))
 
     activePots = property(lambda self: (name for name in Potential.n_atoms
-                                        if self.get_num_pot_by_class(name)))
+                                        if self.get_num_pot_by_class(name, quiet=True)))
 
     species = property(lambda self: {spec.element: spec
                                      for mol in self.molecules.values()
