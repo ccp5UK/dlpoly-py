@@ -20,6 +20,28 @@ from .types import PathLike
 COMMENT_CHAR = '#'
 
 
+class DLPFile:
+    """ Descriptor for standard access to control files in DLPoly """
+    def __init__(self, filename_var: str = ""):
+        self.filename_var = filename_var
+
+    def __set_name__(self, owner, name):
+        if self.filename_var:
+            name = self.filename_var
+        else:
+            name = name.removesuffix('_file')
+        self.attr = f"io_file_{name}"
+
+    def __get__(self, obj, objtype=None):
+        return Path(filepath) if (filepath := getattr(obj.control, self.attr, "")) else ""
+
+    def __set__(self, obj, value):
+        if value is None:
+            setattr(obj.control, self.attr, None)
+        else:
+            setattr(obj.control, self.attr, str(value))
+
+
 def copy_file(inpf: PathLike, outd: PathLike):
     """ Copy a file in a folder, avoiding same file error
 
@@ -52,23 +74,6 @@ def next_file(filename: PathLike):
         outfile = f"{filename}"
 
     return outfile
-
-
-def file_get_set_factory(name: str):
-    """ Creates getters and setters for standard access to control from DLPoly
-
-    :param name: Name of file as given by control
-    :returns: getter & setter functions for property
-    :rtype: func
-    """
-
-    def getter(self):
-        return Path(filepath) if (filepath := getattr(self.control, f"io_file_{name}", "")) else ""
-
-    def setter(self, val):
-        setattr(self.control, f"io_file_{name}", str(val))
-
-    return getter, setter
 
 
 def peek(iterable: Iterator[Any]):

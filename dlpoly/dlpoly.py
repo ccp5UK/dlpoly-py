@@ -20,7 +20,7 @@ from .new_control import NewControl, is_new_control
 from .rdf import RDF
 from .statis import Statis
 from .types import OptPath
-from .utility import copy_file, file_get_set_factory, is_mpi, next_file
+from .utility import copy_file, is_mpi, next_file, DLPFile
 
 FileTypes = Literal["field", "config", "statis", "history",
                     "historf", "revive", "revcon", "revold",
@@ -78,20 +78,20 @@ class DLPoly:
         if output is not None:
             self.control.io_file_output = output
 
-    control_file = property(*file_get_set_factory("control"))
-    field_file = property(*file_get_set_factory("field"))
-    vdw_file = property(*file_get_set_factory("tabvdw"))
-    eam_file = property(*file_get_set_factory("tabeam"))
-    bnd_file = property(*file_get_set_factory("tabbnd"))
-    ang_file = property(*file_get_set_factory("tabang"))
-    dih_file = property(*file_get_set_factory("tabdih"))
-    inv_file = property(*file_get_set_factory("tabinv"))
-    config_file = property(*file_get_set_factory("config"))
-    statis_file = property(*file_get_set_factory("statis"))
-    rdf_file = property(*file_get_set_factory("rdf"))
-    msd_file = property(*file_get_set_factory("msd"))
-    correlations_file = property(*file_get_set_factory("cor"))
-    currents_file = property(*file_get_set_factory("currents"))
+    control_file = DLPFile()
+    field_file = DLPFile()
+    vdw_file = DLPFile('tabvdw')
+    eam_file = DLPFile('tabeam')
+    bnd_file = DLPFile('tabbnd')
+    ang_file = DLPFile('tabang')
+    dih_file = DLPFile('tabdih')
+    inv_file = DLPFile('tabinv')
+    config_file = DLPFile()
+    statis_file = DLPFile()
+    rdf_file = DLPFile()
+    msd_file = DLPFile()
+    correlations_file = DLPFile()
+    currents_file = DLPFile()
 
     def redir_output(self, direc: OptPath = None):
         """ Redirect output to direc and update self for later parsing """
