@@ -110,6 +110,17 @@ def read_line(in_file: TextIO):
     return None
 
 
+def batched(iterable, n):
+    """ Version independent itertools.batched [python >= 3.12]
+
+    batched('ABCDEFG', 3) → ABC DEF G"""
+    if n < 1:
+        raise ValueError('n must be at least one')
+    it = iter(iterable)
+    while batch := tuple(itertools.islice(it, n)):
+        yield batch
+
+
 def build_3d_rotation_matrix(alpha: float = 0., beta: float = 0., gamma: float = 0.,
                              units: Literal["deg", "rad"] = "rad"):
     """ Build a rotation matrix in degrees or radians

@@ -2,6 +2,7 @@
 """
 
 import os
+import shlex
 import shutil
 import subprocess
 from os import PathLike
@@ -349,15 +350,19 @@ class DLPoly:
             if modules:
                 pre_run = f"module purge && module load {' '.join(modules)}\n{pre_run}"
 
-            if pre_run or post_run:  # Windows will not work here
+            if pre_run or post_run:
+                if os.name == "nt":
+                    raise SystemError("Script file runs cannot run on Windows,"
+                                      "Cannot use `pre_run` or `post_run` or `modules`")
+
                 script_file = self.workdir / "env.sh"
                 with open(script_file, "w", encoding="utf-8") as out_file:
-                    out_file.write(f"{pre_run}\n")
-                    out_file.write(f"{run_command}\n")
-                    out_file.write(f"{post_run}\n")
+                    print(pre_run, file=out_file)
+                    print(run_command, file=out_file)
+                    print(post_run, file=out_file)
                 run_command = f"sh {script_file}"
 
-            with subprocess.Popen(run_command.split(),
+            with subprocess.Popen(shlex.split(run_command),
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT) as proc:
 
@@ -366,8 +371,8 @@ class DLPoly:
                         print(f"STDOUT: \n{proc.stdout.read().decode('utf-8')}")
                     if proc.stderr is not None:
                         print(f"STDERR: \n{proc.stderr.read().decode('utf-8')}")
-
-                _, error_code = proc.communicate()
+                proc.communicate()
+                error_code = proc.returncode
 
         return error_code
 
