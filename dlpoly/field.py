@@ -8,7 +8,7 @@ from typing import Dict, Literal, Optional, Sequence, TextIO, Tuple
 
 from .species import Species
 from .types import OptPath
-from .utility import peek, read_line
+from .utility import peek, read_line, batched
 
 BondTypes = Literal["atoms", "bonds", "constraints",
                     "angles", "dihedrals", "inversions", "rigid"]
@@ -94,23 +94,19 @@ class Potential(Interaction):
             self.atoms = sorted(self.atoms)
 
     def __str__(self):
-        if self.pot_class == "ters":
-            line = " ".join(self.atoms) + " ters"
-            line = line + " ".join(self.params[0:min(5, len(self.params))])
-            line = line + "\n" + " ".join(self.params[0:min(11, len(self.params))])
+        if self.pot_class in ("ters", "kihs"):
+            batched_pars = (" ".join(pars) for pars in batched(self.params, 5))
+            return " ".join((" ".join(self.atoms),
+                             self.pot_class,
+                             "\n".join(batched_pars)))
 
-        if self.pot_class == "kihs":
-            line = " ".join(self.atoms) + " kihs"
-            line = line + "\n" + " ".join(self.params[0:min(5, len(self.params))])
-            line = line + "\n" + " ".join(self.params[0:min(11, len(self.params))])
-            line = line + "\n" + " ".join(self.params[0:min(16, len(self.params))])
-        elif self.pot_class == "ters-cross":
+        if self.pot_class == "ters-cross":
             return " ".join((self.atoms,
                             " ".join(self.params)))
-        else:
-            return " ".join((self.pot_type,
-                             " ".join(self.atoms),
-                             " ".join(self.params)))
+
+        return " ".join((" ".join(self.atoms),
+                         self.pot_type,
+                         " ".join(self.params)))
 
 
 class PotHaver(ABC):
