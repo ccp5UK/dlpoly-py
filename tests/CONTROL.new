@@ -16,6 +16,8 @@ stats_frequency  5 steps
 
 correlation_observable [v-v s-s heat_flux-heat_flux]
 correlation_block_points [5000 5000 5000]
+correlation_blocks [2 4 8]
+correlation_window [1 2 3]
 
 rdf_print ON
 rdf_calculate ON

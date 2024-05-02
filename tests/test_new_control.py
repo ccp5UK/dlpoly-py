@@ -59,6 +59,16 @@ class NewControlTest(unittest.TestCase):
         self.assertEqual(self.control.shake_tolerance, [0.000001, 'ang'],
                          'incorrect shake')
 
+    def test_control_correlations(self):
+        self.assertEqual(self.control.correlation_observable, ['v-v', 's-s', 'heat_flux-heat_flux'],
+                         'incorrect correlation_observable')
+        self.assertEqual(self.control.correlation_block_points, [5000, 5000, 5000],
+                         'incorrect correlation_block_points')
+        self.assertEqual(self.control.correlation_blocks, [2, 4, 8],
+                         'incorrect correlation_blocks')
+        self.assertEqual(self.control.correlation_window, [1, 2, 3],
+                         'incorrect correlation_window')
+
     def test_control_from_dict(self):
 
         test_dict = {

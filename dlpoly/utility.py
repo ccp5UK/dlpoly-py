@@ -247,7 +247,6 @@ class DLPData(ABC):
                                     f"for key {key} valid, must be castable to {datatype.__name__}")
 
         if isinstance(datatype, tuple):
-
             if isinstance(vals, (int, float, str)):
                 vals = (vals,)
 
@@ -255,20 +254,24 @@ class DLPData(ABC):
             #   removal of [, and ]
             if key != "correlation_observable":
                 vals = [v.strip("[] ") if isinstance(v, str) else v for v in vals]
-
             try:
                 if ... in datatype:
                     loc = datatype.index(...)
-                    pre: Tuple[type, ...] = datatype[:loc]
-                    post: Tuple[type, ...] = datatype[loc+1:]
-                    ellided: itertools.repeat = itertools.repeat(datatype[loc-1], len(post) - loc)
+                    if loc != len(datatype)-1:
+                        pre: Tuple[type, ...] = datatype[:loc]
+                        post: Tuple[type, ...] = datatype[loc+1:]
+                        ellided: itertools.repeat = itertools.repeat(datatype[loc-1], len(post) - loc)
 
-                    val_iter = iter(vals)
+                        val_iter = iter(vals)
 
-                    transf = itertools.chain(zip(val_iter, pre),
-                                             zip(val_iter, ellided),
-                                             zip(val_iter, post))
-                    val = [target_type(item) for item, target_type in transf]
+                        transf = itertools.chain(zip(val_iter, pre),
+                                                 zip(val_iter, ellided),
+                                                 zip(val_iter, post))
+                        val = [target_type(item) for item, target_type in transf]
+                    else:
+                        pre, ellided = datatype[:loc], datatype[loc-1]
+                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
+                               [ellided(item) for item in vals[loc:]])
 
                 else:
                     val = [target_type(item) for item, target_type in zip(vals, datatype)]
