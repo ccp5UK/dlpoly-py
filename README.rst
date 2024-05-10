@@ -14,7 +14,7 @@ like ASE, MDAnalysis, MDAnse or pymatgen
 install
 -------
 
-You need Python 3.6 or later to run `dlpoly-py`. You can have multiple Python
+You need Python 3.9 or later to run `dlpoly-py`. You can have multiple Python
 versions (2.x and 3.x) installed on the same system without problems.
 
 To install Python 3 for different Linux flavors, macOS and Windows, packages
@@ -150,4 +150,3 @@ contact
 
   - please report issues in the `gitlab tracker <https://gitlab.com/drFaustroll/dlpoly-py/-/issues>`_
   - available in the `matrix room <https://matrix.to/#/!MsDOMMiBCBkTvqGxOz:matrix.org/$-Tgf2pIJ9CD732cbG5FEawZiRy8CJlexMbgwD25vvBQ?via=matrix.org>`_
-
