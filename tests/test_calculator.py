@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import unittest
-
-from dlpoly.calculator import DLPolyCalculator
+from pathlib import Path
 
 from ase.io import read
+from dlpoly.calculator import DLPolyCalculator
+
+DATA_PATH = Path(__file__).parent
 
 
 class CalculatorTest(unittest.TestCase):
@@ -14,10 +16,10 @@ class CalculatorTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(CalculatorTest, cls).setUpClass()
-        cls.calculator = DLPolyCalculator(control="tests/CONTROL",
-                                          config="tests/CONFIG",
-                                          field="tests/FIELD")
+        super().setUpClass()
+        cls.calculator = DLPolyCalculator(control=DATA_PATH / "CONTROL",
+                                          config=DATA_PATH / "CONFIG",
+                                          field=DATA_PATH / "FIELD")
 
         cls.calculator.control['time_run'] = (0, 'steps')
         cls.calculator.control['time_equilibration'] = (0, 'steps')
@@ -45,15 +47,5 @@ class CalculatorTest(unittest.TestCase):
                          "incorrect forces")
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(CalculatorTest('test_positions'))
-    suite.addTest(CalculatorTest('test_velocities'))
-    suite.addTest(CalculatorTest('test_momenta'))
-    suite.addTest(CalculatorTest('test_forces'))
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-
-    runner.run(suite())
+    unittest.main()

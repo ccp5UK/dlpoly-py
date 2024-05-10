@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import unittest
+from pathlib import Path
+
 from dlpoly.rdf import RDF
+
+DATA_PATH = Path(__file__).parent
 
 
 class RDFTest(unittest.TestCase):
 
-    def setUp(self):
-        self.rdf = RDFTest.rdf
-
-    @classmethod
-    def setUpClass(cls):
-        super(RDFTest, cls).setUpClass()
-        cls.rdf = RDF(source="tests/RDFDAT")
+    rdf = RDF(source=DATA_PATH / "RDFDAT")
 
     def test_rdf_nrdf(self):
         self.assertEqual(self.rdf.n_rdf, 190,
@@ -33,15 +31,5 @@ class RDFTest(unittest.TestCase):
                          'incorrect grid point')
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(RDFTest('test_rdf_nrdf'))
-    suite.addTest(RDFTest('test_rdf_npoints'))
-    suite.addTest(RDFTest('test_rdf_label'))
-    suite.addTest(RDFTest('test_rdf_point'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()

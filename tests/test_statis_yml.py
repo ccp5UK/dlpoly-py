@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import unittest
+from pathlib import Path
+
 from dlpoly.statis import Statis
+
+DATA_PATH = Path(__file__).parent
 
 
 class StatisTest(unittest.TestCase):
 
-    def setUp(self):
-        self.statis = StatisTest.statis
-
-    @classmethod
-    def setUpClass(cls):
-        super(StatisTest, cls).setUpClass()
-        cls.statis = Statis(source="tests/statis.yml")
+    statis = Statis(source=DATA_PATH / "statis.yml")
 
     def test_statis_ncolumns(self):
         self.assertEqual(self.statis.columns, 68,
@@ -85,23 +83,5 @@ class StatisTest(unittest.TestCase):
                                    delta=0.01)
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(StatisTest('test_statis_ncolumns'))
-    suite.addTest(StatisTest('test_statis_nrows'))
-    suite.addTest(StatisTest('test_statis_steptime'))
-    suite.addTest(StatisTest('test_statis_temperature'))
-    suite.addTest(StatisTest('test_statis_pressure'))
-    suite.addTest(StatisTest('test_statis_consQ'))
-    suite.addTest(StatisTest('test_statis_vpmf'))
-    suite.addTest(StatisTest('test_statis_energies'))
-    suite.addTest(StatisTest('test_statis_volume'))
-    suite.addTest(StatisTest('test_statis_virial'))
-    suite.addTest(StatisTest('test_statis_angles'))
-    suite.addTest(StatisTest('test_statis_stress'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()
