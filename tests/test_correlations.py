@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import unittest
+from pathlib import Path
+
 from dlpoly.correlations import Correlations
+
+DATA_PATH = Path(__file__).parent
 
 
 class CorrelationsTest(unittest.TestCase):
 
-    def setUp(self):
-        self.correlations = CorrelationsTest.correlations
-
-    @classmethod
-    def setUpClass(cls):
-        super(CorrelationsTest, cls).setUpClass()
-        cls.correlations = Correlations(source="tests/COR.yml")
+    correlations = Correlations(source=DATA_PATH / "COR.yml")
 
     def test_correlations_ncorrelations(self):
         self.assertEqual(self.correlations.n_correlations, 3,
@@ -42,18 +40,5 @@ class CorrelationsTest(unittest.TestCase):
                          'incorrect component checksum')
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(CorrelationsTest('test_correlations_ncorrelations'))
-    suite.addTest(CorrelationsTest('test_correlations_window'))
-    suite.addTest(CorrelationsTest('test_correlations_blocks'))
-    suite.addTest(CorrelationsTest('test_correlations_points'))
-    suite.addTest(CorrelationsTest('test_correlations_labels'))
-    suite.addTest(CorrelationsTest('test_correlations_lags'))
-    suite.addTest(CorrelationsTest('test_correlations_components'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()

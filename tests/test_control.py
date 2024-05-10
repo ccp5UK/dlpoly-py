@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 import unittest
+from pathlib import Path
 
-import dlpoly as dlp
+from dlpoly.control import Control
 from dlpoly.new_control import NewControl
+
+DATA_PATH = Path(__file__).parent
 
 
 class ControlTest(unittest.TestCase):
 
-    def setUp(self):
-        self.control = ControlTest.control
-
-    @classmethod
-    def setUpClass(cls):
-        super(ControlTest, cls).setUpClass()
-        cls.control = dlp.DLPoly(control="tests/CONTROL").control
+    control = Control(DATA_PATH / "CONTROL").to_new()
 
     def test_control_steps(self):
         self.assertEqual(self.control.time_run, [20.0, 'steps'],
@@ -91,17 +88,5 @@ class ControlTest(unittest.TestCase):
         self.assertTrue('not allowed in' in str(context.exception))
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(ControlTest('test_control_steps'))
-    suite.addTest(ControlTest('test_control_tp'))
-    suite.addTest(ControlTest('test_control_ens'))
-    suite.addTest(ControlTest('test_control_prints'))
-    suite.addTest(ControlTest('test_control_equil'))
-    suite.addTest(ControlTest('test_control_from_dict'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()
