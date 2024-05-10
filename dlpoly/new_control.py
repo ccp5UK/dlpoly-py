@@ -1,7 +1,7 @@
 """
 Module to handle new DLPOLY control files
 """
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import singledispatchmethod
 from pathlib import Path
 from typing import Any, Dict, TextIO
@@ -290,6 +290,8 @@ class NewControl(DLPData):
         self.io_file_msd = "MSDTMP"
         self.io_file_currents = "CURRENTS" if Path("CURRENTS").exists() else ""
 
+        self.title = 'Untitled'
+        self.source = Path(source) if source is not None else source
         if source is not None:
             self.read(source)
 
@@ -371,52 +373,99 @@ class NewControl(DLPData):
         with open(filename, "r", encoding="utf-8") as in_file:
             self.read(in_file)
 
+    @singledispatchmethod
+    @staticmethod
+    def _format_val(vals: Any, key: str):
+        return str(vals)
+
+    @_format_val.register
+    @staticmethod
+    def _(vals: Sequence, key: str):
+        lvals = None
+        # correlation_blocks and block_points can be singleton vectors
+        is_correlation_option = key in ("correlation_blocks",
+                                        "correlation_block_points",
+                                        "correlation_observable")
+
+        if not is_correlation_option and isinstance(vals[-1], str):
+            lvals, unit = vals[:-1], vals[-1]
+        else:
+            lvals, unit = vals, ""
+
+        if unit == "steps":
+            lvals = list(map(int, lvals))
+
+        out = " ".join(map(str, lvals))
+
+        if len(lvals) > 1 or is_correlation_option:
+            out = f"[{out}]"
+
+        return f"{out} {unit}"
+
+    @_format_val.register
+    @staticmethod
+    def _(vals: bool, key: str):
+        return "ON" if vals else "OFF"
+
+    @_format_val.register
+    @staticmethod
+    def _(vals: str, key: str):
+        if not vals:
+            return
+
+        return vals
+
     def write(self, filename: PathLike = "new_control"):
         """ Write a new control file
 
         :param filename: Name to write to
 
         """
-        def output(key: str, vals: Any):
 
-            if isinstance(vals, (list, tuple)):
-                lvals = None
-                # correlation_blocks and block_points can be singleton vectors
-                is_correlation_option = key in ("correlation_blocks",
-                                                "correlation_block_points",
-                                                "correlation_observable")
-
-                if not is_correlation_option and isinstance(vals[-1], str):
-                    lvals, unit = vals[:-1], vals[-1]
-                else:
-                    lvals, unit = vals, ""
-
-                if unit == "steps":
-                    lvals = list(map(int, lvals))
-
-                out = " ".join(map(str, lvals))
-
-                if len(lvals) > 1 or is_correlation_option:
-                    out = f"[{out}]"
-
-                print(key, out, unit, file=out_file)
-
-            elif isinstance(vals, bool):
-                print(key, "ON" if vals else "OFF", file=out_file)
-
-            elif isinstance(vals, str) and not vals:
-                return
-
-            else:
-                print(key, vals, file=out_file)
+        def output(key: str, val: Any):
+            if formatted := self._format_val(val, key):
+                print(key, formatted, file=out_file)
 
         with open(filename, "w", encoding="utf-8") as out_file:
             output("title", self["title"])
-            for key, vals in self.__dict__.items():
-                if (key in ("title", "filename", "io_file_control", "io_file_currents") or key.startswith("_") or
-                   key in ("io_file_output") and vals.upper() != "SCREEN"):
+            for key, vals in self.items():
+                if (
+                        key in ("title", "filename", "io_file_control", "io_file_currents") or
+                        (key in ("io_file_output") and vals.upper() != "SCREEN")
+                ):
                     continue
                 output(key, vals)
+
+    def __iter__(self):
+        """ Returns set keys """
+        return (key for key, vals in self.__dict__.items()
+                if (not key.startswith("_") and
+                    key not in ("source") and
+                    vals is not None))
+
+    def items(self):
+        """ Returns key, vals tuple for set keys """
+        for key in self:
+            yield (key, self[key])
+
+    def __str__(self) -> str:
+        out = f"""
+Control: {self.source}
+title: {self.title}
+keys_set: {", ".join(key for key in self)}
+"""
+
+        return out
+
+    def __repr__(self) -> str:
+        out = f"""
+Control: {self.source}
+title: {self.title}
+"""
+        out += "\n".join(f"{key}: {self._format_val(vals, key)}"
+                         for key, vals in self.items()
+                         if key != "title")
+        return out
 
 
 def is_new_control(filename: PathLike):
