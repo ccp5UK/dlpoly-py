@@ -9,7 +9,7 @@ dlpoly-py
 
 dlpoly-py package contains tools to read input and output for DL_POLY
 it can also produce inputs and be mixed with other python packages
-like ASE, MDAnalysis, MDAnse or pymatgen
+like ASE, MDAnalysis, MDANSE or pymatgen
 
 install
 -------
@@ -52,7 +52,7 @@ Depending on your configuration, you may have to run `pip` like this:
 
 .. code:: bash
 
-    pip install git+https://gitlab.com/drFaustroll/dlpoly-py.git
+    pip install git+https://gitlab.com/ccp5/dlpoly-py.git
 
 For more information and examples, see the
 `pip install <https://pip.pypa.io/en/stable/reference/pip_install/#id18>`_
@@ -95,7 +95,7 @@ platform with:
 usage
 -----
 
-Examples can be found in https://gitlab.com/drFaustroll/dlpoly-py/-/tree/devel/examples
+Examples can be found in https://gitlab.com/ccp5/dlpoly-py/-/tree/devel/examples
 
 sime run using Ar data from above folder.
 
@@ -143,10 +143,10 @@ authors
 -------
 
  - Alin M Elena, Daresbury Laboratory, UK
- - Jacob Wilkins, University of Oxford, UK
+ - Jacob Wilkins, Rutherford Appleton Laboratory, UK
 
 contact
 -------
 
-  - please report issues in the `gitlab tracker <https://gitlab.com/drFaustroll/dlpoly-py/-/issues>`_
+  - please report issues in the `gitlab tracker <https://gitlab.com/ccp5/dlpoly-py/-/issues>`_
   - available in the `matrix room <https://matrix.to/#/!MsDOMMiBCBkTvqGxOz:matrix.org/$-Tgf2pIJ9CD732cbG5FEawZiRy8CJlexMbgwD25vvBQ?via=matrix.org>`_
