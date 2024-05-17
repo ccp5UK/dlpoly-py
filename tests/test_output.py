@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 import unittest
-from dlpoly.output import Output
+from pathlib import Path
+
 import numpy as np
+from dlpoly.output import Output
+
+DATA_PATH = Path(__file__).parent
 
 
 class OutputTest(unittest.TestCase):
 
-    def setUp(self):
-        self.output = OutputTest.output
-
-    @classmethod
-    def setUpClass(cls):
-        super(OutputTest, cls).setUpClass()
-        cls.output = Output(source="tests/OUTPUT")
+    output = Output(source=DATA_PATH / "OUTPUT")
 
     def test_output_vdw(self):
         self.assertEqual(self.output.vdw_energy, -0.298721E+04,
@@ -35,16 +33,5 @@ class OutputTest(unittest.TestCase):
                          'incorrect diffusion for oxygen')
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(OutputTest('test_output_vdw'))
-    suite.addTest(OutputTest('test_output_steps'))
-    suite.addTest(OutputTest('test_output_avcell'))
-    suite.addTest(OutputTest('test_output_diff'))
-    suite.addTest(OutputTest('test_output_pres'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()

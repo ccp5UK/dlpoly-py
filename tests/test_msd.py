@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 import unittest
-from dlpoly.msd import MSD
+from pathlib import Path
 
 import numpy as np
+from dlpoly.msd import MSD
+
+DATA_PATH = Path(__file__).parent
 
 
 class MSDTest(unittest.TestCase):
 
-    def setUp(self):
-        self.msd = MSDTest.msd
-
-    @classmethod
-    def setUpClass(cls):
-        super(MSDTest, cls).setUpClass()
-        cls.msd = MSD(source="tests/MSDTMP")
+    msd = MSD(source=DATA_PATH / "MSDTMP")
 
     def test_msd_init(self):
         self.assertEqual(self.msd.n_atoms, 99120,
@@ -53,13 +50,5 @@ class MSDTest(unittest.TestCase):
                                                                  [6.4136960435998060e-04, 7.6009010534739517e+01]])))
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(MSDTest('test_msd_init'))
-    suite.addTest(MSDTest('test_per_species'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()

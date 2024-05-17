@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-import dlpoly as dlp
 import unittest
+from pathlib import Path
+
+import dlpoly as dlp
+
+DATA_PATH = Path(__file__).parent
 
 
 class ConfigTest(unittest.TestCase):
 
-    def setUp(self):
-        self.config = ConfigTest.config
-
-    @classmethod
-    def setUpClass(cls):
-        super(ConfigTest, cls).setUpClass()
-        cls.config = dlp.DLPoly(config="tests/CONFIG").config
+    config = dlp.DLPoly(config=DATA_PATH / "CONFIG").config
 
     def test_config_natoms(self):
         self.assertEqual(self.config.natoms, 99120,
@@ -52,16 +50,5 @@ class ConfigTest(unittest.TestCase):
                              'incorrect forces')
 
 
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(ConfigTest('test_config_natoms'))
-    suite.addTest(ConfigTest('test_config_level'))
-    suite.addTest(ConfigTest('test_config_pbc'))
-    suite.addTest(ConfigTest('test_config_cell'))
-    suite.addTest(ConfigTest('test_config_atom'))
-    return suite
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()
