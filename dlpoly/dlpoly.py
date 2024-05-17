@@ -91,7 +91,7 @@ class DLPoly:
     statis_file = DLPFile()
     rdf_file = DLPFile()
     msd_file = DLPFile()
-    correlations_file = DLPFile()
+    correlations_file = DLPFile('cor')
     currents_file = DLPFile()
 
     def redir_output(self, direc: OptPath = None):

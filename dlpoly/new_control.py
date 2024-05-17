@@ -143,7 +143,6 @@ class NewControl(DLPData):
             "io_file_tabinv": str,
             "io_file_tabvdw": str,
             "io_file_tabeam": str,
-            "io_file_cor": str,
             "io_file_setevb": str,
             "io_file_popevb": str,
             "io_statis_yaml": bool,
