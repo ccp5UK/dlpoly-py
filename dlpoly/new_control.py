@@ -287,12 +287,6 @@ class NewControl(DLPData):
         self.io_file_cor = "COR"
         self.io_file_msd = "MSDTMP"
         self.io_file_currents = "CURRENTS" if Path("CURRENTS").exists() else ""
-        self.io_file_tabbnd = "TABBND" if Path("TABBND").exists() else ""
-        self.io_file_tabang = "TABANG" if Path("TABANG").exists() else ""
-        self.io_file_tabdih = "TABDIH" if Path("TABDIH").exists() else ""
-        self.io_file_tabinv = "TABINV" if Path("TABINV").exists() else ""
-        self.io_file_tabvdw = "TABVDW" if Path("TABVDW").exists() else ""
-        self.io_file_tabeam = "TABEAM" if Path("TABEAM").exists() else ""
 
         if source is not None:
             self.read(source)
