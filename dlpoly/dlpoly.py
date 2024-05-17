@@ -152,7 +152,7 @@ class DLPoly:
         return out_file
 
     def copy_input(self, direc: OptPath = None):
-        """ Copy input field and config to the working location """
+        """ Copy input field, config, and TAB files to the working location """
         if direc is None:
             direc = self.workdir
 
