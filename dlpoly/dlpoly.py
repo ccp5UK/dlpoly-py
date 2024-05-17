@@ -5,6 +5,7 @@ import os
 import shlex
 import shutil
 import subprocess
+from functools import cached_property
 from os import PathLike
 from pathlib import Path
 from typing import Literal, Optional, Sequence, Type
@@ -32,6 +33,8 @@ class DLPoly:
     """ Main class of a DLPOLY runnable set of instructions """
     __version__ = "5.0"  # which version of dlpoly supports
 
+    OUTPUT_FILES = ("statis", "msd", "rdf", "correlations", "currents")
+
     def __init__(self, *,
                  control: OptPath = None, config: OptPath = None,
                  field: OptPath = None, statis: OptPath = None,
@@ -50,11 +53,6 @@ class DLPoly:
         self.default_name = default_name
         self.config = None
         self.field = None
-        self.statis = None
-        self.msd = None
-        self.rdf = None
-        self.correlations = None
-        self.currents = None
         self.exe = exe
         self.workdir = workdir
 
@@ -93,6 +91,36 @@ class DLPoly:
     msd_file = DLPFile()
     correlations_file = DLPFile('cor')
     currents_file = DLPFile()
+
+    @cached_property
+    def statis(self):
+        """Load statis and return it"""
+        self.load_statis(required=True)
+        return self.statis
+
+    @cached_property
+    def rdf(self):
+        """Load rdf and return it"""
+        self.load_rdf(required=True)
+        return self.rdf
+
+    @cached_property
+    def msd(self):
+        """Load msd and return it"""
+        self.load_msd(required=True)
+        return self.msd
+
+    @cached_property
+    def currents(self):
+        """Load currents and return it"""
+        self.load_currents(required=True)
+        return self.currents
+
+    @cached_property
+    def correlations(self):
+        """Load correlations and return it"""
+        self.load_correlations(required=True)
+        return self.correlations
 
     def redir_output(self, direc: OptPath = None):
         """ Redirect output to direc and update self for later parsing """
@@ -166,7 +194,6 @@ class DLPoly:
 
         else:
             self.config_file = self._update_file(direc, self.config_file, self.dest_config)
-
         self.field_file = self._update_file(direc, self.field_file)
 
         if self.vdw_file:
@@ -193,7 +220,10 @@ class DLPoly:
         if field and self.field:
             self.field.write(prefix+self.field_file+suffix)
 
-    def load_control(self, source: OptPath = None, quiet: Optional[bool] = None):
+    def load_control(self,
+                     source: OptPath = None,
+                     quiet: Optional[bool] = None,
+                     required: bool = False):
         """ Load control file into class """
         if quiet is None:  # If we haven't defined quiet or a source, should be quiet
             quiet = source is None
@@ -209,10 +239,16 @@ class DLPoly:
             else:
                 self.control = Control(source).to_new()
             self.control_file = source
+        elif required:
+            raise FileNotFoundError(f"Required control file does not exist at {source}")
         elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_file(self, cls: Type, source: OptPath = None, quiet: Optional[bool] = None):
+    def load_file(self,
+                  cls: Type,
+                  source: OptPath = None,
+                  quiet: Optional[bool] = None,
+                  required: bool = False):
         """ Load general file """
         cls_name = cls.__name__.lower()
         fld_name = cls_name+"_file"
@@ -226,36 +262,45 @@ class DLPoly:
         if source.is_file():
             setattr(self, cls_name, cls(source))
             setattr(self, fld_name, source)
+        elif required:
+            raise FileNotFoundError(f"Required {cls_name} file does not exist at {source}")
         elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_field(self, source: OptPath = None, quiet: bool = False):
+    def load_field(self, source: OptPath = None, quiet: bool = False,
+                   required: bool = False):
         """ Load field file into class """
-        self.load_file(Field, source, quiet)
+        self.load_file(Field, source, quiet, required)
 
-    def load_config(self, source: OptPath = None, quiet: bool = False):
+    def load_config(self, source: OptPath = None, quiet: bool = False,
+                    required: bool = False):
         """ Load config file into class """
-        self.load_file(Config, source, quiet)
+        self.load_file(Config, source, quiet, required)
 
-    def load_statis(self, source: OptPath = None, quiet: bool = False):
+    def load_statis(self, source: OptPath = None, quiet: bool = False,
+                    required: bool = False):
         """ Load statis file into class """
-        self.load_file(Statis, source, quiet)
+        self.load_file(Statis, source, quiet, required)
 
-    def load_rdf(self, source: OptPath = None, quiet: bool = False):
+    def load_rdf(self, source: OptPath = None, quiet: bool = False,
+                 required: bool = False):
         """ Load statis file into class """
-        self.load_file(RDF, source, quiet)
+        self.load_file(RDF, source, quiet, required)
 
-    def load_msd(self, source: OptPath = None, quiet: bool = False):
+    def load_msd(self, source: OptPath = None, quiet: bool = False,
+                 required: bool = False):
         """Load msd file into class"""
-        self.load_file(MSD, source, quiet)
+        self.load_file(MSD, source, quiet, required)
 
-    def load_correlations(self, source: OptPath = None, quiet: bool = False):
+    def load_correlations(self, source: OptPath = None, quiet: bool = False,
+                          required: bool = False):
         """ Load correlations file into class """
-        self.load_file(Correlations, source, quiet)
+        self.load_file(Correlations, source, quiet, required)
 
-    def load_currents(self, source: OptPath = None, quiet: bool = False):
+    def load_currents(self, source: OptPath = None, quiet: bool = False,
+                      required: bool = False):
         """Load currents file into class"""
-        self.load_file(Currents, source, quiet)
+        self.load_file(Currents, source, quiet, required)
 
     @property
     def exe(self):
@@ -298,9 +343,25 @@ class DLPoly:
     def workdir(self, workdir: PathLike):
         self._workdir = Path(workdir) if workdir else None
 
-    def run(self, executable: OptPath = None, modules: Sequence[str] = (),
-            numProcs: int = 1, mpi: str = 'mpirun -n', outputFile: OptPath = None,
-            pre_run: str = "", post_run: str = "", run_check: int = 30, debug: bool = False):
+    def _clear_caches(self):
+        """Clear cached output files"""
+        for outfile in self.OUTPUT_FILES:
+            try:
+                delattr(self, outfile)
+            except AttributeError:
+                pass
+
+    def run(self, *,
+            executable: OptPath = None,
+            modules: Sequence[str] = (),
+            numProcs: int = 1,
+            mpi: str = 'mpirun -n',
+            outputFile: OptPath = None,
+            pre_run: str = "",
+            post_run: str = "",
+            load_outputs: bool = False,
+            run_check: int = 30,
+            debug: bool = False):
         """ this is very primitive one allowing the checking
         for the existence of files and alteration of control parameters """
 
@@ -314,9 +375,7 @@ class DLPoly:
         else:
             print(f"Folder {self.workdir} exists, over-writing.")
 
-        dlpexe = executable
-        if executable is None:
-            dlpexe = self.exe
+        dlpexe = executable if executable is not None else self.exe
 
         control_file = self.workdir / self.control_file.name
         self.copy_input()
@@ -373,6 +432,10 @@ class DLPoly:
                         print(f"STDERR: \n{proc.stderr.read().decode('utf-8')}")
                 proc.communicate()
                 error_code = proc.returncode
+
+        # Clear cached output files
+        if load_outputs and not error_code:
+            self._clear_caches()
 
         return error_code
 
