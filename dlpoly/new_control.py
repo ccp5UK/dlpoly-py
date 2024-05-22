@@ -1,11 +1,13 @@
 """
 Module to handle new DLPOLY control files
 """
+from collections.abc import Iterable
+from functools import singledispatchmethod
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, TextIO
 
+from .types import OptPath, PathLike
 from .utility import DLPData
-from .types import PathLike, OptPath
 
 
 class NewControl(DLPData):
@@ -312,32 +314,62 @@ class NewControl(DLPData):
 
         return new_control
 
-    def read(self, filename: PathLike):
+    @singledispatchmethod
+    def read(self, x: Any):
+        """ Read a control file
+
+        :param x: Input
+
+        """
+        raise TypeError(f"Cannot create {type(self).__name__} from {type(x).__name__}")
+
+    @read.register(dict)
+    def _(self, in_dict: dict):
+        """ Read a control file from a dict
+
+        :param in_dict: Dict to read
+        """
+        for key, val in in_dict.items():
+            self[key] = val
+
+    @read.register(Iterable)
+    @read.register(TextIO)
+    def _(self, data):
+        """ Read a control file
+
+        :param data: Sequence of data to read as from string
+
+        """
+        for line in data:
+            line = line.split("#")[0]
+            line = line.split("!")[0]
+            line = line.strip()
+            if not line:
+                continue
+            key, *args = line.split()
+            # Special case to handle string
+            if key == "title":
+                self[key] = " ".join(args)
+                continue
+
+            if key.startswith("ewald"):
+                corrected_key = key.replace("ewald", "spme")
+                print(f"Warning {key} used in control, should be {corrected_key} (applying correction)", flush=True)
+                key = corrected_key
+
+            self[key] = [stripped_arg for arg in args
+                         if (stripped_arg := arg.strip("[]"))]
+
+    @read.register(Path)
+    @read.register(str)
+    def _(self, filename: PathLike):
         """ Read a control file
 
         :param filename: File to read
 
         """
         with open(filename, "r", encoding="utf-8") as in_file:
-            for line in in_file:
-                line = line.split("#")[0]
-                line = line.split("!")[0]
-                line = line.strip()
-                if not line:
-                    continue
-                key, *args = line.split()
-                # Special case to handle string
-                if key == "title":
-                    self[key] = " ".join(args)
-                    continue
-
-                if key.startswith("ewald"):
-                    corrected_key = key.replace("ewald", "spme")
-                    print(f"Warning {key} used in control, should be {corrected_key} (applying correction)", flush=True)
-                    key = corrected_key
-
-                self[key] = [stripped_arg for arg in args
-                             if (stripped_arg := arg.strip("[]"))]
+            self.read(in_file)
 
     def write(self, filename: PathLike = "new_control"):
         """ Write a new control file
