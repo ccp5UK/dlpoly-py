@@ -413,7 +413,7 @@ class NewControl(DLPData):
         with open(filename, "w", encoding="utf-8") as out_file:
             output("title", self["title"])
             for key, vals in self.__dict__.items():
-                if (key in ("title", "filename", "io_file_control") or key.startswith("_") or
+                if (key in ("title", "filename", "io_file_control", "io_file_currents") or key.startswith("_") or
                    key in ("io_file_output") and vals.upper() != "SCREEN"):
                     continue
                 output(key, vals)
