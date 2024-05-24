@@ -191,6 +191,7 @@ class DLPData(ABC):
             return
 
         if key == "source":  # source is not really a keyword
+            self.__dict__[key] = val
             return
 
         if key == "ensemble" and val is None:
@@ -329,6 +330,8 @@ def check_arg(key: str, *args: str):
     :param args: Potential matching fuzzies in order of priority
     :returns: Matching key or False if not found
     """
+    if key in args:
+        return key
 
     for arg in args:
         if key.startswith(arg):
