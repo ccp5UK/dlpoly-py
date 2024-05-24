@@ -9,36 +9,53 @@ DATA_PATH = Path(__file__).parent
 
 class CorrelationsTest(unittest.TestCase):
 
-    correlations = Correlations(source=DATA_PATH / "COR.yml")
+    correlations = Correlations(source=DATA_PATH / "COR")
 
-    def test_correlations_ncorrelations(self):
-        self.assertEqual(self.correlations.n_correlations, 3,
-                         'incorrect number of correlations')
+    def test_correlations_values(self):
+        assert self.correlations.is_yaml
+        assert self.correlations.n_correlations == 4
 
-    def test_correlations_window(self):
-        self.assertEqual(self.correlations.averaging_window, [1, 1, 1],
-                         'incorrect averaging window parameters')
+        for cor in [
+            "stress_xy-stress_xy",
+            "stress_yz-stress_yz",
+            "heat_flux_x-heat_flux_x",
+            "Ar-velocity_x-velocity_y",
+        ]:
+            assert cor in self.correlations.data.keys()
 
-    def test_correlations_blocks(self):
-        self.assertEqual(self.correlations.blocks, [1, 1, 1],
-                         'incorrect blocks parameters')
+        assert self.correlations.blocks == [1, 1, 1, 1]
+        assert self.correlations.window == [1, 1, 1, 1]
+        assert self.correlations.points_per_block == [5000, 100, 100, 100]
 
-    def test_correlations_points(self):
-        self.assertEqual(self.correlations.points_per_block, [300, 300, 300],
-                         'incorrect block points parameters')
+        for lags in self.correlations.lags:
+            assert lags == [float(i) for i in range(10)]
 
-    def test_correlations_labels(self):
-        self.assertEqual(self.correlations.labels, [['vv', 'Ar'], ['vv', 'Kr'], ['ss', 'global']],
-                         'incorrect correlation labels')
+        assert (
+            self.correlations.data["stress_xy-stress_xy"]["value"][0] == 0.12336263E-02
+        )
+        assert (
+            self.correlations.data["stress_yz-stress_yz"]["value"][0] == 0.19269362E-01
+        )
+        assert (
+            self.correlations.data["heat_flux_x-heat_flux_x"]["value"][0]
+            == 0.57119580E-09
+        )
+        assert (
+            self.correlations.data["Ar-velocity_x-velocity_y"]["value"][0]
+            == 0.31963469E-01
+        )
 
-    def test_correlations_lags(self):
-        self.assertEqual(sum(self.correlations.lags[0]), 22.425,
-                         'incorrect lags checksum')
+    def test_correlations_observables(self):
 
-    def test_correlations_components(self):
-        self.assertEqual(sum(self.correlations.components[0]['v_x-v_x']), -6.860305158479998,
-                         'incorrect component checksum')
+        for observables in ["viscosity", "kinematic-viscosity", "thermal-conductivity"]:
+            assert observables in self.correlations.observables.keys()
+
+        assert len(self.correlations.observables["viscosity"]["components"]) == 2
+        assert len(self.correlations.observables["kinematic-viscosity"]["components"]) == 2
+        assert (
+            self.correlations.observables["thermal-conductivity"]["value"] == 0.23450770E-06
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
