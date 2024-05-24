@@ -6,34 +6,36 @@ from ruamel.yaml import YAML
 from .types import OptPath, PathLike
 
 
-class Correlations():
-    """ class for reading Correlations
+class Correlations:
+    """class for reading Correlations
 
-        :param source: Source correlations to read
+    :param source: Source correlations to read
 
     """
 
     def __init__(self, source: OptPath = None):
         self.source = source
-        self.components = []
+        self.data = []
         self.blocks = []
-        self.averaging_window = []
+        self.window = []
         self.points_per_block = []
         self.lags = []
-        self.labels = []
-        self.derived = []
+        self.observables = []
         self.is_yaml = False
-        self.n_correlations = 0
 
         if source is not None:
             self.read(source)
 
-    def read(self, source: PathLike = "COR"):
-        """ Read a COR file into components
+    @property
+    def n_correlations(self):
+        return len(self.data)
 
-            :param source: File to read
+    def read(self, source: PathLike = "COR"):
+        """Read a COR file into components
+
+        :param source: File to read
         """
-        with open(source, 'r', encoding='utf-8') as in_file:
+        with open(source, "r", encoding="utf-8") as in_file:
             test_word = in_file.readline().split()[0]
             self.is_yaml = test_word == "%YAML"
 
@@ -43,29 +45,24 @@ class Correlations():
             self._read_plaintext(source)
 
     def _read_yaml(self, source: PathLike):
-        """ Read a YAML format COR into components
+        """Read a YAML format COR into components
 
         :param source: File to read
 
         """
         yaml_parser = YAML()
 
-        with open(source, 'rb') as in_file:
-            data = yaml_parser.load(in_file)
+        with open(source, "rb") as in_file:
+            yaml = yaml_parser.load(in_file)
+            self.data = yaml.get("correlations", None)
+            self.observables = yaml.get("observables", None)
 
-        self.n_correlations = len(data['correlations'])
-
-        for cor in data['correlations']:
-            self.components.append(cor['components'])
-            self.blocks.append(cor['parameters']['number_of_blocks'])
-            self.averaging_window.append(cor['parameters']['window_size'])
-            self.points_per_block.append(cor['parameters']['points_per_block'])
-            self.labels.append(cor['name'])
-            self.lags.append(cor['lags'])
-
-            if 'derived' in cor.keys():
-                self.derived.append(cor['derived'])
+        for cor in self.data.values():
+            self.blocks.append(cor["parameters"]["number_of_blocks"])
+            self.window.append(cor["parameters"]["window_size"])
+            self.points_per_block.append(cor["parameters"]["points_per_block"])
+            self.lags.append(cor["lags"])
 
     def _read_plaintext(self, source):
-        # unimplemented in dlpoly
+        """unimplemented in dlpoly"""
         pass
