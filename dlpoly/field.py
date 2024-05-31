@@ -376,11 +376,11 @@ class Field(PotHaver):
                 pot = Potential("ters-cross", args)
                 self.add_potential(pot.atoms, pot)
 
-    def add_molecule(self, molecule):
+    def add_molecule(self, molecule, count: int = 1):
         """ Add molecule to self """
         if molecule.name not in self.molecules:
             self.molecules[molecule.name] = molecule
-        self.molecules[molecule.name].n_mols += 1
+        self.molecules[molecule.name].n_mols += count
 
         return molecule.name, self.molecules[molecule.name].n_mols
 
@@ -400,8 +400,8 @@ class Field(PotHaver):
                 n_vals = int(n_vals[-1]) if len(n_vals) else 1
                 if key.startswith("molecul"):
                     for _ in range(n_vals):
-                        mol = Molecule().read(in_file)
-                        self.molecules[mol.name] = mol
+                        # Molecule sets its own count
+                        self.add_molecule(Molecule().read(in_file), 0)
                 else:
                     self._read_block(in_file, key, n_vals)
                 line = read_line(in_file)
