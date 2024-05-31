@@ -2,14 +2,14 @@
 import unittest
 from pathlib import Path
 
-import dlpoly as dlp
+import dlpoly.field as dlp
 
 DATA_PATH = Path(__file__).parent
 
 
 class FieldTest(unittest.TestCase):
-    field = dlp.DLPoly(field=DATA_PATH / "FIELD").field
-    field_ters = dlp.DLPoly(field=DATA_PATH / "FIELD.ters").field
+    field = dlp.Field(DATA_PATH / "FIELD")
+    field_ters = dlp.Field(DATA_PATH / "FIELD.ters")
 
     def test_field_units(self):
         self.assertEqual(self.field.units, "kcal",
