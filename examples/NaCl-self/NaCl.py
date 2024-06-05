@@ -58,7 +58,7 @@ m.name="NaCl"
 m.n_atoms = 2
 m.species = {1: Species(name="Na",index=1,mass=22.99,charge=0.885,frozen=0,repeats=1),
              2: Species(name="Cl",index=2,mass=35.45,charge=-0.885, frozen=0.,repeats=1)}
-fld.add_molecule(m)
+fld.add_molecule(m, count=nNa)
 m.n_mols = nNa
 #fld.add_potential("NaNa",Potential("vdw",['bhm','Na','Na','6.08114245','3.15450000','2.34000000','24.18021033','11.51457935']))
 fld.add_potential("NaNa",Potential("vdw",['lj','Na','Na','0.0347','2.52']))
