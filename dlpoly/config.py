@@ -3,16 +3,33 @@ Module to handle DLPOLY config files
 """
 
 import copy
-from typing import Literal, Optional, TextIO
+from collections.abc import Iterable
+from enum import IntEnum
+from typing import Optional, TextIO, Union
 
 import numpy as np
 
-# from dlpoly-py.species import Species
+from .types import PathLike, ThreeVec
 from .utility import DLPData
-from .types import ThreeVec
 
 
-def _format_3vec(list_in: ThreeVec):
+class Imcon(IntEnum):
+    """ DLPoly Image Convention """
+    NONE = 0
+    CUBIC = 1
+    ORTHORHOMBIC = 2
+    PARALLELOPIPED = 3
+    SLAB = 6
+
+
+class LevelOfDetail(IntEnum):
+    """ DLPoly Config file LoD """
+    POSITIONS = 0
+    VELOCITIES = 1
+    FORCES = 2
+
+
+def _format_3vec(list_in: ThreeVec) -> str:
     "Format 3-vector for printing"
     return f"{list_in[0]:20.10f}{list_in[1]:20.10f}{list_in[2]:20.10f}\n"
 
@@ -32,7 +49,8 @@ class Atom(DLPData):
                  element: str = "",
                  pos: Optional[ThreeVec] = None,
                  vel: Optional[ThreeVec] = None,
-                 forces: Optional[ThreeVec] = None, index: int = 1):
+                 forces: Optional[ThreeVec] = None,
+                 index: int = 1):
         DLPData.__init__(
             self,
             {
@@ -50,23 +68,23 @@ class Atom(DLPData):
         self.forces = forces if forces is not None else np.zeros(3)
         self.index = index
 
-    def write(self, level: Literal[0, 1, 2]):
+    def write(self, level: LevelOfDetail) -> str:
         """ Print own data to file w.r.t config print level
 
-        :param level: Print level ; 0 = Pos, 1 = Vel, 2 = Forces
+        :param level: Print level
 
         """
 
-        if level == 0:
+        if level == LevelOfDetail.POSITIONS:
             return (f"{self.element:8s}{self.index:10d}\n" +
                     _format_3vec(self.pos))
 
-        if level == 1:
+        if level == LevelOfDetail.VELOCITIES:
             return (f"{self.element:8s}{self.index:10d}\n" +
                     _format_3vec(self.pos),
                     _format_3vec(self.vel))
 
-        if level == 2:
+        if level == LevelOfDetail.FORCES:
             return (f"{self.element:8s}{self.index:10d}\n" +
                     _format_3vec(self.pos),
                     _format_3vec(self.vel),
@@ -74,25 +92,27 @@ class Atom(DLPData):
 
         raise ValueError(f"Invalid print level {level} in Config.write")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (f"{self.element:8s}{self.index:10d}\n" +
                 _format_3vec(self.pos) +
                 _format_3vec(self.vel) +
                 _format_3vec(self.forces))
 
     @classmethod
-    def read(cls, file_handle: TextIO,
-             level: Literal[0, 1, 2], i: int):
+    def read(cls,
+             file_handle: TextIO,
+             level: LevelOfDetail,
+             i: int) -> Union["Atom", None]:
         """ Reads info for one atom
 
         :param file_handle: File to read
-        :param level: Level to readd
+        :param level: Level to read
         :param i: Index
 
         """
         line = file_handle.readline()
         if not line:
-            return False
+            return None
 
         elem_ind = line.split()
 
@@ -107,12 +127,12 @@ class Atom(DLPData):
 
         pos = np.array(file_handle.readline().split(), dtype=float)
 
-        if level > 0:
+        if level >= LevelOfDetail.VELOCITIES:
             vel = np.array(file_handle.readline().split(), dtype=float)
         else:
             vel = None
 
-        if level > 1:
+        if level >= LevelOfDetail.FORCES:
             forces = np.array(file_handle.readline().split(), dtype=float)
         else:
             forces = None
@@ -138,37 +158,40 @@ class Config:
 
     natoms = property(lambda self: len(self.atoms))
 
-    def __init__(self, source=None):
+    def __init__(self, source: Optional[PathLike] = None):
         self.title = ""
-        self.level = 0
+        self.level = LevelOfDetail.POSITIONS
         self.atoms = []
-        self.pbc = 0
+        self.pbc = Imcon.NONE
         self.cell = np.zeros((3, 3))
 
         if source is not None:
             self.source = source
             self.read(source)
 
-    def write(self, filename="new.config", title=None, level=0):
+    def write(self,
+              filename: PathLike = "new.config",
+              title: Optional[str] = None,
+              level: LevelOfDetail = LevelOfDetail.POSITIONS):
         """ Output to file
 
         :param filename: File to write
         :param title: Title of run
-        :param level: Print level ; 1 = Pos, 2 = Vel, 3 = Forces
+        :param level: Print level
 
         """
         self.level = level
         with open(filename, "w", encoding="utf-8") as out_file:
             print(f"{title if title else self.title:72s}", file=out_file)
             print(f"{level:10d}{self.pbc:10d}{self.natoms:10d}", file=out_file)
-            if self.pbc > 0:
+            if self.pbc != Imcon.NONE:
                 for row in self.cell:
                     print(_format_3vec(row), file=out_file)
 
             for atom in self.atoms:
                 print(atom.write(self.level), file=out_file)
 
-    def add_atoms(self, other):
+    def add_atoms(self, other: Union[Iterable[Atom], "Config"]):
         """ Add two Configs together to make one bigger config
 
         :param other: Config to add
@@ -182,8 +205,14 @@ class Config:
         self.atoms.extend(copy.copy(atom) for atom in other)
 
         # Shift new atoms' indices to reflect place in new config
-        for atom in self.atoms[last_index:]:
-            atom.index += last_index
+        for new_index, atom in enumerate(self.atoms[last_index:], last_index+1):
+            atom.index = new_index
+
+    def _read_atoms(self, in_file: TextIO):
+        i = 0
+        while atom := Atom.read(in_file, self.level, i):
+            yield atom
+            i += 1
 
     def read(self, filename="CONFIG"):
         """ Read file into Config
@@ -195,10 +224,10 @@ class Config:
         with open(filename, "r", encoding="utf-8") as in_file:
             self.title = in_file.readline().strip()
             line = in_file.readline().split()
-            self.level = int(line[0])
-            self.pbc = int(line[1])
+            self.level = LevelOfDetail(int(line[0]))
+            self.pbc = Imcon(int(line[1]))
 
-            if self.pbc > 0:
+            if self.pbc != Imcon.NONE:
                 for j in range(3):
                     line = in_file.readline().split()
                     try:
@@ -206,13 +235,17 @@ class Config:
                     except ValueError as exc:
                         raise RuntimeError("Error reading cell") from exc
 
-            self.atoms = []
-            i = 0
-            while atom := Atom.read(in_file, self.level, i):
-                i += 1
-                self.atoms.append(atom)
+            self.atoms = list(self._read_atoms(in_file))
 
         return self
+
+    def __repr__(self):
+        return f"""{self.title if self.title else "Untitled"}
+        config file: {self.source}
+        num_atoms: {self.natoms}
+        image convention: {self.pbc.name} ({self.pbc.value})
+        level of detail: {self.level.name} ({self.level.value})
+        """
 
 
 if __name__ == "__main__":
