@@ -6,5 +6,5 @@ pytest-cov
 tox
 ruamel.yaml
 sphinx
-ase
+ase == 3.23.0
 pint

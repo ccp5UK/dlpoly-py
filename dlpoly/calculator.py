@@ -27,11 +27,11 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
                  Optional[PathLike] = None, restart: Optional[bool] = None,
                  ignore_bad_restart_file: bool = FileIOCalculator._deprecated,
                  label: str = 'dlpoly', atoms: Optional[Atoms] = None,
-                 command: Optional[str] = None,
+                 command: Optional[str] = None, profile: Optional[str] = "",
                  numProcs: int = 1, **kwargs):
 
         FileIOCalculator.__init__(self, restart, ignore_bad_restart_file,
-                                  label, atoms)
+                                  label, atoms, profile)
 
         DLPoly.__init__(self, control=control, field=field, **kwargs)
 
