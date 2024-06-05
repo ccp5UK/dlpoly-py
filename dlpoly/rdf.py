@@ -1,5 +1,5 @@
 """
-Module containing classes for loading rdf data from DL_POLY_4+
+Module containing classes for loading rdf data from DL_POLY_4+.
 """
 
 import numpy as np
@@ -9,14 +9,36 @@ from .types import OptPath, PathLike
 
 
 class RDF():
-    """ class for reading RDFDAT
+    """
+    Class for reading RDFDAT.
 
-        :param source: Source RDF to read
-
-        """
+    Attributes
+    ----------
+    source : PathLike
+        Original file read data from.
+    is_yaml : bool
+        Whether data are in YAML format.
+    n_rdf : int
+        Number of RDFs in file.
+    n_points : int
+        Number of points in each RDF.
+    data : Optional[np.typing.NDArray]
+        Data read from file.
+    labels : Optional[List[str]]
+        List of atoms from file.
+    x : List[float]
+        Radius of shell from origin.
+    """
     __version__ = "0"
 
     def __init__(self, source: OptPath = None):
+        """
+        Instantiate class for reading RDFDAT.
+
+        source : OptPath
+            Source RDF to read.
+        """
+
         self.n_rdf = 0
         self.n_points = 0
         self.x = None
@@ -29,10 +51,13 @@ class RDF():
             self.read(source)
 
     def read(self, source: PathLike = "RDFDAT"):
-        """ Read an RDF file into data
+        """
+        Read RDF file in YAML or plaintext format.
 
-        :param source: File to read
-
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
         """
         with open(source, 'r', encoding='utf-8') as in_file:
             test_word = in_file.readline().split()[0]
@@ -44,10 +69,13 @@ class RDF():
             self._read_plaintext(source)
 
     def _read_yaml(self, source: PathLike):
-        """ Read a YAML format RDF into data
+        """
+        Read RDF data from YAML format file.
 
-        :param source: File to read
-
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
         """
         yaml_parser = YAML()
 
@@ -65,10 +93,13 @@ class RDF():
             self.data[i, :, 1] = data['rdfs'][i]['nofr']
 
     def _read_plaintext(self, source: PathLike):
-        """ Read a plaintext format RDF into data
+        """
+        Read RDF data from plain-text format file.
 
-        :param source: File to read
-
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
         """
         with open(source, 'r', encoding='utf-8') as in_file:
             # Discard title

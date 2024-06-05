@@ -1,4 +1,5 @@
-""" Module containing main DLPOLY class.
+"""
+Module containing main DLPOLY class.
 """
 
 import os
@@ -30,22 +31,103 @@ FileTypes = Literal["field", "config", "statis", "history",
 
 
 class DLPoly:
-    """ Main class of a DLPOLY runnable set of instructions """
+    """
+    Main class of a DLPOLY runnable set of instructions.
+
+    Attributes
+    ----------
+    control : Control
+        Main DLPoly control object.
+    config : Config
+        Atomic configuration.
+    field : Field
+        DLPoly field file.
+
+    dest_config : PathLike
+        Location to copy configuration to.
+    default_name : str
+        Base name for workdir.
+        If this directory exists, a number will be appended to this
+        to make the workdir name.
+    """
     __version__ = "5.0"  # which version of dlpoly supports
 
     OUTPUT_FILES = ("statis", "msd", "rdf", "correlations", "currents")
 
-    def __init__(self, *,
-                 control: OptPath = None, config: OptPath = None,
-                 field: OptPath = None, statis: OptPath = None,
-                 output: OptPath = None, dest_config: OptPath = None,
-                 rdf: OptPath = None, msd: OptPath = None,
-                 correlations: OptPath = None, currents: OptPath = None,
-                 workdir: OptPath = None, default_name: str = "dlprun",
-                 exe: OptPath = None, vdw_file: OptPath = None,
-                 eam_file: OptPath = None, bnd_file: OptPath = None,
-                 ang_file: OptPath = None, dih_file: OptPath = None,
-                 inv_file: OptPath = None):
+    def __init__(
+            self, *,
+            control: OptPath = None,
+            config: OptPath = None,
+            field: OptPath = None,
+            statis: OptPath = None,
+            output: OptPath = None,
+            dest_config: OptPath = None,
+            workdir: OptPath = None,
+            default_name: str = "dlprun",
+            exe: OptPath = None,
+            rdf: OptPath = None,
+            msd: OptPath = None,
+            correlations: OptPath = None,
+            currents: OptPath = None,
+            vdw_file: OptPath = None,
+            eam_file: OptPath = None,
+            bnd_file: OptPath = None,
+            ang_file: OptPath = None,
+            dih_file: OptPath = None,
+            inv_file: OptPath = None
+    ):
+        """
+        Main class of a DLPOLY runnable set of instructions.
+
+        Parameters
+        ----------
+        control : OptPath
+            Main control file to load.
+        config : OptPath
+            Main config file to load.
+        field : OptPath
+            Main field file to load.
+        statis : OptPath
+            Statis file to load.
+        output : OptPath
+            File to write output log to.
+
+        Other Parameters
+        ----------------
+        dest_config : OptPath
+            Configuration to write to when task is `run`.
+        workdir : OptPath
+            Directory where tasks should be copied before running.
+            Will be cleared if already exists.
+        default_name : str
+            Base-name for `workdir` (if `workdir` is `None`),
+            If already exists, will append numbers and create new name.
+            Default is "dlprun".
+        exe : OptPath
+            Location of DLPOLY executable.
+
+        rdf : OptPath
+            RDF file to load.
+        msd : OptPath
+            MSD file to load.
+        correlations : OptPath
+            Correlations file to load.
+        currents : OptPath
+            Currents file to load.
+
+        vdw_file : OptPath
+            Input TABVDW location.
+        eam_file : OptPath
+            Input TABEAM location.
+        bnd_file : OptPath
+            Input TABBND location.
+        ang_file : OptPath
+            Input TABANG location.
+        dih_file : OptPath
+            Input TABDIH location.
+        inv_file : OptPath
+            Input TABINV location.
+        """
 
         # Default to having a control
         self.control = NewControl()
@@ -93,40 +175,71 @@ class DLPoly:
     currents_file = DLPFile()
 
     @cached_property
-    def statis(self):
-        """Load statis and return it"""
+    def statis(self) -> Statis:
+        """
+        Load statis and return it.
+        """
         self.load_statis(required=True)
         return self.statis
 
     @cached_property
-    def rdf(self):
-        """Load rdf and return it"""
+    def rdf(self) -> RDF:
+        """
+        Load rdf and return it.
+        """
         self.load_rdf(required=True)
         return self.rdf
 
     @cached_property
-    def msd(self):
-        """Load msd and return it"""
+    def msd(self) -> MSD:
+        """
+        Load msd and return it.
+        """
         self.load_msd(required=True)
         return self.msd
 
     @cached_property
-    def currents(self):
-        """Load currents and return it"""
+    def currents(self) -> Currents:
+        """
+        Load currents and return it.
+        """
         self.load_currents(required=True)
         return self.currents
 
     @cached_property
-    def correlations(self):
-        """Load correlations and return it"""
+    def correlations(self) -> Correlations:
+        """
+        Load correlations and return it.
+        """
         self.load_correlations(required=True)
         return self.correlations
 
     def redir_output(self, direc: OptPath = None):
-        """ Redirect output to direc and update self for later parsing """
+        """
+        Redirect output to direc and update self for later parsing.
 
-        def get_file_def(filetype: FileTypes, default: PathLike):
-            """ Get default filename if filename not specified """
+        Parameters
+        ----------
+        direc : OptPath
+            Directory to redirect to.
+        """
+
+        def get_file_def(filetype: FileTypes, default: PathLike) -> PathLike:
+            """
+            Get default filename if filename not specified.
+
+            Parameters
+            ----------
+            filetype : FileTypes
+                File type to load.
+            default : PathLike
+                Name if `filetype` not set.
+
+            Returns
+            -------
+            PathLike
+                Filename from `Control` if set else `default`.
+            """
             if path := getattr(self.control,
                                f"io_file_{filetype}", False):
                 return path
@@ -170,7 +283,24 @@ class DLPoly:
                 direc / Path(get_file_def("msd", "MSDTMP")).name)
 
     @staticmethod
-    def _update_file(direc: PathLike, in_file: PathLike, dest_name: OptPath = None):
+    def _update_file(direc: PathLike, in_file: PathLike, dest_name: OptPath = None) -> Path:
+        """
+        Redirect a `in_file` to a new `direc`tory.
+
+        Parameters
+        ----------
+        direc : PathLike
+            Directory to put as destination.
+        in_file : PathLike
+            File to redirect.
+        dest_name : OptPath
+            Name of file to write in directory. Default is `in_file`.
+
+        Returns
+        -------
+        Path
+            Path of file after redirection.
+        """
         if dest_name is None:
             dest_name = in_file
         dest_name = Path(dest_name)
@@ -180,7 +310,14 @@ class DLPoly:
         return out_file
 
     def copy_input(self, direc: OptPath = None):
-        """ Copy input field, config, and TAB files to the working location """
+        """
+        Copy input field, config, and TAB files to the working location.
+
+        Parameters
+        ----------
+        direc : OptPath
+            Directory to copy to. Default is `workdir`.
+        """
         if direc is None:
             direc = self.workdir
 
@@ -210,9 +347,27 @@ class DLPoly:
             self.inv_file = self._update_file(direc, self.inv_file)
 
     def write(self,
-              control: bool = True, config: bool = True, field: bool = True,
-              prefix: str = '', suffix: str = ''):
-        """ Write each of the components to file """
+              control: bool = True,
+              config: bool = True,
+              field: bool = True,
+              prefix: str = '',
+              suffix: str = ''):
+        """
+        Write necessary DLPoly input files to disc.
+
+        Parameters
+        ----------
+        control : bool
+            Whether to write control.
+        config : bool
+            Whether to write config.
+        field : bool
+            Whether to write field.
+        prefix : str
+            Prefix to add to file name(s).
+        suffix : str
+            Suffix to add to file name(s).
+        """
         if control:
             self.control.write(prefix+self.control_file+suffix)
         if config and self.config:
@@ -224,11 +379,29 @@ class DLPoly:
                      source: OptPath = None,
                      quiet: Optional[bool] = None,
                      required: bool = False):
-        """ Load control file into class """
+        """
+        Load control file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` and `source` not found.
+        """
         if quiet is None:  # If we haven't defined quiet or a source, should be quiet
             quiet = source is None
 
         if source is None:
+
             source = self.control_file
 
         source = Path(source)
@@ -249,7 +422,27 @@ class DLPoly:
                   source: OptPath = None,
                   quiet: Optional[bool] = None,
                   required: bool = False):
-        """ Load general file """
+        """
+        Load file based on class descriptor.
+
+        Parameters
+        ----------
+        cls : Type
+            Type of file being set.
+            `cls` determines which `Control` argument is read/set.
+        source : OptPath
+            Source of file. Default is `self.{cls.__name__}_file`.
+        quiet : Optional[bool]
+            Whether to ``print`` warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         cls_name = cls.__name__.lower()
         fld_name = cls_name+"_file"
         if quiet is None:  # If we haven't defined quiet or a source, should be quiet
@@ -269,47 +462,188 @@ class DLPoly:
 
     def load_field(self, source: OptPath = None, quiet: bool = False,
                    required: bool = False):
-        """ Load field file into class """
+        """
+        Load field file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(Field, source, quiet, required)
 
     def load_config(self, source: OptPath = None, quiet: bool = False,
                     required: bool = False):
-        """ Load config file into class """
+        """
+        Load config file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(Config, source, quiet, required)
 
     def load_statis(self, source: OptPath = None, quiet: bool = False,
                     required: bool = False):
-        """ Load statis file into class """
+        """
+        Load statis file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(Statis, source, quiet, required)
 
     def load_rdf(self, source: OptPath = None, quiet: bool = False,
                  required: bool = False):
-        """ Load statis file into class """
+        """
+        Load statis file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(RDF, source, quiet, required)
 
     def load_msd(self, source: OptPath = None, quiet: bool = False,
                  required: bool = False):
-        """Load msd file into class"""
+        """
+        Load msd file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(MSD, source, quiet, required)
 
     def load_correlations(self, source: OptPath = None, quiet: bool = False,
                           required: bool = False):
-        """ Load correlations file into class """
+        """
+        Load correlations file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(Correlations, source, quiet, required)
 
     def load_currents(self, source: OptPath = None, quiet: bool = False,
                       required: bool = False):
-        """Load currents file into class"""
+        """
+        Load currents file into class.
+
+        Parameters
+        ----------
+        source : OptPath
+            Source of control file. Default is `self.control_file`.
+        quiet : Optional[bool]
+            Whether to print warning if file not found.
+            Default is `True` if `source` passed, else `False`.
+        required : bool
+            Whether to raise error if file not found. Default is `False`.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `required` is ``True`` and `source` not found.
+        """
         self.load_file(Currents, source, quiet, required)
 
     @property
-    def exe(self):
-        """ executable name to be used to run DLPOLY"""
+    def exe(self) -> Path:
+        """
+        Executable name to be used to run DLPOLY.
+        """
         return self._exe
 
     @exe.setter
     def exe(self, exe: PathLike):
-        """ set the executable name"""
+        """
+        Set the executable name.
+
+        Checks in order:
+           - `exe` as Path to executable
+           - Environment variable (``DLP_EXE``)
+           - ``which`` `exe`
+           - `exe` in current folder.
+
+        Tries to run it as DLPoly.
+
+        Parameters
+        ----------
+        exe : PathLike
+           Executable to try.
+
+        Raises
+        ------
+        FileNotFound
+            If `exe` is invalid or DLPoly can't be found.
+        """
         if exe is not None and (exepath := Path(exe)).exists():
             self._exe = exepath
         else:
@@ -324,19 +658,21 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-            with subprocess.Popen([self.exe, '-h'],
+            with subprocess.Popen([self.exe, '-V'],
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT) as proc:
                 result, _ = proc.communicate()
 
-            if f"Usage: {self.exe}" not in result.decode("utf-8"):
+            if "DL_POLY" not in result.decode("utf-8"):
                 print(f"{self.exe.absolute()} is not DLPoly, run may not work")
         except FileNotFoundError:
             print(f"{self.exe.absolute()} does not exist, run may not work")
 
     @property
     def workdir(self):
-        """ Directory in which to do work """
+        """
+        Folder in which inputs are copied and outputs are written to.
+        """
         return self._workdir
 
     @workdir.setter
@@ -344,7 +680,9 @@ class DLPoly:
         self._workdir = Path(workdir) if workdir else None
 
     def _clear_caches(self):
-        """Clear cached output files"""
+        """
+        Clear cached output files.
+        """
         for outfile in self.OUTPUT_FILES:
             try:
                 delattr(self, outfile)
@@ -353,18 +691,55 @@ class DLPoly:
 
     def run(self, *,
             executable: OptPath = None,
-            modules: Sequence[str] = (),
             numProcs: int = 1,
             mpi: str = 'mpirun -n',
             outputFile: OptPath = None,
+            load_outputs: bool = False,
+            modules: Sequence[str] = (),
             pre_run: str = "",
             post_run: str = "",
-            load_outputs: bool = False,
             run_check: int = 30,
-            debug: bool = False):
-        """ this is very primitive one allowing the checking
-        for the existence of files and alteration of control parameters """
+            debug: bool = False) -> int:
+        """
+        Perform a DLPoly run with the current setup.
 
+        Parameters
+        ----------
+        executable : OptPath
+            Executable to run DLPoly.
+        numProcs : int
+            Number of processors to run calculation (if MPI).
+        mpi : str
+            Shell command to launch MPI.
+        outputFile : OptPath
+            File to write log to.
+        load_outputs : bool
+            Delete stored outputs to force loading of new ones.
+
+        Returns
+        -------
+        int
+            Returned error code from job.
+
+        Other Parameters
+        ----------------
+        modules : Sequence[str]
+            Modules to load on a linux system for running.
+        pre_run : str
+            Shell commands to run prior to executing DLPoly.
+        post_run : str
+            Shell commands to run after executing DLPoly.
+        run_check : int, UNUSED
+            Timeout for shell run to ensure DLPoly has not failed.
+        debug : bool
+            Print stdout and stderr of DLPoly process to screen.
+
+        Raises
+        ------
+        SystemError
+            If on Windows system and attempting to use `modules`,
+            `pre_run` or `post_run`.
+        """
         # If we're defaulting to default name
         # Get last runname + 1 for this one
         if self.workdir is None:
@@ -441,7 +816,9 @@ class DLPoly:
 
 
 def main():
-    """ Run the main program """
+    """
+    Run the main program from command line arguments.
+    """
     arg_list = get_command_args()
     dlp_run = DLPoly(control=arg_list.control, config=arg_list.config,
                      field=arg_list.field, statis=arg_list.statis,

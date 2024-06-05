@@ -1,23 +1,39 @@
 """
-Module to handle new DLPOLY control files
+Module to handle new-style DLPoly control files.
 """
 from collections.abc import Iterable, Sequence
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Any, Dict, TextIO
+from typing import Any, Dict, Iterator, TextIO, Tuple, Union
 
 from .types import OptPath, PathLike
 from .utility import DLPData
 
 
 class NewControl(DLPData):
-    """ Class defining a DLPOLY new control file
+    """
+    Class to handle new-style DLPoly control file.
 
-    :param source: File to read
-    :param override: Set keys manually on init
+    Attributes
+    ----------
+    source
+        File data originally read from.
 
+    Notes
+    -----
+    For meanings of parameters, see DLPoly manual.
     """
     def __init__(self, source: OptPath = None, **override):
+        """
+        Instantiate class to handle new-style DLPoly control file.
+
+        Parameters
+        ----------
+        source : OptPath
+            File to read.
+        **override : Dict[str, Any]
+            Extra arguments to set on instantiation.
+        """
         DLPData.__init__(self, {
             "title": str,
             "simulation_method": str,
@@ -299,11 +315,23 @@ class NewControl(DLPData):
             self[key] = val
 
     @staticmethod
-    def from_dict(in_dict: Dict[str, Any], strict: bool = True):
-        """ Create a control file from a dictionary ignoring invalid options in dictionary
+    def from_dict(in_dict: Dict[str, Any], strict: bool = True) -> "NewControl":
+        """
+        Create a control file from a dictionary.
 
-        :param in_dict: Dictionary to read
-        :param strict: Error on invalid keys
+        If not `strict`, raising on invalid options in dictionary.
+
+        Parameters
+        ----------
+        in_dict : Dict[str, Any]
+            Dictionary to read params from.
+        strict : bool
+            Whether to `raise` in case of invalid key.
+
+        Returns
+        -------
+        NewControl
+            Control built from dictionary `in_dict`.
         """
         new_control = NewControl()
         if strict:
@@ -317,19 +345,34 @@ class NewControl(DLPData):
         return new_control
 
     @singledispatchmethod
-    def read(self, x: Any):
-        """ Read a control file
+    def read(self, x):
+        """
+        Read a DLPoly new-style control file.
 
-        :param x: Input
+        Note: If used on `Control` instance, will update `Control`
+              with read values with new values taking priority.
 
+        Parameters
+        ----------
+        x : Union[dict, Iterable[str], TextIO, str, Path]
+            Dict or file-like data to read.
+
+        Raises
+        ------
+        TypeError
+            Attempt to read from invalid type.
         """
         raise TypeError(f"Cannot create {type(self).__name__} from {type(x).__name__}")
 
     @read.register(dict)
     def _(self, in_dict: dict):
-        """ Read a control file from a dict
+        """
+        Read a control file from a dictionary.
 
-        :param in_dict: Dict to read
+        Parameters
+        ----------
+        in_dict : dict
+            Dictionary to read from.
         """
         for key, val in in_dict.items():
             self[key] = val
@@ -337,10 +380,13 @@ class NewControl(DLPData):
     @read.register(Iterable)
     @read.register(TextIO)
     def _(self, data):
-        """ Read a control file
+        """
+        Read a control file from a file-like string iterator.
 
-        :param data: Sequence of data to read as from string
-
+        Parameters
+        ----------
+        data : Union[Iterable[str], TextIO]
+            File-like data to read from.
         """
         for line in data:
             line = line.split("#")[0]
@@ -356,7 +402,8 @@ class NewControl(DLPData):
 
             if key.startswith("ewald"):
                 corrected_key = key.replace("ewald", "spme")
-                print(f"Warning {key} used in control, should be {corrected_key} (applying correction)", flush=True)
+                print(f"Warning {key} used in control, should be {corrected_key}"
+                      " (applying correction)", flush=True)
                 key = corrected_key
 
             self[key] = [stripped_arg for arg in args
@@ -365,22 +412,55 @@ class NewControl(DLPData):
     @read.register(Path)
     @read.register(str)
     def _(self, filename: PathLike):
-        """ Read a control file
+        """
+        Read a control file from a path on disc.
 
-        :param filename: File to read
-
+        Parameters
+        ----------
+        filename : PathLike
+            Path to DLPoly new-style control file.
         """
         with open(filename, "r", encoding="utf-8") as in_file:
             self.read(in_file)
 
     @singledispatchmethod
     @staticmethod
-    def _format_val(vals: Any, key: str):
+    def _format_val(vals: Any, key: str) -> str:
+        """
+        Format `Control` variables for output to file.
+
+        Parameters
+        ----------
+        vals : Any
+            Value to format.
+        key : str
+            Key of variables.
+
+        Returns
+        -------
+        str
+            Formatted `Control` variable.
+        """
         return str(vals)
 
     @_format_val.register
     @staticmethod
-    def _(vals: Sequence, key: str):
+    def _(vals: Sequence, key: str) -> str:
+        """
+        Format tuple/vector of parameters.
+
+        Parameters
+        ----------
+        vals : Sequence
+            Vector-like value.
+        key : str
+            Key of variable.
+
+        Returns
+        -------
+        str
+            Formatted `Control` variable.
+        """
         lvals = None
         # correlation_blocks and block_points can be singleton vectors
         is_correlation_option = key in ("correlation_blocks",
@@ -404,25 +484,69 @@ class NewControl(DLPData):
 
     @_format_val.register
     @staticmethod
-    def _(vals: bool, key: str):
+    def _(vals: bool, key: str) -> str:
+        """
+        Format boolean arguments.
+
+        Parameters
+        ----------
+        vals : bool
+            Boolean value.
+        key : str
+            Key of variable.
+
+        Returns
+        -------
+        str
+            Formatted `Control` variable.
+        """
         return "ON" if vals else "OFF"
 
-    @_format_val.register
+    @_format_val.register(str)
+    @_format_val.register(Path)
     @staticmethod
-    def _(vals: str, key: str):
-        if not vals:
-            return
+    def _(vals: Union[str, Path], key: str) -> str:
+        """
+        Format string/Path arguments.
 
-        return vals
+        Parameters
+        ----------
+        vals : Union[str, Path]
+            Path or string-like value.
+        key : str
+            Key of variable.
+
+        Returns
+        -------
+        str
+            Formatted `Control` variable.
+        """
+        if not vals:
+            return ""
+
+        return str(vals)
 
     def write(self, filename: PathLike = "new_control"):
-        """ Write a new control file
+        """
+        Write `Control` object to disc.
 
-        :param filename: Name to write to
-
+        Parameters
+        ----------
+        filename : PathLike
+            File to write data to.
         """
 
         def output(key: str, val: Any):
+            """
+            Write key to file if present.
+
+            Parameters
+            ----------
+            key : str
+                Key to write.
+            val : Any
+                Value to write.
+            """
             if formatted := self._format_val(val, key):
                 print(key, formatted, file=out_file)
 
@@ -436,15 +560,29 @@ class NewControl(DLPData):
                     continue
                 output(key, vals)
 
-    def __iter__(self):
-        """ Returns set keys """
+    def __iter__(self) -> Iterator[str]:
+        """
+        Return all `Control` keys which have been set.
+
+        Returns
+        -------
+        Iterator[str]
+            Generator of DLPoly keys which have been set.
+        """
         return (key for key, vals in self.__dict__.items()
                 if (not key.startswith("_") and
                     key not in ("source") and
                     vals is not None))
 
-    def items(self):
-        """ Returns key, vals tuple for set keys """
+    def items(self) -> Iterator[Tuple[str, Any]]:
+        """
+        Return key-value tuples like `dict.items()` method.
+
+        Yields
+        ------
+        Tuple[str, Any]
+            Key-value pairs.
+        """
         for key in self:
             yield (key, self[key])
 
@@ -468,8 +606,20 @@ title: {self.title}
         return out
 
 
-def is_new_control(filename: PathLike):
-    """ Determine if file is in old or new format """
+def is_new_control(filename: PathLike) -> bool:
+    """
+    Determine if file is in old or new format.
+
+    Parameters
+    ----------
+    filename : PathLike
+        File to check.
+
+    Returns
+    -------
+    bool
+        Whether file is old-style or new-style.
+    """
     with open(filename, "r", encoding="utf-8") as in_file:
         for line in in_file:
             line = line[0:line.find("#")]
@@ -481,3 +631,5 @@ def is_new_control(filename: PathLike):
 
             key = line.split()[0].lower()
             return key == "title"
+
+    return False

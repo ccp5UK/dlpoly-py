@@ -1,21 +1,33 @@
 """
-Set up command line input for DLPOLY parser
+Set up command line input for DLPOLY parser.
 """
 
 import argparse as arg
-from typing import Optional
+from collections.abc import Sequence
+from typing import Any, Optional, Union
 
 
 # SmartFormatter taken from StackOverflow
 class SmartFormatter(arg.HelpFormatter):
-    """ Class to allow raw formatting only on certain lines """
+    """
+    Class to allow raw formatting only on certain lines.
+    """
 
-    def _split_lines(self, text: str, width: int):
-        """ Do not format lines prefixed with R|
+    def _split_lines(self, text: str, width: int) -> str:
+        """
+        Do not format lines prefixed with R|.
 
-        :param text: Texto to parse
-        :param width: Max width
+        Parameters
+        ----------
+        text : str
+            Text to parse.
+        width : int
+            Maximum width.
 
+        Returns
+        -------
+        str
+            Line-wrapped and split inputs.
         """
         if text.startswith("R|"):
             return text[2:].splitlines()
@@ -25,20 +37,28 @@ class SmartFormatter(arg.HelpFormatter):
 
 # DictKeyPair taken from StackOverflow
 class StoreDictKeyPair(arg.Action):
-    """ Class to convert a=b into dictionary key, value pair """
+    """
+    Class to convert a=b into dictionary key-value pair.
+    """
 
     def __call__(self,
                  parser: arg.ArgumentParser,
                  namespace: arg.Namespace,
-                 values: str,
+                 values: Union[str, Sequence[Any], None],
                  optionString: Optional[str] = None):
-        """ Take a=b and map to dict
+        """
+        Take a=b and map to dict.
 
-        :param parser: Parse in
-        :param namespace: Object to write to
-        :param values: Vals to map
-        :param optionString: Extra options
-
+        Parameters
+        ----------
+        parser : arg.ArgumentParser
+            Parent parser.
+        namespace : arg.Namespace
+            Output namespace object.
+        values : str
+            Incoming commandline arguments to parse.
+        optionString : Optional[str]
+            Extra options.
         """
         new_dict = dict((key_val.split('=') for key_val in values.split(',')))
         setattr(namespace, self.dest, new_dict)
@@ -61,11 +81,13 @@ _PARSER.add_argument(
 )
 
 
-def get_command_args():
-    """Run parser and parse arguments
+def get_command_args() -> arg.Namespace:
+    """
+    Run parser and parse arguments.
 
-    :returns: List of arguments
-    :rtype: argparse.Namespace
-
+    Returns
+    -------
+    argparse.Namespace
+        List of arguments.
     """
     return _PARSER.parse_args()
