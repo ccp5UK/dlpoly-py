@@ -1,9 +1,9 @@
 """
-Module to handle DLPOLY config files
+Module to handle DLPOLY config files.
 """
 
+from collections.abc import Generator, Iterable
 import copy
-from collections.abc import Iterable
 from enum import IntEnum
 from typing import Optional, TextIO, Union
 
@@ -14,7 +14,10 @@ from .utility import DLPData
 
 
 class Imcon(IntEnum):
-    """ DLPoly Image Convention """
+    """
+    DLPoly image convention.
+    """
+
     NONE = 0
     CUBIC = 1
     ORTHORHOMBIC = 2
@@ -23,34 +26,83 @@ class Imcon(IntEnum):
 
 
 class LevelOfDetail(IntEnum):
-    """ DLPoly Config file LoD """
+    """
+    DLPoly CONFIG file level of detail.
+    """
+
     POSITIONS = 0
     VELOCITIES = 1
     FORCES = 2
 
 
 def _format_3vec(list_in: ThreeVec) -> str:
-    "Format 3-vector for printing"
+    """
+    Format 3-vector for printing.
+
+    Parameters
+    ----------
+    list_in : ThreeVec
+        Vector to convert.
+
+    Returns
+    -------
+    str
+        Standard formatted string for DLPoly style.
+    """
     return f"{list_in[0]:20.10f}{list_in[1]:20.10f}{list_in[2]:20.10f}\n"
 
 
 class Atom(DLPData):
-    """ Class defining a DLPOLY atom type
+    """
+    Class defining a DLPoly atom.
 
-     :param element: Label
-     :param pos: Position vector
-     :param vel: Velocity vector
-     :param forces: Net force vector
-     :param index: ID
+    Attributes
+    ----------
+    element : str
+        Atom label.
+    pos : ThreeVec
+        Position vector.
+    vel : ThreeVec
+        Velocity vector.
+    forces : ThreeVec
+        Net force vector.
+    index : int
+        Unique ID.
+    molecule : Tuple[str, int]
+        Owner molecule and count.
 
-     """
+    Methods
+    -------
+    write(level)
+        Write the `Atom` with given level of detail.
+    read(file_handle, level, i)
+        Read a single `Atom` from a file.
+    """
 
-    def __init__(self,
-                 element: str = "",
-                 pos: Optional[ThreeVec] = None,
-                 vel: Optional[ThreeVec] = None,
-                 forces: Optional[ThreeVec] = None,
-                 index: int = 1):
+    def __init__(
+        self,
+        element: str = "",
+        pos: Optional[ThreeVec] = None,
+        vel: Optional[ThreeVec] = None,
+        forces: Optional[ThreeVec] = None,
+        index: int = 1,
+    ):
+        """
+        Instantiate a DLPoly atom.
+
+        Parameters
+        ----------
+        element : str
+            Atom label.
+        pos : Optional[ThreeVec]
+            Position vector.
+        vel : Optional[ThreeVec]
+            Velocity vector.
+        forces : Optional[ThreeVec]
+            Net force vector.
+        index : int
+            Unique ID.
+        """
         DLPData.__init__(
             self,
             {
@@ -69,46 +121,61 @@ class Atom(DLPData):
         self.index = index
 
     def write(self, level: LevelOfDetail) -> str:
-        """ Print own data to file w.r.t config print level
+        """
+        Return string of own data ready to write to file at given print level.
 
-        :param level: Print level
+        Parameters
+        ----------
+        level : LevelOfDetail
+            Level of detail to print.
 
+        Returns
+        -------
+        str
+            Data in DLPoly CONFIG file format.
+
+        Raises
+        ------
+        ValueError
+            If print level is invalid.
         """
 
         if level == LevelOfDetail.POSITIONS:
-            return (f"{self.element:8s}{self.index:10d}\n" +
-                    _format_3vec(self.pos))
+            return f"{self.element:8s}{self.index:10d}\n" + _format_3vec(self.pos)
 
         if level == LevelOfDetail.VELOCITIES:
-            return (f"{self.element:8s}{self.index:10d}\n" +
-                    _format_3vec(self.pos),
-                    _format_3vec(self.vel))
+            return (
+                f"{self.element:8s}{self.index:10d}\n" + _format_3vec(self.pos),
+                _format_3vec(self.vel),
+            )
 
         if level == LevelOfDetail.FORCES:
-            return (f"{self.element:8s}{self.index:10d}\n" +
-                    _format_3vec(self.pos),
-                    _format_3vec(self.vel),
-                    _format_3vec(self.forces))
+            return (
+                f"{self.element:8s}{self.index:10d}\n" + _format_3vec(self.pos),
+                _format_3vec(self.vel),
+                _format_3vec(self.forces),
+            )
 
         raise ValueError(f"Invalid print level {level} in Config.write")
 
-    def __str__(self) -> str:
-        return (f"{self.element:8s}{self.index:10d}\n" +
-                _format_3vec(self.pos) +
-                _format_3vec(self.vel) +
-                _format_3vec(self.forces))
-
     @classmethod
-    def read(cls,
-             file_handle: TextIO,
-             level: LevelOfDetail,
-             i: int) -> Union["Atom", None]:
-        """ Reads info for one atom
+    def read(cls, file_handle: TextIO, level: LevelOfDetail, i: int) -> "Atom":
+        """
+        Read single atom.
 
-        :param file_handle: File to read
-        :param level: Level to read
-        :param i: Index
+        Parameters
+        ----------
+        file_handle : TextIO
+            File to read from.
+        level : LevelOfDetail
+            Level of detail of input file.
+        i : int
+            Current index of atom.
 
+        Returns
+        -------
+        Atom
+            Instance of atom object.
         """
         line = file_handle.readline()
         if not line:
@@ -139,13 +206,47 @@ class Atom(DLPData):
 
         return cls(element, pos, vel, forces, index)
 
+    def __str__(self) -> str:
+        return (
+            f"{self.element:8s}{self.index:10d}\n"
+            + _format_3vec(self.pos)
+            + _format_3vec(self.vel)
+            + _format_3vec(self.forces)
+        )
+
 
 class Config:
-    """ Class defining a DLPOLY config file
+    """
+    Class defining a DLPoly CONFIG file.
 
-     :param source: File to read
+    Attributes
+    ----------
+    title : str
+        DLPoly title comment.
+    level : LevelOfDetail
+        Level of detail of CONFIG file to read/write.
+    atoms : List[Atom]
+        Atoms contained in configuration.
+    pbc : Imcon
+        Image convention.
+    cell : np.ndarray
+        3x3 Cartesian matrix defining cell.
+    source : Optional[PathLike]
+        File CONFIG originally read from.
+    params : Dict[str, type]x
+        Types associated with components.
+    natoms : int
+        Number of atoms.
 
-     """
+    Methods
+    -------
+    read(filename)
+        Read CONFIG from file.
+    write(filename, title, level)
+        Write CONFIG to file.
+    add_atoms(other)
+        Add atoms from `other` CONFIG or sequence of `Atom`.
+    """
 
     params = {
         "atoms": list,
@@ -159,6 +260,14 @@ class Config:
     natoms = property(lambda self: len(self.atoms))
 
     def __init__(self, source: Optional[PathLike] = None):
+        """
+        Instantiate class defining a DLPOLY config file.
+
+        Parameters
+        ----------
+        source : Optional[PathLike]
+            File to read.
+        """
         self.title = ""
         self.level = LevelOfDetail.POSITIONS
         self.atoms = []
@@ -169,59 +278,45 @@ class Config:
             self.source = source
             self.read(source)
 
-    def write(self,
-              filename: PathLike = "new.config",
-              title: Optional[str] = None,
-              level: LevelOfDetail = LevelOfDetail.POSITIONS):
-        """ Output to file
-
-        :param filename: File to write
-        :param title: Title of run
-        :param level: Print level
-
+    def _read_atoms(self, in_file: TextIO) -> Generator[Atom, None, None]:
         """
-        self.level = level
-        with open(filename, "w", encoding="utf-8") as out_file:
-            print(f"{title if title else self.title:72s}", file=out_file)
-            print(f"{level:10d}{self.pbc:10d}{self.natoms:10d}", file=out_file)
-            if self.pbc != Imcon.NONE:
-                for row in self.cell:
-                    print(_format_3vec(row), file=out_file)
+        Generator to read `Atom`s from file.
 
-            for atom in self.atoms:
-                print(atom.write(self.level), file=out_file)
+        Parameters
+        ----------
+        in_file : TextIO
+            File to read atoms from.
 
-    def add_atoms(self, other: Union[Iterable[Atom], "Config"]):
-        """ Add two Configs together to make one bigger config
-
-        :param other: Config to add
-
+        Yields
+        ------
+        Atom
+            Atom read from file.
         """
-        last_index = self.natoms
-
-        if isinstance(other, Config):
-            other = other.atoms
-
-        self.atoms.extend(copy.copy(atom) for atom in other)
-
-        # Shift new atoms' indices to reflect place in new config
-        for new_index, atom in enumerate(self.atoms[last_index:], last_index+1):
-            atom.index = new_index
-
-    def _read_atoms(self, in_file: TextIO):
         i = 0
         while atom := Atom.read(in_file, self.level, i):
             yield atom
             i += 1
 
-    def read(self, filename="CONFIG"):
-        """ Read file into Config
-
-        :param filename: File to read
-
+    def read(self, filename: PathLike = "CONFIG") -> "Config":
         """
+        Read file into Config.
 
-        with open(filename, "r", encoding="utf-8") as in_file:
+        Parameters
+        ----------
+        filename : PathLike
+            File to read.
+
+        Returns
+        -------
+        "Config"
+            Configuration as read from file.
+
+        Raises
+        ------
+        RuntimeError
+            If issue reading cell.
+        """
+        with open(filename, encoding="utf-8") as in_file:
             self.title = in_file.readline().strip()
             line = in_file.readline().split()
             self.level = LevelOfDetail(int(line[0]))
@@ -238,6 +333,55 @@ class Config:
             self.atoms = list(self._read_atoms(in_file))
 
         return self
+
+    def write(
+        self,
+        filename: PathLike = "new.config",
+        title: Optional[str] = None,
+        level: LevelOfDetail = LevelOfDetail.POSITIONS,
+    ):
+        """
+        Output `Config` to file.
+
+        Parameters
+        ----------
+        filename : PathLike
+            File to write config to.
+        title : Optional[str]
+            Title comment for first line.
+        level : LevelOfDetail
+            Level of detail to dump.
+        """
+        self.level = level
+        with open(filename, "w", encoding="utf-8") as out_file:
+            print(f"{title if title else self.title:72s}", file=out_file)
+            print(f"{level:10d}{self.pbc:10d}{self.natoms:10d}", file=out_file)
+            if self.pbc != Imcon.NONE:
+                for row in self.cell:
+                    print(_format_3vec(row), file=out_file)
+
+            for atom in self.atoms:
+                print(atom.write(self.level), file=out_file)
+
+    def add_atoms(self, other: Union["Config", Iterable[Atom]]):
+        """
+        Add atoms from `Config` `other` to self.
+
+        Parameters
+        ----------
+        other : Union[Config, Sequence[Atom]]
+            Config to take atoms from or list of atoms to add.
+        """
+        last_index = self.natoms
+
+        if isinstance(other, Config):
+            other = other.atoms
+
+        self.atoms.extend(copy.copy(atom) for atom in other)
+
+        # Shift new atoms' indices to reflect place in new config
+        for new_index, atom in enumerate(self.atoms[last_index:], last_index + 1):
+            atom.index = new_index
 
     def __repr__(self):
         return f"""{self.title if self.title else "Untitled"}

@@ -1,25 +1,30 @@
 """
-File containing methods for loading statistics data from DL_POLY_4
+File containing methods for loading statistics data from DLPoly.
 """
 
-from typing import Optional
 from functools import singledispatchmethod
+from typing import Optional, Tuple
 
 import numpy as np
 from ruamel.yaml import YAML
 
 from .config import Config
 from .control import Control
-from .types import PathLike, OptPath
+from .types import OptPath, PathLike
 
 
-class Statis():
-    """Type to parse and interpret STATIS file
+class Statis:
+    """
+    Class to parse and interpret STATIS file.
 
-    :param source: STATIS to read
-    :param control: Associated CONTROL
-    :param config: Associated CONFIG
-
+    Attributes
+    ----------
+    source : OptPath
+        File data originally read from.
+    is_yaml : bool
+        Whether source file is in YAML format.
+    data : np.ndarray
+        Raw parsed data array.
     """
     __version__ = "0.1"
 
@@ -27,6 +32,18 @@ class Statis():
                  source: OptPath = None,
                  control: Optional[Control] = None,
                  config: Optional[Config] = None):
+        """
+        Instantiate class to parse and interpret STATIS file.
+
+        Parameters
+        ----------
+        source : OptPath
+            STATIS to read.
+        control : Optional[Control]
+            Associated CONTROL.
+        config : Optional[Config]
+            Associated CONFIG.
+        """
         self.data = np.array([])
         self.is_yaml = False
         if source is not None:
@@ -37,6 +54,24 @@ class Statis():
 
     @singledispatchmethod
     def __getitem__(self, val):
+        """
+        Get column(s) from `data`.
+
+        If `val` is:
+          - `int`: return 1-indexed column of `data`.
+          - `slice`: return 1-indexed columns of `data.
+          - `str`: First name match for column in `data` (based on `labels`)
+
+        Parameters
+        ----------
+        val : Union[int, slice, str]
+            Column to get.
+
+        Raises
+        ------
+        NotImplementedError
+            Bad type passed.
+        """
         raise NotImplementedError(
             f"Unsupported get type ({type(val).__name__})"
         )
@@ -65,32 +100,56 @@ class Statis():
         raise KeyError(f"Key {val} not found in statis")
 
     @property
-    def rows(self):
-        """Number of rows in data"""
+    def rows(self) -> int:
+        """
+        Number of rows in data.
+        """
         return self.data.shape[0]
 
     @property
-    def columns(self):
-        """Number of columns in data"""
+    def columns(self) -> int:
+        """
+        Number of columns in data.
+        """
         return self.data.shape[1]
 
     @property
-    def _next_label(self):
+    def _next_label(self) -> Tuple[int, int]:
+        """
+        Generate next label index from existing `labels`.
+
+        Returns
+        -------
+        Tuple[int, int]
+            Next label index.
+        """
         row, col = divmod(len(self.labels), 5)
         return row+1, col+1
 
     def add_label(self, arg: str):
-        """Add a label to the list of labels
+        """
+        Add a label to the list of labels.
 
-        :param arg: Label to add
+        Parameters
+        ----------
+        arg : str
+            Label to add.
         """
         self.labels.append(f"{arg}")
 
-    def read(self, filename: PathLike = "STATIS"):
-        """Read and parse a STATIS file
+    def read(self, filename: PathLike = "STATIS") -> "Statis":
+        """
+        Read and parse a STATIS file.
 
-        :param filename: File to read
-        :returns: Parsed statis
+        Parameters
+        ----------
+        filename : PathLike
+            File to read.
+
+        Returns
+        -------
+        Statis
+            Parsed statis.
         """
         with open(filename, "r", encoding="utf-8") as in_file:
             first_word = in_file.readline().split()[0]
@@ -100,8 +159,8 @@ class Statis():
             yaml_parser = YAML()
             with open(filename, "rb") as in_file:
                 data = yaml_parser.load(in_file)
-            self.labels = data["labels"][0]
-            self.data = np.array(data["timesteps"])
+                self.labels = data["labels"][0]
+                self.data = np.array(data["timesteps"])
         else:
             with open(filename, "r", encoding="utf-8") as in_file:
                 _, _, data = in_file.read().split("\n", 2)
@@ -116,11 +175,15 @@ class Statis():
     def gen_labels(self,
                    control: Optional[Control] = None,
                    config: Optional[Config] = None):
-        """Generate labels for headers in STATIS file
+        """
+        Generate labels for headers in STATIS file.
 
-        :param control: Control file relating to statis
-        :param config: Config file relating to statis
-        :returns: Set labels for further reference
+        Parameters
+        ----------
+        control : Optional[Control]
+            Control file relating to statis.
+        config : Optional[Config]
+            Config file relating to statis.
         """
         self.labels = ["Total Extended System Energy",
                        "System Temperature",
@@ -169,7 +232,7 @@ class Statis():
             if control.ensemble.ensemble in ("npt", "nst"):
                 for i in range(9):
                     self.add_label("Cell Dimensions")
-                self.add_label("Instantaneous PV")
+                    self.add_label("Instantaneous PV")
                 if any(key in control.ensemble.args
                        for key in ("area", "tens", "semi", "orth")):
                     self.add_label("H_Z")
@@ -184,7 +247,13 @@ class Statis():
         self.labels = ["iter", "time"] + self.labels
 
     def flatten(self):
-        """FIXME! briefly describe function"""
+        """
+        Write data column-by-column to multiple files.
+
+        Files will be named according to the label associated with each column in `Statis`.
+
+        Note: If files already exist, they will be overwritten.
+        """
         for i in range(self.columns-3):
             with open(self.labels[i], "w", encoding="utf-8") as out_file:
                 for j in range(self.rows):

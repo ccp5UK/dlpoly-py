@@ -1,21 +1,29 @@
 """
-DLPOLY Species class
+DLPOLY Species class.
 """
 
 from .utility import DLPData
 
 
 class Species(DLPData):
-    """ Class defining a DLPOLY species type
+    """
+    Class defining a DLPoly atomic "species".
 
-        :param name: Species label
-        :param index: CONFIG Index
-        :param charge: Charge
-        :param mass: Mass
-        :param frozen: Num frozen
-        :param repeats: Number of occurences
-
-        """
+    Attributes
+    ----------
+    name : str
+        Species label.
+    index : int
+        CONFIG index.
+    charge : float
+        Atomic charge.
+    mass : float
+        Atomic mass.
+    frozen : int
+        Number of frozen.
+    repeats : int
+        Number of occurences.
+    """
     def __init__(self,
                  name: str = "X",
                  index: int = 1,
@@ -23,6 +31,24 @@ class Species(DLPData):
                  mass: float = 1.0,
                  frozen: int = 0,
                  repeats: int = 1):
+        """
+        Instantiate class defining a DLPoly atomic "species".
+
+        Parameters
+        ----------
+        name : str
+            Species label.
+        index : int
+            CONFIG index.
+        charge : float
+            Atomic charge.
+        mass : float
+            Atomic mass.
+        frozen : int
+            Number of frozen.
+        repeats : int
+            Number of occurences.
+        """
 
         DLPData.__init__(self, {'element': str, 'index': int, 'charge': float,
                                 'mass': float, 'frozen': int, 'repeats': int})

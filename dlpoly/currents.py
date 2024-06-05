@@ -1,5 +1,5 @@
 '''
-Module to handle CURRENTS files
+Module to handle CURRENTS files.
 '''
 
 from typing import Optional, List
@@ -10,10 +10,32 @@ import numpy as np
 from .types import PathLike, OptPath
 
 
-class Currents():
+class Currents:
+    """
+    Class for reading Currents.
 
+    Attributes
+    ----------
+    source : PathLike
+        Original file read data from.
+    is_yaml : bool
+        Whether data are in YAML format.
+    data : Optional[np.typing.NDArray]
+        Data read from file.
+    atoms : Optional[List[str]]
+        List of atoms from file.
+    timesteps : Optional[np.typing.NDArray]
+        Timestep samples in file.
+    """
     def __init__(self, source: OptPath = None):
+        """
+        Instantiate class for reading Currents.
 
+        Parameters
+        ----------
+        source : OptPath
+            File to read data from.
+        """
         self.is_yaml = False
         self.source = source
         self.data: Optional[np.typing.NDArray] = None
@@ -25,6 +47,14 @@ class Currents():
             self.read(source)
 
     def read(self, source: PathLike = "CURRENTS"):
+        """
+        Read Currents file in YAML or plaintext format.
+
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
+        """
         with open(source, 'r', encoding='utf-8') as in_file:
             test_word = in_file.readline().split()[0]
             self.is_yaml = test_word == "%YAML"
@@ -35,6 +65,14 @@ class Currents():
             self._read_plaintext(source)
 
     def _read_yaml(self, source: PathLike):
+        """
+        Read Currents data from YAML format file.
+
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
+        """
         self.source = source
         yaml_parser = YAML()
 
@@ -72,6 +110,19 @@ class Currents():
                             self.data[timestep, ind, k, 2] = complex(rz[k], iz[k])
 
     def _read_plaintext(self, source: PathLike):
+        """
+        Read Currents data from plain-text format file.
+
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
+
+        Raises
+        ------
+        Exception
+            If k-point samples are inconsistent.
+        """
         self.source = source
         with open(source, "r", encoding="utf-8") as file:
             lines = [line.rstrip().replace(",", " ") for line in file]

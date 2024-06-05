@@ -8,6 +8,7 @@ Welcome to dlpoly-py's documentation!
 
 
 .. automodule:: dlpoly
+   :no-members:
 
 .. toctree::
    :maxdepth: 1

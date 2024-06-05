@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'dlpoly-py'
-copyright = '2020, Alin M Elena;Jacob Wilkins'
-author = 'Alin M Elena;Jacob Wilkins'
+copyright = '2024, Alin M Elena; Jacob Wilkins'
+author = 'Alin M Elena; Jacob Wilkins'
 
 
 # -- General configuration ---------------------------------------------------

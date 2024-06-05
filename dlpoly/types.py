@@ -1,5 +1,5 @@
 """
-Provides typing for DLPoly
+Provides typing for DLPoly.
 """
 
 import os
