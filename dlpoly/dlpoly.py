@@ -161,7 +161,7 @@ class DLPoly:
             self.control.io_file_cor = str(
                 direc / Path(get_file_def("cor", "COR")).name)
 
-        if getattr(self.control, "currents_calculate", False) == "On":
+        if getattr(self.control, "currents_calculate", False):
             self.control.io_file_currents = str(
                 direc / Path(get_file_def("currents", "CURRENTS")).name)
 

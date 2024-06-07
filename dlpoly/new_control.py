@@ -288,7 +288,7 @@ class NewControl(DLPData):
         self.io_file_rdf = "RDFDAT"
         self.io_file_cor = "COR"
         self.io_file_msd = "MSDTMP"
-        self.io_file_currents = "CURRENTS" if Path("CURRENTS").exists() else ""
+        self.io_file_currents = "CURRENTS"
 
         self.title = 'Untitled'
         self.source = Path(source) if source is not None else source
@@ -430,7 +430,7 @@ class NewControl(DLPData):
             output("title", self["title"])
             for key, vals in self.items():
                 if (
-                        key in ("title", "filename", "io_file_control", "io_file_currents") or
+                        key in ("title", "filename", "io_file_control") or
                         (key in ("io_file_output") and vals.upper() != "SCREEN")
                 ):
                     continue
