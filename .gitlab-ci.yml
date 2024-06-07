@@ -1,4 +1,4 @@
-image: registry.gitlab.com/ccp5/dlpoly-py/dlpoly:5.2.0-pre
+image: registry.gitlab.com/ccp5/dlpoly-py/dlpoly:5.2.0-pre-828bbf70
 
 before_script:
   - python3 -m venv py-ci && source ./py-ci/bin/activate
