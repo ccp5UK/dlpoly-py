@@ -3,7 +3,6 @@ image: registry.gitlab.com/ccp5/dlpoly-py/dlpoly:5.2.0-pre-828bbf70
 before_script:
   - python3 -m venv py-ci && source ./py-ci/bin/activate
   - python --version
-  - python -m pip install -r requirements.txt
 
 stages:
   - test
@@ -32,8 +31,7 @@ tests:
   stage: test
   script:
     - source ./py-ci/bin/activate
-    - python ./setup.py build
-    - python ./setup.py install --user
+    - pip install .[all]
       #    - python -m unittest discover -s tests -p 'test_*.py'
     - source ~/.bashrc
     - module load dl_poly
