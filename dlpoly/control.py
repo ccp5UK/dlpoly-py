@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 """
-Module to handle DLPOLY control files
+Module to handle DLPOLY control files.
 """
 
+# pylint: disable=too-many-branches,too-many-statements,too-many-instance-attributes,too-many-lines
 from pathlib import Path
 from typing import Any, List, Literal, Sequence, Tuple, Union
 
@@ -15,9 +15,50 @@ MeansTypes = Literal["evans", "langevin", "andersen", "berendsen",
                      "hoover", "gst", "ttm", "dpd", "mtk", None]
 
 
-class FField(DLPData):
-    """ Class defining properties relating to forcefields """
+class _FField(DLPData):
+    """
+    Class handling properties relating to forcefields.
+
+    Attributes
+    ----------
+    rvdw : float
+        Van der Waals' cutoff.
+    rcut : float
+        Other potentials cutoff.
+    rpad : float
+        Cutoff skin for haloes.
+    rpadset : bool
+        Whether `rpad` has been set.
+    elec : bool
+        Whether to compute electrostatics.
+    elec_method : str
+        Method to compute electrostatics.
+    elec_params : tuple
+        Parameters for electrostatics method.
+    metal : bool
+        Whether using metal-like interactions.
+    metal_style : str
+        Metal-like interaction method
+    vdw : bool
+        Whether using Van der Waals' interactions.
+    ewald_vdw : bool
+        Whether to compute VdW interactions with Ewald.
+    vdw_params : dict
+        Parameters for VdW interactions.
+    polar_method : str
+        Method for polarisation.
+    polar_t_hole : int
+        Number of T Holes in polarisation.
+    """
     def __init__(self, *_):
+        """
+        Instantiate class handling force-field parameters.
+
+        Parameters
+        ----------
+        *_
+           Ignore all parameters, construction only valid through `parse`.
+        """
         DLPData.__init__(self, {"rvdw": float, "rcut": float, "rpad": float, "rpadset": bool,
                                 "elec": bool, "elec_method": str, "metal": bool, "vdw": bool,
                                 "ewald_vdw": bool, "elec_params": tuple, "vdw_params": dict,
@@ -47,11 +88,15 @@ class FField(DLPData):
                                          "cut", "rvdw", "metal", "vdw", "polar", "ewald_vdw"))
 
     def parse(self, key: str, vals: Any):
-        """ Handle key-vals for FField types
+        """
+        Handle key-vals for FField interactions.
 
-        :param key: Key to parse
-        :param vals: Value to assign
-
+        Parameters
+        ----------
+        key : str
+            Key to parse.
+        vals : Any
+            Values associated with key.
         """
         full_name = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
                      "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func":
@@ -99,7 +144,7 @@ class FField(DLPData):
         elif key == "ewald_vdw":
             self.ewald_vdw = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         out_str = ""
         if self.elec:
             out_str += f"{self.elec_method} {' '.join(self.elec_params)}\n"
@@ -114,9 +159,38 @@ class FField(DLPData):
         return out_str
 
 
-class Ignore(DLPData):
-    """ Class definining properties that can be ignored """
+class _Ignore(DLPData):
+    """
+    Class handling properties that can be ignored/disabled.
+
+    Attributes
+    ----------
+    elec : bool
+        Disable electrostatics.
+    ind : bool
+        Ignore config indices.
+    top : bool
+        Disable topology information printing.
+    vdw : bool
+        Disable Van der Waals' interactions.
+    vafav : bool
+        Disable computing average VAF.
+    vom : bool
+        Disable centre of mass velocity correction.
+    link : bool
+        Disable computation of linked-halos.
+    strict : bool
+        Disable strict checks.
+    """
     def __init__(self, *_):
+        """
+        Instantiate class handling properties that can be ignored/disabled.
+
+        Parameters
+        ----------
+        *_
+           Ignore all parameters, construction only valid through `parse`.
+        """
         DLPData.__init__(self, {"elec": bool, "ind": bool, "str": bool,
                                 "top": bool, "vdw": bool, "vafav": bool,
                                 "vom": bool, "link": bool, "strict": bool})
@@ -133,11 +207,15 @@ class Ignore(DLPData):
     keysHandled = property(lambda self: ("no",))
 
     def parse(self, _key: None, args: Any):
-        """ Parse disable/ignores
+        """
+        Parse ignore parameters.
 
-        :param _key: "NO", ignored
-        :param args: Arg to assign
-
+        Parameters
+        ----------
+        _key : None
+            Always "NO", disabled.
+        args : Any
+            Flag to disable.
         """
         self[args[0]] = True
 
@@ -149,9 +227,32 @@ class Ignore(DLPData):
         return out_str
 
 
-class Analysis(DLPData):
-    """ Class defining properties of analysis """
+class _Analysis(DLPData):
+    """
+    Class handling properties of analysis.
+
+    Attributes
+    ----------
+    all : tuple[int, int, float]
+        Analyse all.
+    bon : tuple[int, int, float]
+        Analyse bonds.
+    ang : tuple[int, int]
+        Analyse angles.
+    dih : tuple[int, int]
+        Analyse dihedrals.
+    inv : tuple[int, int]
+        Analyse inversions.
+    """
     def __init__(self, *_):
+        """
+        Instantiate class handling properties of analysis.
+
+        Parameters
+        ----------
+        *_
+           Ignore all parameters, construction only valid through `parse`.
+        """
         DLPData.__init__(self, {"all": (int, int, float),
                                 "bon": (int, int, float),
                                 "ang": (int, int),
@@ -166,10 +267,13 @@ class Analysis(DLPData):
     keysHandled = property(lambda self: ("ana",))
 
     def parse(self, args: Tuple[str, ...]):
-        """ Parse analysis line
+        """
+        Parse analysis line.
 
-        :param args: Args to parse
-
+        Parameters
+        ----------
+        args : Tuple[str, ...]
+            Analysis parameters.
         """
         self[args[0]] = args[1:]
 
@@ -187,16 +291,63 @@ class Analysis(DLPData):
         # return outstr
 
 
-class Print(DLPData):
-    """ Class definining properties that can be printed """
+class _Print(DLPData):
+    """
+    Class handling properties that can be printed.
+
+    Attributes
+    ----------
+    printevery : int
+       Print to OUTPUT every N steps.
+    statsevery : int
+       Dump STATIS file every N steps.
+
+    rdf : bool
+       Whether to compute RDF.
+    rdfprint : bool
+       Whether to write RDFTMP file.
+    rdfevery : int
+       Frequency of dumping RDF.
+
+    analysis : bool
+       Whether analysis is to be performed.
+    analysisprint : bool
+       Whether analysis is to be printed.
+    analysis_object : _Analysis
+       Analysis information.
+
+    vaf : bool
+       Whether to compute VAF.
+    vafprint : bool
+       Whether to write VAF File.
+    vafevery : int
+       Frequency of dumping VAF.
+    vafbin : int
+       Number of bins to average VAF over.
+
+    zden : bool
+       Compute Z-density.
+    zdenevery : int
+       Frequency of dumping Z-density.
+    zdenprint : bool
+       Whether to write ZDEN file.
+    """
     def __init__(self, *_):
+        """
+        Instantiate class handling properties of that can be printed.
+
+        Parameters
+        ----------
+        *_
+           Ignore all parameters, construction only valid through `parse`.
+        """
         DLPData.__init__(self, {"rdf": bool, "analysis": bool, "analysisprint": bool,
-                                "analysis_object": Analysis, "printevery": int,
+                                "analysis_object": _Analysis, "printevery": int,
                                 "vaf": bool, "zden": bool, "rdfevery": int, "vafevery": int,
                                 "vafbin": int, "statsevery": int, "zdenevery": int,
                                 "rdfprint": bool, "zdenprint": bool, "vafprint": bool})
 
-        self.analysis_object = Analysis()
+        self.analysis_object = _Analysis()
         self.rdf = False
         self.vaf = False
         self.zden = False
@@ -217,11 +368,15 @@ class Print(DLPData):
     keysHandled = property(lambda self: ("print", "rdf", "zden", "stats", "analyse", "vaf"))
 
     def parse(self, key: str, args: Tuple[Any, ...]):
-        """ Parse a split print line and see what it actually says
+        """
+        Parse a handled key into object parameters.
 
-        :param key: Key to parse
-        :param args: Values to assign
-
+        Parameters
+        ----------
+        key : str
+            Key to handle.
+        args : Tuple[Any, ...]
+            Arguments for key `key`.
         """
 
         if check_arg(key, "print"):
@@ -265,8 +420,40 @@ class Print(DLPData):
         return out_str
 
 
-class IOParam(DLPData):
-    """ Class defining io parameters """
+class _IOParam(DLPData):
+    """
+    Class handling io parameters.
+
+    Attributes
+    ----------
+    dlp_files : Tuple[str, ...]
+        Files handled by `_IOParam`.
+    control : str
+    field : str
+    config : str
+    statis : str
+    output : str
+    history : str
+    historf : str
+    revive : str
+    revcon : str
+    revold : str
+    rdf : str
+    msd : str
+    tabvdw : str
+    tabbnd : str
+    tabang : str
+    tabdih : str
+    tabinv : str
+    tabeam : str
+    cor : str
+    currents : str
+
+    Methods
+    -------
+    parse(key, args)
+        Parse a handled key into object parameters.
+    """
 
     dlp_files = property(lambda self: {"control", "field", "config", "statis", "output", "history",
                                        "historf", "revive", "revcon", "revold", "rdf", "msd",
@@ -274,6 +461,14 @@ class IOParam(DLPData):
                                        "tabeam", "cor", "currents"})
 
     def __init__(self, **files_in: PathLike):
+        """
+        Instantiate class handling parameters related to I/O.
+
+        Parameters
+        ----------
+        **files_in : PathLike
+            Override defaults on instantiation.
+        """
 
         DLPData.__init__(self, {file_type: str for file_type in self.dlp_files})
 
@@ -309,11 +504,15 @@ class IOParam(DLPData):
     keysHandled = property(lambda self: ("io",))
 
     def parse(self, _key: None, args: Tuple[str, Any]):
-        """ Parse an IO line
+        """
+        Parse an IO line.
 
-        :param _key: "IO", ignored
-        :param args: Value to assign
-
+        Parameters
+        ----------
+        _key : None
+            Ignored as always "IO".
+        args : Tuple[str, Any]
+            Arguments to set.
         """
         setattr(self, args[0], args[1])
 
@@ -324,8 +523,39 @@ class IOParam(DLPData):
         return out
 
 
-class EnsembleParam:
-    """ Class containing ensemble data """
+class _EnsembleParam:
+    """
+    Class containing ensemble data.
+
+    Attributes
+    ----------
+    validMeans : Dict[str, Tuple[Optional[str], ...]
+        Valid possibilities for given means.
+    meansArgs : Dict[Tuple[str, Optional[str]], int]
+        Number of expected args for given means combination.
+    full_name : Dict[str, str]
+        Mapping from abbreviated name to full name.
+    ensemble : {"nve", "nvt", "npt", "nst", "pmf"}
+        MD Ensemble to use.
+    means : Optional[str]
+        Thermostat/Barostat integrator to use.
+    args : Tuple[Any, ...]
+        List of ensemble arguments.
+
+    dpd_order : {1, 2}
+        Order of dissipative particle dynamics integrator
+
+    area : bool
+        Semi-isotropic ensemble constraints.
+    orth : bool
+        Semi-isotropic ensemble constraints.
+    tens : bool
+        Semi-isotropic ensemble constraints.
+    tension : float
+        Constraint value.
+    semi : bool
+        Semi-isotropic ensemble constraints.
+    """
     validMeans = {"nve": (None,), "pmf": (None,),
                   "nvt": ("evans", "langevin", "andersen", "berendsen",
                           "hoover", "gst", "ttm", "dpd"),
@@ -346,6 +576,14 @@ class EnsembleParam:
     keysHandled = property(lambda self: ("ensemble",))
 
     def __init__(self, *argsIn):
+        """
+        Instantiate class handling ensembles.
+
+        Parameters
+        ----------
+        *argsIn : Tuple[str, ...]
+            Split DLPoly old-style ``ensemble`` line.
+        """
         if not argsIn:          # Default to NVE because why not?
             argsIn = ("nve")
         args = list(argsIn)[:]  # Make copy
@@ -375,35 +613,49 @@ class EnsembleParam:
                 self.semi = True
 
     @property
-    def ensemble(self):
-        """ The thermodynamic ensemble """
+    def ensemble(self) -> EnsembleTypes:
+        """
+        The thermodynamic ensemble.
+        """
         return self._ensemble
 
     @ensemble.setter
     def ensemble(self, ensemble: EnsembleTypes):
-        """ Set ensemble and check if valid """
-        if ensemble not in EnsembleParam.validMeans:
+        """
+        Set the ensemble and ensure is valid. Also reset mean and args ready for subsequent setting.
+
+        Parameters
+        ----------
+        ensemble : EnsembleTypes
+            Type of ensemble.
+
+        Raises
+        ------
+        ValueError
+            If ensemble not in allowed ensembles.
+        """
+        if ensemble not in _EnsembleParam.validMeans:
             raise ValueError(f"Cannot set ensemble to be {ensemble}. "
-                             f"Valid ensembles {', '.join(EnsembleParam.validMeans.keys())}.")
+                             f"Valid ensembles {', '.join(_EnsembleParam.validMeans.keys())}.")
         self._means = None
         self.args = []
         self._ensemble = ensemble
 
     @property
     def means(self):
-        """ The integrator used to maintain the ensemble """
+        """The integrator used to maintain the ensemble."""
         return self._means
 
     @means.setter
     def means(self, means: MeansTypes):
-        if means not in EnsembleParam.validMeans[self.ensemble]:
+        if means not in _EnsembleParam.validMeans[self.ensemble]:
             raise ValueError(f"Cannot set means to be {means}. "
-                             f"Valid means {', '.join(map(str, EnsembleParam.validMeans[self.ensemble]))}.")
+                             f"Valid means {', '.join(map(str, _EnsembleParam.validMeans[self.ensemble]))}.")
         self.args = []
         self._means = means
 
     def __str__(self):
-        expect = EnsembleParam.meansArgs[(self.ensemble, self.means)]
+        expect = _EnsembleParam.meansArgs[(self.ensemble, self.means)]
         received = len(self.args)
         if ((isinstance(expect, (range, tuple)) and received not in expect) or
                 (isinstance(expect, int) and received != expect)):
@@ -416,9 +668,34 @@ class EnsembleParam:
                         )
 
 
-class TimingParam(DLPData):
-    """ Class defining io parameters """
+class _TimingParam(DLPData):
+    """
+    Class handling time parameters.
+
+    Attributes
+    ----------
+    close : float
+    steps : int
+    equil : int
+    timestep : float
+    variable : bool
+    maxdis : float
+    mindis : float
+    mxstep : float
+    job : float
+    collect : bool
+    dump : int
+    """
     def __init__(self, **kwargs):
+        """
+        Instantiate class for handling parameters related to time.
+
+        Parameters
+        ----------
+        **kwargs
+            Params to initialise defaults from.
+        """
+
         DLPData.__init__(self, {"close": float, "steps": int, "equil": int, "timestep": float,
                                 "variable": bool, "maxdis": float, "mindis": float, "mxstep": float,
                                 "job": float, "collect": bool, "dump": int})
@@ -441,11 +718,15 @@ class TimingParam(DLPData):
                                          "maxdis", "mindis", "mxstep", "job", "collect", "dump"))
 
     def parse(self, key: str, args: Union[Any, Sequence[Any]]):
-        """ Parse a split timing line and see what it actually says
+        """
+        Parse a handled key into object parameters.
 
-        :param key: Key to parse
-        :param args: Values to assign
-
+        Parameters
+        ----------
+        key : str
+            Key to parse.
+        args : Union[Any, Sequence[Any]]
+            Values associated with key.
         """
         if check_arg(key,
                      "close",
@@ -480,14 +761,31 @@ class TimingParam(DLPData):
 
 
 class Control(DLPData):
-    """ Class defining a DLPOLY control file
-
-        :param source: File to parse
     """
+    Class handling a DLPOLY control file.
+
+    Attributes
+    ----------
+    source : OptPath
+        File data originally read from.
+
+    Notes
+    -----
+    For meanings of parameters, see DLPoly manual.
+    """
+
     def __init__(self, source: OptPath = None):
+        """
+        Instantiate old-style DLPoly control taking initial parameters from `source`.
+
+        Parameters
+        ----------
+        source : OptPath
+            File to read data from.
+        """
         DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "l_rout": bool,
                                 "l_rin": bool, "l_tor": bool, "l_dis": int, "unit_test": bool,
-                                "l_vdw": bool, "l_fast": bool, "ana": Analysis,
+                                "l_vdw": bool, "l_fast": bool, "ana": _Analysis,
                                 "app_test": bool, "currents": bool,
                                 "binsize": float, "cap": float,
                                 "densvar": float, "eps": float, "exclu": bool,
@@ -498,9 +796,9 @@ class Control(DLPData):
                                 "regaus": int, "replay": str, "restart": str, "quaternion": float,
                                 "rlxtol": float, "scale": int, "slab": bool, "shake": float,
                                 "stack": int, "temp": float, "yml_statis": bool, "yml_rdf": bool,
-                                "title": str, "zero": str, "timing": TimingParam,
-                                "print": Print, "ffield": FField, "ensemble": EnsembleParam,
-                                "ignore": Ignore, "io": IOParam, "subcell": float,
+                                "title": str, "zero": str, "timing": _TimingParam,
+                                "print": _Print, "ffield": _FField, "ensemble": _EnsembleParam,
+                                "ignore": _Ignore, "io": _IOParam, "subcell": float,
                                 "impact": (int, int, float, float, float, float),
                                 "minim": (str, int, float, ...), "msdtmp": (int, int),
                                 "nfold": (int, int, int), "optim": (str, float),
@@ -518,29 +816,49 @@ class Control(DLPData):
         self.l_rout = False
         self.l_dis = False
         self.l_fast = False
-        self.io = IOParam(control=source or "CONTROL")
-        self.ignore = Ignore()
-        self.print = Print()
-        self.ffield = FField()
-        self.ensemble = EnsembleParam("nve")
-        self.ana = Analysis()
-        self.timing = TimingParam(collect=False,
-                                  steps=0,
-                                  equil=0,
-                                  variable=False,
-                                  timestep=0.001)
+        self.io = _IOParam(control=source or "CONTROL")
+        self.ignore = _Ignore()
+        self.print = _Print()
+        self.ffield = _FField()
+        self.ensemble = _EnsembleParam("nve")
+        self.ana = _Analysis()
+        self.timing = _TimingParam(collect=False,
+                                   steps=0,
+                                   equil=0,
+                                   variable=False,
+                                   timestep=0.001)
 
         if source is not None:
             self.source = source
             self.read(source)
 
     @property
-    def _handlers(self):
-        """ Return iterable of handlers """
+    def _handlers(self) -> Tuple[_IOParam, _Ignore, _Print, _FField, _TimingParam, _Analysis]:
+        """
+        Return tuple of all handlers.
+
+        Returns
+        -------
+        Tuple[_IOParam, _Ignore, _Print, _FField, _TimingParam, _Analysis]
+            Contained handlers.
+        """
         return (self.io, self.ignore, self.print, self.ffield, self.timing, self.ana)
 
     @staticmethod
     def _strip_crap(args: Sequence[str]) -> List[str]:
+        """
+        Remove unnecessary extra words from argument lists.
+
+        Parameters
+        ----------
+        args : Sequence[str]
+            Argument list to strip.
+
+        Returns
+        -------
+        List[str]
+            Stripped argument list.
+        """
 
         return [arg for arg in args if
                 not check_arg(arg, "constant", "every", "sampl", "tol",
@@ -549,11 +867,19 @@ class Control(DLPData):
                               "nbins", "rmax")
                 or check_arg(arg, "timestep")]
 
-    def read(self, filename: PathLike):
-        """ Read a control file
+    def read(self, filename: PathLike) -> "Control":
+        """
+        Read a DLPoly old-style CONTROL file.
 
-        :param filename: File to read
+        Parameters
+        ----------
+        filename : PathLike
+            Source file to read.
 
+        Returns
+        -------
+        Control
+            Updated object after read.
         """
         with open(filename, "r", encoding="utf-8") as in_file:
             self["title"] = in_file.readline()
@@ -576,7 +902,7 @@ class Control(DLPData):
                         break
                 else:
                     if check_arg(key, "ensemble"):
-                        self.ensemble = EnsembleParam(*args)
+                        self.ensemble = _EnsembleParam(*args)
                     else:
                         # Handle partial matching
                         self[key] = args
@@ -584,12 +910,18 @@ class Control(DLPData):
         return self
 
     def write(self, filename: PathLike = "CONTROL"):
-        """ Write the control out to a file
+        """
+        Write a DLPoly old-style CONTROL file to file.
 
-        :param filename: Output file
-
+        Parameters
+        ----------
+        filename : PathLike
+            File to write to.
         """
         def output(*args: Any):
+            """
+            Write arguments to file as space-separated strings.
+            """
             print(file=out_file, *args)
 
         with open(filename, "w", encoding="utf-8") as out_file:
@@ -626,16 +958,28 @@ class Control(DLPData):
                     output(key, val)
             output("finish")
 
-    def to_new(self):
-        """ Return control in new style
+    def to_new(self) -> NewControl:
+        """
+        Convert old-style DLPoly CONTROL to new-style.
 
-        :returns: New control
-        :rtype: NewControl
-
+        Returns
+        -------
+        NewControl
+            Converted Control data.
         """
         new_control = NewControl()
 
-        def output(key: str, *vals: Tuple[Any, ...]):
+        def output(key: str, *vals):
+            """
+            Set key to appropriate values (as tuple).
+
+            Parameters
+            ----------
+            key : str
+                Key to set.
+            *vals
+                Values to set.
+            """
             new_control[key] = vals
 
         output("title", self.title)
@@ -766,13 +1110,13 @@ class Control(DLPData):
                 if val.elec:
 
                     if val.elec_method == "shift":
-                        val.elec_method = "force_shifted"
+                        elec_method = "force_shifted"
 
                     if val.elec_method == "ewald":
-                        val.elec_method = "spme"
+                        elec_method = "spme"
 
-                    output("coul_method", val.elec_method)
-                    if check_arg(val.elec_method, "ewald", "spme"):
+                    output("coul_method", elec_method)
+                    if check_arg(elec_method, "ewald", "spme"):
 
                         if check_arg(val.elec_params[0], "precision"):
                             output("spme_precision", val.elec_params[1])

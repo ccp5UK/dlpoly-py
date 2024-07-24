@@ -1,4 +1,6 @@
-""" Module containing data related to parsing output """
+"""
+Module containing data related to parsing output.
+"""
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -7,14 +9,40 @@ from .types import ThreeByThree, OptPath, PathLike
 
 
 class Output():
-    """Class containing parsed OUTPUT data
+    """
+    Class containing parsed OUTPUT data.
 
-     :param source: OUTPUT file to read
-
-     """
+    Attributes
+    ----------
+    source : OptPath
+        File data originally read from.
+    vdw_energy: Optional[float]
+    vdw_pressure: Optional[float]
+    steps: Optional[float]
+    average_steps: Optional[float]
+    time: Optional[float]
+    average_time: Optional[float]
+    run_time: Optional[float]
+    run_tps: Optional[float]
+    pressure: Optional[float]
+    pressure_tensor: Optional[ThreeByThree]
+    pressure_tensor_rms: Optional[ThreeByThree]
+    average_cell: Optional[ThreeByThree]
+    average_cell_rms: Optional[ThreeByThree]
+    diffusion: Optional[Dict[str, Tuple[float, float]]]
+    average: Optional[Dict[str, Tuple[float, float]]]
+    """
     __version__ = "0"
 
     def __init__(self, source: OptPath = None):
+        """
+        Instantiate class containing parsed OUTPUT data.
+
+        Parameters
+        ----------
+        source : OptPath
+            File to read data from.
+        """
 
         self.vdw_energy: Optional[float] = None
         self.vdw_pressure: Optional[float] = None
@@ -38,61 +66,34 @@ class Output():
 
     @staticmethod
     def type_3x3(label: str, data: ThreeByThree) -> str:
-        """Print as 3x3 block
+        """
+        Format matrix into standard 3x3 block.
 
-        :param label: Label to print
-        :param a: Value stored
+        Parameters
+        ----------
+        label : str
+            Label to print.
+        data : ThreeByThree
+            Data to format.
 
+        Returns
+        -------
+        str
+           Formatted 3x3 matrix.
         """
         out = f"{label}: \n"
         for i in range(3):
             out += f"{data[i, 0]:16.8e} {data[i, 1]:16.8e} {data[i, 2]:16.8e}\n"
         return out
 
-    def __str__(self):
-        out_str = ''
-        if self.vdw_energy is not None:
-            out_str += f"long range vdw energy correction: {self.vdw_energy} donkeys\n"
-            out_str += f"long range vdw pressure correction: {self.vdw_pressure} donkeys\n"
-
-        out_str += f"runtime for md loop: {self.run_time} s\n"
-        out_str += f"time per md step: {self.run_tps} s\n"
-        out_str += f"md steps: {self.steps}\n"
-        out_str += f"md steps for average: {self.average_steps}\n"
-        out_str += f"md simulation time: {self.time} ps\n"
-        out_str += f"md simulation time for average: {self.average_time} ps\n"
-
-        if self.average is not None:
-            out_str += "Averages: \n"
-            out_str += f"#{'name':16s} {'value':>16s} {'rms':>16s}\n"
-            for key, value in self.average.items():
-                out_str += f" {key:16s} {value[0]:16.8e} {value[1]:16.8e}\n"
-            out_str += "\n"
-
-        if self.diffusion is not None:
-            out_str += "Approximate 3D Diffusion Coefficients and square root of MSDs:\n"
-            out_str += f"#{'Species':16s} {'DC [10^-9 m^2 s^-1]':>20s} {'Sqrt(MSD) [Å]':>16s} \n"
-            for key, value in self.diffusion.items():
-                out_str += " {key:16s}     {value[0]:16.8e} {value[1]:16.8e}\n"
-            out_str += "\n"
-
-        if self.pressure_tensor is not None:
-            out_str += self.type_3x3("Average pressure tensor [katm]: ",
-                                     self.pressure_tensor)
-            out_str += self.type_3x3("Average pressure tensor rms [katm]: ",
-                                     self.pressure_tensor_rms)
-            out_str += f"pressure (trace/3) [katm]: {self.pressure}\n"
-
-        if self.average_cell is not None:
-            out_str += self.type_3x3("Average cell vectors [Å]: ", self.average_cell)
-            out_str += self.type_3x3("Average cell vectors rms [Å]: ", self.average_cell_rms)
-        return out_str
-
     def read(self, source: PathLike = "OUTPUT"):
-        """ Read an OUTPUT file into memory
+        """
+        Read an OUTPUT file into `Output`.
 
-        :param source: File to read
-
+        Parameters
+        ----------
+        source : PathLike
+            File to read data from.
         """
         with open(source, 'r', encoding="utf-8") as in_file:
             to_read = map(lambda line: line.strip().split(), in_file)
@@ -161,6 +162,45 @@ class Output():
                         values = np.array(next(to_read), dtype=float)
                         self.average_cell[i, :] = values[0:3]
                         self.average_cell_rms[i, :] = values[3:6]
+
+    def __str__(self) -> str:
+        out_str = ''
+        if self.vdw_energy is not None:
+            out_str += f"long range vdw energy correction: {self.vdw_energy} donkeys\n"
+            out_str += f"long range vdw pressure correction: {self.vdw_pressure} donkeys\n"
+
+        out_str += f"runtime for md loop: {self.run_time} s\n"
+        out_str += f"time per md step: {self.run_tps} s\n"
+        out_str += f"md steps: {self.steps}\n"
+        out_str += f"md steps for average: {self.average_steps}\n"
+        out_str += f"md simulation time: {self.time} ps\n"
+        out_str += f"md simulation time for average: {self.average_time} ps\n"
+
+        if self.average is not None:
+            out_str += "Averages: \n"
+            out_str += f"#{'name':16s} {'value':>16s} {'rms':>16s}\n"
+            for key, value in self.average.items():
+                out_str += f" {key:16s} {value[0]:16.8e} {value[1]:16.8e}\n"
+            out_str += "\n"
+
+        if self.diffusion is not None:
+            out_str += "Approximate 3D Diffusion Coefficients and square root of MSDs:\n"
+            out_str += f"#{'Species':16s} {'DC [10^-9 m^2 s^-1]':>20s} {'Sqrt(MSD) [Å]':>16s} \n"
+            for key, value in self.diffusion.items():
+                out_str += " {key:16s}     {value[0]:16.8e} {value[1]:16.8e}\n"
+            out_str += "\n"
+
+        if self.pressure_tensor is not None:
+            out_str += self.type_3x3("Average pressure tensor [katm]: ",
+                                     self.pressure_tensor)
+            out_str += self.type_3x3("Average pressure tensor rms [katm]: ",
+                                     self.pressure_tensor_rms)
+            out_str += f"pressure (trace/3) [katm]: {self.pressure}\n"
+
+        if self.average_cell is not None:
+            out_str += self.type_3x3("Average cell vectors [Å]: ", self.average_cell)
+            out_str += self.type_3x3("Average cell vectors rms [Å]: ", self.average_cell_rms)
+        return out_str
 
 
 if __name__ == '__main__':

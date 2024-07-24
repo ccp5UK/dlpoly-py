@@ -1,5 +1,5 @@
 '''
-Module to handle MSDTMP config files
+Module to handle MSDTMP config files.
 '''
 
 from typing import Optional, Any, List
@@ -8,13 +8,42 @@ import numpy as np
 from .types import OptPath, PathLike
 
 
-class MSD():
-    """Class relating to MSD data
-
-    :param source: File to read
+class MSD:
     """
+    Class relating to MSD data.
 
+    Attributes
+    ----------
+    source : OptPath
+        File data originally read from.
+    title : str
+        DLPoly comment string.
+    n_frames : int
+        Number of frames in MSD.
+    n_atoms : int
+        Number of atoms in MSD.
+    latom : List[List[str]]
+        List of atoms in MSD.
+    timestep : float
+        Timestep of MSD.
+    data : Optional[np.typing.NDArray[np.float64]]
+        MSD data columns.
+    step : Optional[np.typing.NDArray[np.float64]]
+        Timesteps.
+    time : Optional[np.typing.NDArray[np.float64]]
+        Time of sample.
+    species : Optional[np.typing.NDArray[Any]]
+        Species enumeration.
+    """
     def __init__(self, source: OptPath = None):
+        """
+        Instantiate class relating to MSD data.
+
+        Parameters
+        ----------
+        source : OptPath
+            File to read.
+        """
         self.n_frames = 0
         self.n_atoms = 0
         self.latom: List[List[str]] = []
@@ -30,15 +59,20 @@ class MSD():
             self.read(source)
 
     @property
-    def n_species(self):
+    def n_species(self) -> int:
+        """
+        Number of species in MSD.
+        """
         return len(self.species)
 
-    def per_species(self):
-        """List by species
+    def per_species(self) -> np.ndarray:
+        """
+        List by species.
 
-        :returns: List of species averages
-        :rtype: np.ndarray
-
+        Returns
+        -------
+        np.ndarray
+            List of species averages.
         """
         data = np.zeros((self.n_frames, self.n_species, 2))
         for i in range(self.n_frames):
@@ -49,11 +83,19 @@ class MSD():
 
         return data
 
-    def read(self, filename: PathLike = "MSDTMP"):
-        """Read an MSDTMP file
+    def read(self, filename: PathLike = "MSDTMP") -> "MSD":
+        """
+        Read an MSDTMP file.
 
-        :param filename: File to read
+        Parameters
+        ----------
+        filename : PathLike
+            File to read.
 
+        Returns
+        -------
+        MSD
+            Constructed MSD.
         """
 
         with open(filename, "r", encoding="utf-8") as in_file:

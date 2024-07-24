@@ -1,11 +1,12 @@
-"""Simple DL_POLY_4 utilities to play with inputs and outputs.
+"""
+Simple DL_POLY_4 utilities to play with inputs and outputs.
 
-typical usage
+Examples
+--------
 
 >>>   from dlpoly import DLPoly
 >>>   dlPoly = DLPoly(control="Ar.control", config="Ar.config",
 >>>                   field="Ar.field", workdir="argon")
-
 """
 
 from distutils.version import LooseVersion

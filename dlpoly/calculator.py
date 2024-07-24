@@ -1,9 +1,10 @@
 """
-DLPoly ASE Calculator
+DLPoly ASE Calculator.
 """
 
+from collections.abc import Sequence
 from os import PathLike
-from typing import Literal, Optional, Sequence
+from typing import Literal, Optional
 
 from ase import Atoms
 from ase.calculators.calculator import FileIOCalculator, all_changes
@@ -16,22 +17,66 @@ from dlpoly import DLPoly
 
 class DLPolyCalculator(FileIOCalculator, DLPoly):
     """
-    Calculator using DLPoly for ASE
+    Calculator using DLPoly for ASE.
+
+    Attributes
+    ----------
+    command : Optional[str]
+        Command to run DLPoly.
+    numProcs : int
+        Number of processes to use in parallel.
     """
-    implemented_properties = ['energy', 'forces', 'stress']
+
+    implemented_properties = ["energy", "forces", "stress"]
     units = UnitRegistry()
     # these can be pre-calculated
-    to_ase_pressure = units('kiloatmosphere').to('electron_volt / angstrom**3').magnitude
+    to_ase_pressure = (
+        units("kiloatmosphere").to("electron_volt / angstrom**3").magnitude
+    )
 
-    def __init__(self, field: Optional[PathLike] = None, control:
-                 Optional[PathLike] = None, restart: Optional[bool] = None,
-                 ignore_bad_restart_file: bool = FileIOCalculator._deprecated,
-                 label: str = 'dlpoly', atoms: Optional[Atoms] = None,
-                 command: Optional[str] = None, profile: Optional[str] = "",
-                 numProcs: int = 1, **kwargs):
+    def __init__(
+        self,
+        field: Optional[PathLike] = None,
+        control: Optional[PathLike] = None,
+        restart: Optional[bool] = None,
+        ignore_bad_restart_file: bool = FileIOCalculator._deprecated,
+        label: str = "dlpoly",
+        atoms: Optional[Atoms] = None,
+        command: Optional[str] = None,
+        profile: Optional[str] = "",
+        numProcs: int = 1,
+        **kwargs
+    ):
+        """
+        Calculator using DLPoly for ASE.
 
-        FileIOCalculator.__init__(self, restart, ignore_bad_restart_file,
-                                  label, atoms, profile)
+        Parameters
+        ----------
+        field : Optional[PathLike]
+            Field file to load.
+        control : Optional[PathLike]
+            Control file to load.
+        restart : Optional[bool]
+            Whether this calculation is a restart of an old one.
+        ignore_bad_restart_file : bool
+            If restart fails, start a fresh run.
+        label : str
+            Calculator label.
+        atoms : Optional[Atoms]
+            ASE atomic structure.
+        command : Optional[str]
+            Command to run DLPoly.
+        profile : Optional[str]
+            Profiling command.
+        numProcs : int
+            Number of processes to use in parallel.
+        **kwargs
+            Extra options to pass to `DLPoly.__init__`.
+        """
+
+        FileIOCalculator.__init__(
+            self, restart, ignore_bad_restart_file, label, atoms, profile
+        )
 
         DLPoly.__init__(self, control=control, field=field, **kwargs)
 
@@ -40,23 +85,41 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
             self.command = command
             self.exe = command
 
-    def calculate(self, atoms: Optional[Atoms] = None,
-                  properties: Sequence[Literal['energy', 'forces', 'stress']] = ('energy',),
-                  system_changes: Sequence[str] = tuple(all_changes)):
+    def calculate(
+        self,
+        atoms: Optional[Atoms] = None,
+        properties: Sequence[Literal["energy", "forces", "stress"]] = ("energy",),
+        system_changes: Sequence[str] = tuple(all_changes),
+    ):
+        """
+        Perform an MD calculation using DLPoly.
+
+        Parameters
+        ----------
+        atoms : Optional[Atoms]
+            ASE atomic structure.
+        properties : Sequence[Literal['energy', 'forces', 'stress']]
+            Properties to calculate.
+        system_changes : Sequence[str]
+            Dummy argument for interface.
+        """
 
         if atoms is not None:
             if self.config is None:
                 # nb write does perform unit conversion
-                write(self.config_file, atoms, format='dlp4')
+                write(self.config_file, atoms, format="dlp4")
 
             self.run(numProcs=self.numProcs)
             self.load_statis()
 
             # nb read converts dlp units to ase in velocity and forces
-            atoms = read(self.control.io_file_revcon, format='dlp4')
+            atoms = read(self.control.io_file_revcon, format="dlp4")
 
-            self.results['energy'] = self.statis.data[-1, 5] * self.units(self.field.units).to('electron_volt')
-            self.results['forces'] = atoms.get_forces()
-            self.results['stress'] = full_3x3_to_voigt_6_stress(
-                self.statis.data[-1, 31:40].reshape((3, 3))
-            ) * self.to_ase_pressure
+            self.results["energy"] = self.statis.data[-1, 5] * self.units(
+                self.field.units
+            ).to("electron_volt")
+            self.results["forces"] = atoms.get_forces()
+            self.results["stress"] = (
+                full_3x3_to_voigt_6_stress(self.statis.data[-1, 31:40].reshape((3, 3)))
+                * self.to_ase_pressure
+            )
