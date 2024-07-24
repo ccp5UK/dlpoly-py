@@ -36,16 +36,26 @@ class DLPoly:
     OUTPUT_FILES = ("statis", "msd", "rdf", "correlations", "currents")
 
     def __init__(self, *,
-                 control: OptPath = None, config: OptPath = None,
-                 field: OptPath = None, statis: OptPath = None,
-                 output: OptPath = None, dest_config: OptPath = None,
-                 rdf: OptPath = None, msd: OptPath = None,
-                 correlations: OptPath = None, currents: OptPath = None,
-                 workdir: OptPath = None, default_name: str = "dlprun",
-                 exe: OptPath = None, vdw_file: OptPath = None,
-                 eam_file: OptPath = None, bnd_file: OptPath = None,
-                 ang_file: OptPath = None, dih_file: OptPath = None,
-                 inv_file: OptPath = None):
+                 control: OptPath = None,
+                 config: OptPath = None,
+                 field: OptPath = None,
+                 statis: OptPath = None,
+                 output: OptPath = None,
+                 dest_config: OptPath = None,
+                 rdf: OptPath = None,
+                 msd: OptPath = None,
+                 correlations: OptPath = None,
+                 currents: OptPath = None,
+                 workdir: OptPath = None,
+                 default_name: str = "dlprun",
+                 exe: OptPath = None,
+                 vdw_file: OptPath = None,
+                 eam_file: OptPath = None,
+                 bnd_file: OptPath = None,
+                 ang_file: OptPath = None,
+                 dih_file: OptPath = None,
+                 inv_file: OptPath = None,
+                 load_default: bool = True):
 
         # Default to having a control
         self.control = NewControl()
@@ -56,7 +66,8 @@ class DLPoly:
         self.exe = exe
         self.workdir = workdir
 
-        self.load_control(control)
+        if load_default or control is not None:
+            self.load_control(control)
 
         for (cls, source) in ((Config, config),
                               (Field, field),
@@ -71,7 +82,8 @@ class DLPoly:
                               (ANG, ang_file),
                               (DIH, dih_file),
                               (INV, inv_file)):
-            self.load_file(cls, source)
+            if load_default or source is not None:
+                self.load_file(cls, source)
 
         # Override output
         if output is not None:
