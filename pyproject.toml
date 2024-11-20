@@ -7,12 +7,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlpoly-py"
-description = 'dlpoly4 python module for file manipulation'
+description = "DLPoly python module for file manipulation."
 authors = [{name = "Alin M Elena", email = "alinm.elena@gmail.com"},
            {name = "Jacob Wilkins", email = "jacob.wilkins@stfc.ac.uk"}]
+requires-python = ">=3.9"
 readme = "README.rst"
 license = {text = "BSD-3-Clause"}
-dynamic = ["version"]
+keywords = ["dlpoly", "molecular dynamics"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
@@ -21,11 +22,14 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Chemistry",
 ]
+dynamic = ["version"]
 
 dependencies=[
     'numpy>=1.5.0',
     'matplotlib>=2.0.0',
     'ruamel.yaml',
+    'ase == 3.23.0',
+    'pint',
 ]
 
 
