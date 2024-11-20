@@ -20,8 +20,18 @@ class Currents:
         Original file read data from.
     is_yaml : bool
         Whether data are in YAML format.
-    data : Optional[np.typing.NDArray]
-        Data read from file.
+    density : Optional[np.typing.NDArray]
+        k-space density read from file.
+    longitudinal : Optional[np.typing.NDArray]
+        k-space longitudinal current read from file.
+    transverse : Optional[np.typing.NDArray]
+        k-space transverse current read from file.
+    energy_density : Optional[np.typing.NDArray]
+        k-space energy-density current
+    energy : Optional[np.typing.NDArray]
+        k-space energy current read from file.
+    stress : Optional[np.typing.NDArray]
+        k-dependent stress tensor
     atoms : Optional[List[str]]
         List of atoms from file.
     timesteps : Optional[np.typing.NDArray]
@@ -38,7 +48,12 @@ class Currents:
         """
         self.is_yaml = False
         self.source = source
-        self.data: Optional[np.typing.NDArray] = None
+        self.density: Optional[np.typing.NDArray] = None
+        self.longitudinal: Optional[np.typing.NDArray] = None
+        self.transverse: Optional[np.typing.NDArray] = None
+        self.energy: Optional[np.typing.NDArray] = None
+        self.energy_density: Optional[np.typing.NDArray] = None
+        self.stress: Optional[np.typing.NDArray] = None
         self.atoms: Optional[List[str]] = None
         self.timesteps: Optional[np.typing.NDArray] = None
 
@@ -82,32 +97,44 @@ class Currents:
         times = len(data['timesteps'])
 
         if times > 0:
-            atoms = list(data['timesteps'][0]['atoms'].keys())
+            atoms = list(data['timesteps'][0]['density'])
             natoms = len(atoms)
+            has_energy = "stress" in data['timesteps'][0]
 
             if natoms > 0:
-                kpoints = len(data['timesteps'][0]['atoms'][atoms[0]])
-                kpoints = kpoints // (2*3)
+                kpoints = len(data['timesteps'][0]['density'][atoms[0]])
+                kpoints = kpoints//2
 
-                self.data = np.zeros((times, natoms, kpoints, 3), dtype=complex)
+                self.density = np.zeros((times, natoms, kpoints), dtype=complex)
+                self.longitudinal = np.zeros((times, natoms, kpoints, 3), dtype=complex)
+                self.transverse = np.zeros((times, natoms, kpoints, 3), dtype=complex)
+                self.energy_density = np.zeros((times, natoms, kpoints, 3), dtype=complex)
+                if has_energy:
+                    self.energy = np.zeros((times, natoms, kpoints, 3), dtype=complex)
+                    self.stress = np.zeros((times, natoms, kpoints, 6), dtype=complex)
+
                 self.timesteps = np.zeros(times)
                 self.atoms = atoms
 
                 for timestep in range(times):
                     curr_data = data['timesteps'][timestep]
                     self.timesteps[timestep] = curr_data['time']
+                    density = curr_data['density']
+                    longitudinal = curr_data['longitudinal']
+                    transverse = curr_data['transverse']
+                    energy_density = curr_data['energy_density']
+                    if has_energy:
+                        stress = curr_data['stress']
+                        energy = curr_data['energy']
+
                     for ind, atom in enumerate(atoms):
-                        points = np.array(curr_data['atoms'][atom], dtype=float)
-                        rx = points[0:points.shape[0]:6]
-                        ix = points[1:points.shape[0]:6]
-                        ry = points[2:points.shape[0]:6]
-                        iy = points[3:points.shape[0]:6]
-                        rz = points[4:points.shape[0]:6]
-                        iz = points[5:points.shape[0]:6]
-                        for k in range(kpoints):
-                            self.data[timestep, ind, k, 0] = complex(rx[k], ix[k])
-                            self.data[timestep, ind, k, 1] = complex(ry[k], iy[k])
-                            self.data[timestep, ind, k, 2] = complex(rz[k], iz[k])
+                        self.density[timestep, ind, :] = _unpack_complex(density[atom], 1)
+                        self.longitudinal[timestep, ind, :, :] = _unpack_complex(longitudinal[atom], 3)
+                        self.transverse[timestep, ind, :, :] = _unpack_complex(transverse[atom], 3)
+                        self.energy_density[timestep, ind, :, :] = _unpack_complex(energy_density[atom], 3)
+                        if has_energy:
+                            self.energy[timestep, ind, :, :] = _unpack_complex(energy[atom], 3)
+                            self.stress[timestep, ind, :, :] = _unpack_complex(stress[atom], 6)
 
     def _read_plaintext(self, source: PathLike):
         """
@@ -127,50 +154,70 @@ class Currents:
         with open(source, "r", encoding="utf-8") as file:
             lines = [line.rstrip().replace(",", " ") for line in file]
 
-        timesteps = np.zeros(len(lines))
-        atoms = []
-        kpoints = 0
+        if len(lines) < 4:
+            return
 
-        for i, line in enumerate(lines):
-            data = line.split()
-            timesteps[i] = float(data[0])
-            atoms.append(data[1])
-            k = (len(data)-2)//(2*3)
-            if kpoints not in (0, k):
-                raise Exception(f"""Inconsistent number of kpoint values in currents file: {source}
-  at line {i}
-  {data}""")
-            kpoints = k
+        kpoints = len(lines[0].split())//2-1
 
-        self.timesteps = np.sort(np.unique(timesteps))
+        header = lines[0:min(5, len(lines))]
+        has_energy = header[-1].split()[1] == header[-2].split()[1]
 
-        # unique performs a sort, but we must preserve
-        #  the ordering of the file
+        unique_atoms = set()
+        for line in lines:
+            unique_atoms.add(line.split()[1])
+
+        natoms = len(unique_atoms)
+        entries = 6 if has_energy else 4
+        nsteps = (len(lines)//natoms)//entries
+
+        header = lines[0:entries*natoms]
         self.atoms = []
-        for atom in atoms:
-            if atom in self.atoms:
-                break
-            self.atoms.append(atom)
-
-        self.data = np.zeros((len(self.timesteps),
-                              len(self.atoms),
-                              kpoints,
-                              3), dtype=complex)
+        for i in range(0, len(header), entries):
+            self.atoms.append(header[i].split()[1])
 
         line_no = 0
-        if len(self.timesteps) > 0 and len(self.atoms) > 0:
-            for timestep in range(len(self.timesteps)):
-                for ind in range(len(self.atoms)):
-                    data = lines[line_no].split()
-                    points = np.array(data[2:len(data)]).astype(float)
-                    rx = points[0:points.shape[0]:6]
-                    ix = points[1:points.shape[0]:6]
-                    ry = points[2:points.shape[0]:6]
-                    iy = points[3:points.shape[0]:6]
-                    rz = points[4:points.shape[0]:6]
-                    iz = points[5:points.shape[0]:6]
-                    for k in range(kpoints):
-                        self.data[timestep, ind, k, 0] = complex(rx[k], ix[k])
-                        self.data[timestep, ind, k, 1] = complex(ry[k], iy[k])
-                        self.data[timestep, ind, k, 2] = complex(rz[k], iz[k])
-                    line_no += 1
+
+        self.density = np.zeros((nsteps, natoms, kpoints), dtype=complex)
+        self.longitudinal = np.zeros((nsteps, natoms, kpoints, 3), dtype=complex)
+        self.transverse = np.zeros((nsteps, natoms, kpoints, 3), dtype=complex)
+        self.energy_density = np.zeros((nsteps, natoms, kpoints, 3), dtype=complex)
+        self.timesteps = np.zeros(nsteps)
+        if has_energy:
+            self.energy = np.zeros((nsteps, natoms, kpoints, 3), dtype=complex)
+            self.stress = np.zeros((nsteps, natoms, kpoints, 6), dtype=complex)
+        for timestep in range(nsteps):
+            for ind in range(len(self.atoms)):
+                self.timesteps[timestep] = lines[line_no].split()[0]
+                data = [np.array(line.split()[2:]).astype(float) for line in lines[line_no:line_no+entries]]
+                self.density[timestep, ind, :] = _unpack_complex(data[0], 1)
+                self.longitudinal[timestep, ind, :, :] = _unpack_complex(data[1], 3)
+                self.transverse[timestep, ind, :, :] = _unpack_complex(data[2], 3)
+                self.energy_density[timestep, ind, :, :] = _unpack_complex(data[3], 3)
+                if has_energy:
+                    self.stress[timestep, ind, :, :] = _unpack_complex(data[4], 6)
+                    self.energy[timestep, ind, :, :] = _unpack_complex(data[5], 3)
+                line_no += entries
+
+
+def _unpack_complex(data: list[float], components: int = 1) -> np.typing.NDArray:
+    """
+    Unpack column major packed complex data.
+
+    Parameters
+    ----------
+    data : list[float]
+        Complex data in column major order
+
+    Returns
+    -------
+    np.typing.NDArray
+        Unpacked complex data
+    """
+    data = np.array(data)
+    if components == 1:
+        return data[0::2]+1j*data[1::2]
+    cdata = data[0::2]+1j*data[1::2]
+    unpacked = np.zeros((len(cdata)//components, components), dtype=complex)
+    for cmp in range(components):
+        unpacked[:, cmp] = cdata[cmp::components]
+    return unpacked
