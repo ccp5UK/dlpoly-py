@@ -1,12 +1,21 @@
 image: registry.gitlab.com/ccp5/dlpoly-py/dlpoly:5.2.0-pre-828bbf70
+cache:
+  paths:
+    - .pip-cache/
 
 before_script:
   - python3 -m venv py-ci && source ./py-ci/bin/activate
   - python --version
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install build twine
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
 
 stages:
   - test
   - static
+  - build
+  - publish
 
 flake8:
   stage: static
@@ -38,3 +47,21 @@ tests:
     - tox
 
   coverage: '/TOTAL.+ ([0-9]{1,3}%)/'
+
+build:
+  stage: build
+  script:
+    - python3 -m build
+  artifacts:
+    paths:
+      - dist/
+
+publish:
+  stage: publish
+  script:
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  rules:
+    - if: $CI_COMMIT_TAG
+
+
+  
