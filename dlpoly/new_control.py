@@ -74,7 +74,7 @@ class NewControl(DLPData):
             "correlation_blocks": (int, ...),
             "correlation_block_points": (int, ...),
             "correlation_window": (int, ...),
-            "correlation_update_frequency": (int, ..., str),
+            "correlation_update_frequency": (int, ...),
             "correlation_dump_frequency": (float, str),
             "traj_calculate": bool,
             "traj_key": str,
@@ -472,7 +472,8 @@ class NewControl(DLPData):
         # correlation_blocks and block_points can be singleton vectors
         is_correlation_option = key in ("correlation_blocks",
                                         "correlation_block_points",
-                                        "correlation_observable")
+                                        "correlation_observable",
+                                        "correlation_update_frequency")
 
         if not is_correlation_option and isinstance(vals[-1], str):
             lvals, unit = vals[:-1], vals[-1]
