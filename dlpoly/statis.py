@@ -165,9 +165,10 @@ class Statis:
             with open(filename, "r", encoding="utf-8") as in_file:
                 _, _, data = in_file.read().split("\n", 2)
                 self.data = np.array(data.split(), dtype=float)
-                columns = int(self.data[2])
-                rows = self.data.size // (columns + 3)
-                self.data.shape = rows, columns + 3
+                columns = int(self.data[2])+3
+                rows = self.data.size // (columns)
+                self.data = self.data[:rows*columns]
+                self.data.shape = rows, columns
                 self.data = np.delete(self.data, 2, axis=1)
 
         return self
