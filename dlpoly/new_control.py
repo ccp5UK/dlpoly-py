@@ -296,6 +296,9 @@ class NewControl(DLPData):
             "dftb_test": bool,
             "replay": bool,
             "replay_calculate_forces": bool,
+            "charge_smearing_method": str,
+            "charge_smearing_length": float,
+            "charge_smearing_beta": str,
         }, strict=True)
 
         self.io_file_output = "OUTPUT"
