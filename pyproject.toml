@@ -9,7 +9,8 @@ build-backend = "setuptools.build_meta"
 name = "dlpoly-py"
 description = "DLPoly python module for file manipulation."
 authors = [{name = "Alin M Elena", email = "alinm.elena@gmail.com"},
-           {name = "Jacob Wilkins", email = "jacob.wilkins@stfc.ac.uk"}]
+           {name = "Jacob Wilkins", email = "jacob.wilkins@stfc.ac.uk"},
+           {name = "Harvey Devereux", email = "h.devereux@qmul.ac.uk"}]
 requires-python = ">=3.9"
 readme = "README.rst"
 license = {text = "BSD-3-Clause"}
@@ -28,7 +29,7 @@ dependencies=[
     'numpy>=1.5.0',
     'matplotlib>=2.0.0',
     'ruamel.yaml',
-    'ase == 3.23.0',
+    'ase == 3.24.0',
     'pint',
 ]
 
