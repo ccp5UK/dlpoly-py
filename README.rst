@@ -144,6 +144,7 @@ authors
 
  - Alin M Elena, Daresbury Laboratory, UK
  - Jacob Wilkins, Rutherford Appleton Laboratory, UK
+ - Harvey Devereux, Queen Mary University Lodon, UK
 
 contact
 -------
