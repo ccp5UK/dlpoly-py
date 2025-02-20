@@ -57,3 +57,4 @@ msd_start  10 steps
 msd_frequency  5 steps
 shake_tolerance  1e-06 ang
 random_seed [1 2 3]
+momentum_density [O]
