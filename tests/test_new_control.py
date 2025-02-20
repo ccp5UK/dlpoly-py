@@ -65,6 +65,10 @@ class NewControlTest(unittest.TestCase):
         self.assertEqual(self.control.correlation_window, [1, 2, 3],
                          'incorrect correlation_window')
 
+    def test_momentum_density(self):
+        self.assertEqual(self.control.momentum_density, ['O'],
+                         'incorrect momentum density')
+
     def test_control_from_dict(self):
 
         test_dict = {
@@ -86,7 +90,8 @@ class NewControlTest(unittest.TestCase):
             'rescale_frequency': [3, 'steps'],
             'shake_tolerance': [0.000001, 'ang'],
             'correlation_observable': ['v-v', 's-s', 'heat_flux-heat_flux'],
-            'correlation_block_points': [5000, 5000, 5000]
+            'correlation_block_points': [5000, 5000, 5000],
+            'momentum_density': ['O']
             }
 
         cont = NewControl.from_dict(test_dict)

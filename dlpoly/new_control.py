@@ -114,7 +114,7 @@ class NewControl(DLPData):
             "currents_calculate": bool,
             "energy_stress_currents": bool,
             "heat_flux": bool,
-            "momentum_density": (str),
+            "momentum_density": (str, ...),
             "write_per_particle": bool,
             "elastic_constants": bool,
             "print_frequency": (float, str),
@@ -472,13 +472,14 @@ class NewControl(DLPData):
             Formatted `Control` variable.
         """
         lvals = None
-        # correlation_blocks and block_points can be singleton vectors
-        is_correlation_option = key in ("correlation_blocks",
-                                        "correlation_block_points",
-                                        "correlation_observable",
-                                        "correlation_update_frequency")
+        can_be_len_1 = key in ("correlation_observable",
+                               "correlation_blocks",
+                               "correlation_block_points",
+                               "correlation_window",
+                               "correlation_update_frequency",
+                               "momentum_density")
 
-        if not is_correlation_option and isinstance(vals[-1], str):
+        if not can_be_len_1 and isinstance(vals[-1], str):
             lvals, unit = vals[:-1], vals[-1]
         else:
             lvals, unit = vals, ""
@@ -488,7 +489,7 @@ class NewControl(DLPData):
 
         out = " ".join(map(str, lvals))
 
-        if len(lvals) > 1 or is_correlation_option:
+        if len(lvals) > 1 or can_be_len_1:
             out = f"[{out}]"
 
         return f"{out} {unit}"
