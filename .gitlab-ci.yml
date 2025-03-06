@@ -81,7 +81,7 @@ deploy2zenodo:
     DEPLOY2ZENODO_ADD_IsPartOf: "yes"
     DEPLOY2ZENODO_GET_METADATA: "result.json"
   before_script:
-    - apk add --no-cache git jq cffconvert
+    - apk add --no-cache git jq cffconvert curl
     - publication_date=$(echo "$CI_COMMIT_TIMESTAMP" | grep -Eo "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
     - |
       cffconvert -i CITATION.cff -f zenodo | \
