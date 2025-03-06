@@ -60,12 +60,22 @@ build:
       - dist/
 
 publish:
+  only:
+    - devel
+    - tags
+  stage: publish
+  script:
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  rules:
+
+deploy2zenodo:
+  only:
+    - tags
+    - devel
   image: alpine:latest
   stage: publish
-  rules:
-    - if: $CI_COMMIT_TAG
   variables:
-    DEPLOY2ZENODO_API_URL: "https://sandbox.zenodo.org/api"
+    DEPLOY2ZENODO_API_URL: "https://zenodo.org/api"
     DEPLOY2ZENODO_JSON: "CITATION.json"
     DEPLOY2ZENODO_DEPOSITION_ID: "create NEW record"
     DEPLOY2ZENODO_UPLOAD: "$CI_PROJECT_NAME-$CI_COMMIT_TAG.zip"
@@ -90,5 +100,3 @@ publish:
     paths:
       - $DEPLOY2ZENODO_JSON
       - $DEPLOY2ZENODO_GET_METADATA
-  script:
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
