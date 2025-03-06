@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+title: "dlpoly-py"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Elena
+    given-names: Alin
+  - family-names: Wilkins
+    given-names: Jacob
+  - family-names: Devereux
+    given-names: Harvey
+repository-code: 'https://gitlab.com/ccp5/dlpoly-py'
+abstract: DL_POLY python companion-package
+license: BSD-3-Clause
