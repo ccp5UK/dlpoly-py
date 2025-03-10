@@ -297,7 +297,7 @@ class NewControl(DLPData):
             "replay": bool,
             "replay_calculate_forces": bool,
             "charge_smearing_method": str,
-            "charge_smearing_length": float,
+            "charge_smearing_length": (float, str),
             "charge_smearing_beta": str,
         }, strict=True)
 
