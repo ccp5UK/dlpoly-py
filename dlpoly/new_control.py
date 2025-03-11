@@ -268,6 +268,7 @@ class NewControl(DLPData):
             "nfold": (int, int, int),
             "cutoff": (float, str),
             "padding": (float, str),
+            "coul_bjerrum_length": (float, str),
             "coul_damping": (float, str),
             "coul_dielectric_constant": float,
             "coul_extended_exclusion": bool,
