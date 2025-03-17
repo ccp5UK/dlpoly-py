@@ -14,8 +14,8 @@ rdf_calculate ON
 rdf_frequency  1 steps
 padding  0.125 ang
 cutoff  6.5 ang
-coul_method ewald
-ewald_precision 1e-06
+coul_method spme
+spme_precision 1e-06
 ensemble nvt
 ensemble_method hoover
 ensemble_thermostat_coupling  1.0 ps

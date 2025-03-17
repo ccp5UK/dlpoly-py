@@ -17,8 +17,8 @@ rdf_frequency  1 steps
 vdw_cutoff  7.4633 ang
 padding  0.05 ang
 cutoff  7.4633 ang
-coul_method ewald
-ewald_precision 1e-06
+coul_method spme
+spme_precision 1e-06
 ensemble pmf
 time_run  1000 steps
 time_equilibration  300 steps

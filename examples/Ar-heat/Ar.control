@@ -1,6 +1,6 @@
 title Ar 
 
-io_file_config Ar.control
+io_file_config Ar.config
 io_file_field Ar.field
 io_file_statis STATIS
 io_file_revive REVIVE
