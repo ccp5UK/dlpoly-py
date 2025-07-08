@@ -1,0 +1,11 @@
+A spectral neighbor analysis potential for Mo - Chi Chen (2019)
+units             ev
+molecular         types    1
+Molybdenum
+nummols           128
+atoms             1
+Mo                95.94    0.0   1
+finish
+kim_init          SNAP_ChenDengTran_2017_Mo__MO_698578166685_000
+kim_interactions  Mo
+close

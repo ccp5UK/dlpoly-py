@@ -10,6 +10,7 @@ DATA_PATH = Path(__file__).parent
 class FieldTest(unittest.TestCase):
     field = dlp.Field(DATA_PATH / "FIELD")
     field_ters = dlp.Field(DATA_PATH / "FIELD.ters")
+    field_kim = dlp.Field(DATA_PATH / "FIELD.KIM")
 
     def test_field_units(self):
         self.assertEqual(self.field.units, "kcal",
@@ -36,6 +37,15 @@ class FieldTest(unittest.TestCase):
                          'incorrect number of Tersoff cross potentials')
         self.assertEqual(self.field_ters.nKihss, 0,
                          'incorrect number of Tersoff KIHS potentials')
+
+    def test_field_kim(self):
+        self.assertEqual(self.field.kim_model, None)
+        self.assertEqual(self.field.kim_interactions, None)
+        self.assertEqual(self.field_ters.kim_model, None)
+        self.assertEqual(self.field_ters.kim_interactions, None)
+
+        self.assertEqual(self.field_kim.kim_model, 'SNAP_ChenDengTran_2017_Mo__MO_698578166685_000')
+        self.assertEqual(self.field_kim.kim_interactions, ['Mo'])
 
 
 if __name__ == '__main__':

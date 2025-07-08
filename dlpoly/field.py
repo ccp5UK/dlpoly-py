@@ -654,6 +654,8 @@ class Field(PotHaver):
     externs = _PotList()
     tersoffs = _PotList()
     tersoffcrosses = _PotList()
+    kim_model = None
+    kim_interactions = None
 
     nMolecules = _PotCount()
     nVdws = _PotCount()
@@ -714,6 +716,28 @@ class Field(PotHaver):
             args = field_file.readline().split()
             pot = Potential(pot_class, args)
             self.add_potential(pot.atoms, pot)
+
+    def _parse_kim(self, line: str):
+        """
+        Parse an OpenKIM key
+
+        Parameters
+        ----------
+        line : str
+            The OpenKIM line to parse.
+
+        Raises
+        ------
+        Exception
+            If line is not kim_init or kim_interactions.
+        """
+        key, value = line.split()
+        if key.lower() == "kim_init":
+            self.kim_model = value
+        elif key.lower() == "kim_interactions":
+            self.kim_interactions = value.split(" ")
+        else:
+            raise Exception(f"Malformed OpenKIM entry {line}. Only 'kim_init' or 'kim_interactions' are allowed.")
 
     def _read_tersoff(self, field_file: TextIO, n_pots: int):
         """
@@ -802,15 +826,21 @@ class Field(PotHaver):
                 key, self.units = units
             line = read_line(in_file)
             while line.lower() != "close":
-                key, *n_vals = line.lower().split()
-                n_vals = int(n_vals[-1]) if len(n_vals) else 1
-                if key.startswith("molecul"):
-                    for _ in range(n_vals):
-                        # Molecule sets its own count
-                        self.add_molecule(Molecule().read(in_file), 0)
+                if line.lower().startswith('kim'):
+                    self._parse_kim(line)
                 else:
-                    self._read_block(in_file, key, n_vals)
+                    key, *n_vals = line.lower().split()
+                    n_vals = int(n_vals[-1]) if len(n_vals) else 1
+                    if key.startswith("molecul"):
+                        for _ in range(n_vals):
+                            # Molecule sets its own count
+                            self.add_molecule(Molecule().read(in_file), 0)
+                    else:
+                        self._read_block(in_file, key, n_vals)
                 line = read_line(in_file)
+
+            if ((self.kim_model is not None) != (self.kim_interactions is not None)):
+                raise Exception('Either both kim_init and kim_interactions, or neither is valid.')
 
     def write(self, field_file: PathLike = "FIELD"):
         """
@@ -828,6 +858,10 @@ class Field(PotHaver):
 
             for molecule in self.molecules.values():
                 molecule.write(out_file)
+
+            if (self.kim_model is not None and self.kim_interactions is not None):
+                print(f"kim_init {self.kim_model}", file=out_file)
+                print(f"kim_interactions {' '.join(self.kim_interactions)}")
 
             for pot_class in self.activePots:
                 pots = list(self.get_pot_by_class(pot_class, quiet=True))
