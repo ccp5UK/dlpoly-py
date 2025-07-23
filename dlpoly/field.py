@@ -12,7 +12,7 @@ from .utility import batched, peek, read_line
 
 BondTypes = Literal["atoms", "bonds", "constraints",
                     "angles", "dihedrals", "inversions", "rigid"]
-PotentialTypes = Literal["extern", "vdw", "vdwtab", "metal", "rdf",
+PotentialTypes = Literal["dpd", "extern", "vdw", "vdwtab", "metal", "rdf",
                          "tbp", "fbp", "ters", "kihs", "ters-cross",
                          "teth", "shell", "pmf"]
 
@@ -138,7 +138,7 @@ class Potential(Interaction):
         Name of interaction type.
     """
     n_atoms = {"extern": 0, "vdw": 2, "vdwtab": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4,
-               "ters": 1, "ters-cross": 2, "kihs": 2}
+               "ters": 1, "ters-cross": 2, "kihs": 2, "dpd": 2}
 
     def __init__(self, pot_class: PotentialTypes, params: Sequence[float] = ()):
         """
