@@ -9,8 +9,8 @@ rdf_frequency  10.0 steps
 vdw_cutoff  7.0 ang
 padding  0.25 ang
 cutoff  7.0 ang
-coul_method ewald
-ewald_precision 1e-06
+coul_method spme
+spme_precision 1e-06
 ensemble nst
 ensemble_method hoover
 ensemble_thermostat_coupling  0.1 ps

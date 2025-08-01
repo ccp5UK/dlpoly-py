@@ -11,8 +11,8 @@ print_frequency  50 steps
 stats_frequency  10 steps
 padding  0.25 ang
 cutoff  10.1 ang
-coul_method ewald
-ewald_precision 1e-06
+coul_method spme
+spme_precision 1e-06
 ensemble nvt
 ensemble_method hoover
 ensemble_thermostat_coupling  0.1 ps

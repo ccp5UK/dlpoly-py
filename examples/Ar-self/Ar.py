@@ -7,9 +7,7 @@ from dlpoly.new_control import NewControl as Control
 from dlpoly.field import Field, Bond, Potential, Molecule
 from dlpoly.species import Species
 
-
-dlp = "/your/home/bin/DLPOLY.Z"
-#dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
+dlp = "/home/drFaustroll/lavello/build-dlp-jan/bin/DLPOLY.Z"
 
 a = bulk('Ar', 'fcc', a=4.0)*(8,8,8)
 write("Ar-fcc.config",a,format='dlp4')
@@ -47,7 +45,7 @@ m.n_atoms = 1
 m.species = {1: Species(name="Ar",index=1,mass=39.948000,charge=0.0,frozen=0,repeats=1)}
 fld.add_molecule(m)
 m.n_mols = len(a)
-fld.add_potential("Ar",Potential("vdw",['lj','Ar','Ar','0.9661', '3.405']))
+fld.add_potential("Ar",Potential("vdw",['Ar','Ar','lj','0.9661', '3.405']))
 fld.write("ar.field")
 
 dlpoly = DLPoly()
