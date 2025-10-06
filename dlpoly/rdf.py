@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 from .types import OptPath, PathLike
 
 
-class RDF():
+class RDF:
     """
     Class for reading RDFDAT.
 
@@ -29,6 +29,7 @@ class RDF():
     x : List[float]
         Radius of shell from origin.
     """
+
     __version__ = "0"
 
     def __init__(self, source: OptPath = None):
@@ -59,7 +60,7 @@ class RDF():
         source : PathLike
             File to read data from.
         """
-        with open(source, 'r', encoding='utf-8') as in_file:
+        with open(source, "r", encoding="utf-8") as in_file:
             test_word = in_file.readline().split()[0]
             self.is_yaml = test_word == "%YAML"
 
@@ -79,18 +80,18 @@ class RDF():
         """
         yaml_parser = YAML()
 
-        with open(source, 'rb') as in_file:
+        with open(source, "rb") as in_file:
             data = yaml_parser.load(in_file)
 
-        self.n_rdf = data['npairs']
-        self.n_points = data['ngrid']
-        self.x = np.array(data['grid'])
-        self.labels = [label['name'] for label in data['rdfs']]
+        self.n_rdf = data["npairs"]
+        self.n_points = data["ngrid"]
+        self.x = np.array(data["grid"])
+        self.labels = [label["name"] for label in data["rdfs"]]
         self.data = np.zeros((self.n_rdf, self.n_points, 2))
 
         for i in range(self.n_rdf):
-            self.data[i, :, 0] = data['rdfs'][i]['gofr']
-            self.data[i, :, 1] = data['rdfs'][i]['nofr']
+            self.data[i, :, 0] = data["rdfs"][i]["gofr"]
+            self.data[i, :, 1] = data["rdfs"][i]["nofr"]
 
     def _read_plaintext(self, source: PathLike):
         """
@@ -101,7 +102,7 @@ class RDF():
         source : PathLike
             File to read data from.
         """
-        with open(source, 'r', encoding='utf-8') as in_file:
+        with open(source, "r", encoding="utf-8") as in_file:
             # Discard title
             in_file.readline()
 

@@ -54,7 +54,7 @@ class System:
 
                 shape, *args = args
 
-                if shape in ("cubic",):
+                if shape in {"cubic"}:
                     spacing, *args = args
 
             elif keyword == "repeat":
@@ -118,8 +118,8 @@ class System:
 
         # Calculate current list of potential conflicts
         potentialConflicts = [atom for atom in self.config.atoms
-                              if any(atom.pos > config.bounds[0]-radius and
-                                     atom.pos < config.bounds[1]+radius)]
+                              if any(atom.pos > config.bounds[0] - radius and
+                                     atom.pos < config.bounds[1] + radius)]
 
         for constraintClass in ("bonds", "constraints", "rigid"):
             for pot in config.get_pot_by_class(constraintClass):
@@ -130,7 +130,7 @@ class System:
                 for trialAtom in potentialConflicts:
                     riPt = trialAtom.pos - atomi.pos
                     dot = np.dot(riPt, rij)
-                    if 0.0 < dot < modRijSq and np.dot(riPt, riPt) - dot**2/modRijSq < radiusSq:
+                    if 0.0 < dot < modRijSq and np.dot(riPt, riPt) - dot**2 / modRijSq < radiusSq:
                         # delete molecule!
                         self._del_config(trialAtom.molecule)
 
@@ -167,8 +167,7 @@ class System:
         for line in source:
             if line.lower() == "end potential":
                 break
-            line = parse_line(line)
-            potClass, nPots = line.split()
+            potClass, nPots = parse_line(line).split()
             nPots = int(nPots)
             self.field._read_block(source, potClass, nPots)
         else:
@@ -183,11 +182,10 @@ def build(source):
 
     """
     system = System()
-    for line in source:
-        line = parse_line(line).lower()
+    for line in map(parse_line, source):
         if not line:
             continue
-        key, *args = line.split()
+        key, *args = line.lower().split()
 
         if key == "structure":
             system.handle_structure(source)

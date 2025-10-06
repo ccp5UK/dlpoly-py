@@ -1,6 +1,6 @@
-'''
+"""
 Module to handle MSDTMP config files.
-'''
+"""
 
 from typing import Optional, Any, List
 import numpy as np
@@ -35,6 +35,7 @@ class MSD:
     species : Optional[np.typing.NDArray[Any]]
         Species enumeration.
     """
+
     def __init__(self, source: OptPath = None):
         """
         Instantiate class relating to MSD data.
@@ -47,7 +48,7 @@ class MSD:
         self.n_frames = 0
         self.n_atoms = 0
         self.latom: List[List[str]] = []
-        self.timestep = 0.
+        self.timestep = 0.0
         self.data: Optional[np.typing.NDArray[np.float64]] = None
         self.step: Optional[np.typing.NDArray[np.float64]] = None
         self.time: Optional[np.typing.NDArray[np.float64]] = None
@@ -116,7 +117,7 @@ class MSD:
                 frame_species = []
                 for j in range(self.n_atoms):
                     species, _, mean_sq, t = next(data_in)
-                    self.data[i, j, :] = float(mean_sq)**2, float(t)
+                    self.data[i, j, :] = float(mean_sq) ** 2, float(t)
                     frame_species.append(species)
                 self.latom.append(np.sort(frame_species))
         # nb now np.sort(np.unique()), as set() can have non-deterministic behaviour on

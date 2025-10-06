@@ -1,6 +1,6 @@
-'''
+"""
 Module to handle miscellaneous input files.
-'''
+"""
 
 from abc import ABC, abstractmethod
 
@@ -16,6 +16,7 @@ class Input(ABC):
     source
         File data originally read from.
     """
+
     def __init__(self, source: OptPath = None):
         """
         Instantiate tabulated potential input class.

@@ -13,7 +13,10 @@ from dlpoly.control import Control
 CONVERSIONS = {r"&s": "source", r"&n": "num"}
 CONV_HELP = str(", ".join([f"{orig} => {sub}" for orig, sub in CONVERSIONS.items()]))
 
-_PARSER = argparse.ArgumentParser(description='Convert from old-style DLPOLY script to new-style', add_help=True)
+_PARSER = argparse.ArgumentParser(
+    description='Convert from old-style DLPOLY script to new-style',
+    add_help=True
+)
 _PARSER.add_argument('sources', nargs="+", help="List of files to convert")
 _PARSER.add_argument('-o', '--output-format', default="&s.new",
                      help=f"Format of output filenames {CONV_HELP}. Default: %(default)s")

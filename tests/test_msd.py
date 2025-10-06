@@ -18,14 +18,17 @@ class MSDTest(unittest.TestCase):
         self.assertEqual(self.msd.n_frames, 3,
                          'incorrect number of frames')
         self.assertEqual(self.msd.n_species, 19)
-        self.assertIsNone(np.testing.assert_array_equal(self.msd.species, np.array(['C', 'C2', 'C3', 'CB',
-                                                                                    'CH', 'CK', 'CN', 'CQ',
-                                                                                    'CS', 'CZ', 'H', 'HK',
-                                                                                    'HO', 'HW', 'N', 'NA',
-                                                                                    'O', 'OH', 'OW'], dtype='<U2')))
+        self.assertIsNone(np.testing.assert_array_equal(self.msd.species, np.array(
+            ['C', 'C2', 'C3', 'CB',
+             'CH', 'CK', 'CN', 'CQ',
+             'CS', 'CZ', 'H', 'HK',
+             'HO', 'HW', 'N', 'NA',
+             'O', 'OH', 'OW'],
+            dtype='<U2')))
         self.assertEqual(self.msd.timestep, 0.00025)
         self.assertIsNone(np.testing.assert_array_equal(self.msd.step, np.array([10., 15., 20.])))
-        self.assertIsNone(np.testing.assert_array_equal(self.msd.time, np.array([0.003, 0.00425, 0.0055])))
+        self.assertIsNone(np.testing.assert_array_equal(self.msd.time,
+                                                        np.array([0.003, 0.00425, 0.0055])))
 
     def test_per_species(self):
         self.assertIsNone(np.testing.assert_allclose(self.msd.per_species()[-1, :, :],

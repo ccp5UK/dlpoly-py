@@ -41,11 +41,13 @@ class StoreDictKeyPair(arg.Action):
     Class to convert a=b into dictionary key-value pair.
     """
 
-    def __call__(self,
-                 parser: arg.ArgumentParser,
-                 namespace: arg.Namespace,
-                 values: Union[str, Sequence[Any], None],
-                 optionString: Optional[str] = None):
+    def __call__(
+        self,
+        parser: arg.ArgumentParser,
+        namespace: arg.Namespace,
+        values: Union[str, Sequence[Any], None],
+        optionString: Optional[str] = None,
+    ):
         """
         Take a=b and map to dict.
 
@@ -60,7 +62,7 @@ class StoreDictKeyPair(arg.Action):
         optionString : Optional[str]
             Extra options.
         """
-        new_dict = dict((key_val.split('=') for key_val in values.split(',')))
+        new_dict = dict((key_val.split("=") for key_val in values.split(",")))
         setattr(namespace, self.dest, new_dict)
 
 
@@ -76,9 +78,7 @@ _PARSER.add_argument("-C", "--config", help="Config file to load", type=str)
 _PARSER.add_argument(
     "-w", "--workdir", help="Work directory in which to run", type=str, default="myRun"
 )
-_PARSER.add_argument(
-    "-e", "--dlp", help="Name of DLP execuable to run", default="DLPOLY.Z"
-)
+_PARSER.add_argument("-e", "--dlp", help="Name of DLP execuable to run", default="DLPOLY.Z")
 
 
 def get_command_args() -> arg.Namespace:

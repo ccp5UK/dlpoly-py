@@ -26,12 +26,15 @@ class Statis:
     data : np.ndarray
         Raw parsed data array.
     """
+
     __version__ = "0.1"
 
-    def __init__(self,
-                 source: OptPath = None,
-                 control: Optional[Control] = None,
-                 config: Optional[Config] = None):
+    def __init__(
+        self,
+        source: OptPath = None,
+        control: Optional[Control] = None,
+        config: Optional[Config] = None,
+    ):
         """
         Instantiate class to parse and interpret STATIS file.
 
@@ -72,27 +75,24 @@ class Statis:
         NotImplementedError
             Bad type passed.
         """
-        raise NotImplementedError(
-            f"Unsupported get type ({type(val).__name__})"
-        )
+        raise NotImplementedError(f"Unsupported get type ({type(val).__name__})")
 
     # 1 indexed slicing
     @__getitem__.register(int)
     def _(self, val):
-        return self.data[:, val-1]
+        return self.data[:, val - 1]
 
     @__getitem__.register(slice)
     def _(self, val):
-        val = slice(val.start-1, val.stop-1, val.step)
+        val = slice(val.start - 1, val.stop - 1, val.step)
         return self.data[:, val]
 
     # Look up key
     @__getitem__.register(str)
     def _(self, val):
-        if pos := next((i
-                        for i, key in enumerate(self.labels)
-                        if val.lower() in key.lower()
-                        ), None):
+        if pos := next(
+            (i for i, key in enumerate(self.labels) if val.lower() in key.lower()), None
+        ):
             if val != self.labels[pos]:
                 print(self.labels[pos])
             return self.data[:, pos]
@@ -124,7 +124,7 @@ class Statis:
             Next label index.
         """
         row, col = divmod(len(self.labels), 5)
-        return row+1, col+1
+        return row + 1, col + 1
 
     def add_label(self, arg: str):
         """
@@ -165,17 +165,15 @@ class Statis:
             with open(filename, "r", encoding="utf-8") as in_file:
                 _, _, data = in_file.read().split("\n", 2)
                 self.data = np.array(data.split(), dtype=float)
-                columns = int(self.data[2])+3
+                columns = int(self.data[2]) + 3
                 rows = self.data.size // (columns)
-                self.data = self.data[:rows*columns]
+                self.data = self.data[: rows * columns]
                 self.data.shape = rows, columns
                 self.data = np.delete(self.data, 2, axis=1)
 
         return self
 
-    def gen_labels(self,
-                   control: Optional[Control] = None,
-                   config: Optional[Config] = None):
+    def gen_labels(self, control: Optional[Control] = None, config: Optional[Config] = None):
         """
         Generate labels for headers in STATIS file.
 
@@ -186,43 +184,45 @@ class Statis:
         config : Optional[Config]
             Config file relating to statis.
         """
-        self.labels = ["Total Extended System Energy",
-                       "System Temperature",
-                       "Configurational Energy",
-                       "Short Range Potential Energy",
-                       "Electrostatic Energy",
-                       "Chemical Bond Energy",
-                       "Valence Angle And 3-Body Potential Energy",
-                       "Dihedral, Inversion, And 4-Body Potential Energy",
-                       "Tethering Energy",
-                       "Enthalpy (Total Energy + Pv)",
-                       "Rotational Temperature",
-                       "Total Virial",
-                       "Short-Range Virial",
-                       "Electrostatic Virial",
-                       "Bond Virial",
-                       "Valence Angle And 3-Body Virial",
-                       "Constraint Bond Virial",
-                       "Tethering Virial",
-                       "Volume",
-                       "Core-Shell Temperature",
-                       "Core-Shell Potential Energy",
-                       "Core-Shell Virial",
-                       "Md Cell Angle Α",
-                       "Md Cell Angle Β",
-                       "Md Cell Angle Γ",
-                       "Pmf Constraint Virial",
-                       "Pressure",
-                       "External Degree Of Freedom",
-                       "stress xx",
-                       "stress xy",
-                       "stress xz",
-                       "stress yx",
-                       "stress yy",
-                       "stress yz",
-                       "stress zx",
-                       "stress zy",
-                       "stress zz"]
+        self.labels = [
+            "Total Extended System Energy",
+            "System Temperature",
+            "Configurational Energy",
+            "Short Range Potential Energy",
+            "Electrostatic Energy",
+            "Chemical Bond Energy",
+            "Valence Angle And 3-Body Potential Energy",
+            "Dihedral, Inversion, And 4-Body Potential Energy",
+            "Tethering Energy",
+            "Enthalpy (Total Energy + Pv)",
+            "Rotational Temperature",
+            "Total Virial",
+            "Short-Range Virial",
+            "Electrostatic Virial",
+            "Bond Virial",
+            "Valence Angle And 3-Body Virial",
+            "Constraint Bond Virial",
+            "Tethering Virial",
+            "Volume",
+            "Core-Shell Temperature",
+            "Core-Shell Potential Energy",
+            "Core-Shell Virial",
+            "Md Cell Angle Α",
+            "Md Cell Angle Β",
+            "Md Cell Angle Γ",
+            "Pmf Constraint Virial",
+            "Pressure",
+            "External Degree Of Freedom",
+            "stress xx",
+            "stress xy",
+            "stress xz",
+            "stress yx",
+            "stress yy",
+            "stress yz",
+            "stress zx",
+            "stress zy",
+            "stress zz",
+        ]
 
         if control:
             # Never true as yet
@@ -230,12 +230,11 @@ class Statis:
                 for i in range(config.natoms):
                     self.add_label("Mean Squared Displacement")
                     self.add_label("Velocity . Velocity")
-            if control.ensemble.ensemble in ("npt", "nst"):
+            if control.ensemble.ensemble in {"npt", "nst"}:
                 for i in range(9):
                     self.add_label("Cell Dimensions")
                     self.add_label("Instantaneous PV")
-                if any(key in control.ensemble.args
-                       for key in ("area", "tens", "semi", "orth")):
+                if any(key in control.ensemble.args for key in ("area", "tens", "semi", "orth")):
                     self.add_label("H_Z")
                     self.add_label("vol/h_z")
                     if any(key in control.ensemble.args for key in ("tens", "semi")):
@@ -243,7 +242,7 @@ class Statis:
                         self.add_label("gamma_y")
 
         # Catch Remainder
-        for i in range(len(self.labels)+1, self.columns+1):
+        for i in range(len(self.labels) + 1, self.columns + 1):
             self.add_label(f"col_{i:d}")
         self.labels = ["iter", "time"] + self.labels
 
@@ -255,17 +254,17 @@ class Statis:
 
         Note: If files already exist, they will be overwritten.
         """
-        for i in range(self.columns-3):
+        for i in range(self.columns - 3):
             with open(self.labels[i], "w", encoding="utf-8") as out_file:
                 for j in range(self.rows):
-                    out_file.write(f"{self.data[j, 1]} {self.data[j, i+3]}\n")
+                    out_file.write(f"{self.data[j, 1]} {self.data[j, i + 3]}\n")
 
     def __str__(self):
-        return (f"statis: {self.source} with {self.columns} columns: \n" +
-                ("\n".join(f"{i} {label}" for i, label in enumerate(self.labels, 1)))
-                )
+        return f"statis: {self.source} with {self.columns} columns: \n" + (
+            "\n".join(f"{i} {label}" for i, label in enumerate(self.labels, 1))
+        )
 
     def __repr__(self):
-        return (f"statis: {self.source} with {self.columns} columns: \n" +
-                (", ".join(f"{i} {label}" for i, label in enumerate(self.labels, 1)))
-                )
+        return f"statis: {self.source} with {self.columns} columns: \n" + (
+            ", ".join(f"{i} {label}" for i, label in enumerate(self.labels, 1))
+        )

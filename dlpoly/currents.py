@@ -1,6 +1,6 @@
-'''
+"""
 Module to handle CURRENTS files.
-'''
+"""
 
 from typing import Optional, List
 
@@ -37,6 +37,7 @@ class Currents:
     timesteps : Optional[np.typing.NDArray]
         Timestep samples in file.
     """
+
     def __init__(self, source: OptPath = None):
         """
         Instantiate class for reading Currents.
@@ -70,7 +71,7 @@ class Currents:
         source : PathLike
             File to read data from.
         """
-        with open(source, 'r', encoding='utf-8') as in_file:
+        with open(source, "r", encoding="utf-8") as in_file:
             test_word = in_file.readline().split()[0]
             self.is_yaml = test_word == "%YAML"
 
@@ -91,19 +92,19 @@ class Currents:
         self.source = source
         yaml_parser = YAML()
 
-        with open(source, 'rb') as in_file:
+        with open(source, "rb") as in_file:
             data = yaml_parser.load(in_file)
 
-        times = len(data['timesteps'])
+        times = len(data["timesteps"])
 
         if times > 0:
-            atoms = list(data['timesteps'][0]['density'])
+            atoms = list(data["timesteps"][0]["density"])
             natoms = len(atoms)
-            has_energy = "stress" in data['timesteps'][0]
+            has_energy = "stress" in data["timesteps"][0]
 
             if natoms > 0:
-                kpoints = len(data['timesteps'][0]['density'][atoms[0]])
-                kpoints = kpoints//2
+                kpoints = len(data["timesteps"][0]["density"][atoms[0]])
+                kpoints //= 2
 
                 self.density = np.zeros((times, natoms, kpoints), dtype=complex)
                 self.longitudinal = np.zeros((times, natoms, kpoints, 3), dtype=complex)
@@ -117,21 +118,25 @@ class Currents:
                 self.atoms = atoms
 
                 for timestep in range(times):
-                    curr_data = data['timesteps'][timestep]
-                    self.timesteps[timestep] = curr_data['time']
-                    density = curr_data['density']
-                    longitudinal = curr_data['longitudinal']
-                    transverse = curr_data['transverse']
-                    energy_density = curr_data['energy_density']
+                    curr_data = data["timesteps"][timestep]
+                    self.timesteps[timestep] = curr_data["time"]
+                    density = curr_data["density"]
+                    longitudinal = curr_data["longitudinal"]
+                    transverse = curr_data["transverse"]
+                    energy_density = curr_data["energy_density"]
                     if has_energy:
-                        stress = curr_data['stress']
-                        energy = curr_data['energy']
+                        stress = curr_data["stress"]
+                        energy = curr_data["energy"]
 
                     for ind, atom in enumerate(atoms):
                         self.density[timestep, ind, :] = _unpack_complex(density[atom], 1)
-                        self.longitudinal[timestep, ind, :, :] = _unpack_complex(longitudinal[atom], 3)
+                        self.longitudinal[timestep, ind, :, :] = _unpack_complex(
+                            longitudinal[atom], 3
+                        )
                         self.transverse[timestep, ind, :, :] = _unpack_complex(transverse[atom], 3)
-                        self.energy_density[timestep, ind, :, :] = _unpack_complex(energy_density[atom], 3)
+                        self.energy_density[timestep, ind, :, :] = _unpack_complex(
+                            energy_density[atom], 3
+                        )
                         if has_energy:
                             self.energy[timestep, ind, :, :] = _unpack_complex(energy[atom], 3)
                             self.stress[timestep, ind, :, :] = _unpack_complex(stress[atom], 6)
@@ -157,9 +162,9 @@ class Currents:
         if len(lines) < 4:
             return
 
-        kpoints = len(lines[0].split())//2-1
+        kpoints = len(lines[0].split()) // 2 - 1
 
-        header = lines[0:min(5, len(lines))]
+        header = lines[0 : min(5, len(lines))]
         has_energy = header[-1].split()[1] == header[-2].split()[1]
 
         unique_atoms = set()
@@ -168,9 +173,9 @@ class Currents:
 
         natoms = len(unique_atoms)
         entries = 6 if has_energy else 4
-        nsteps = (len(lines)//natoms)//entries
+        nsteps = (len(lines) // natoms) // entries
 
-        header = lines[0:entries*natoms]
+        header = lines[0 : entries * natoms]
         self.atoms = []
         for i in range(0, len(header), entries):
             self.atoms.append(header[i].split()[1])
@@ -188,7 +193,10 @@ class Currents:
         for timestep in range(nsteps):
             for ind in range(len(self.atoms)):
                 self.timesteps[timestep] = lines[line_no].split()[0]
-                data = [np.array(line.split()[2:]).astype(float) for line in lines[line_no:line_no+entries]]
+                data = [
+                    np.array(line.split()[2:]).astype(float)
+                    for line in lines[line_no : line_no + entries]
+                ]
                 self.density[timestep, ind, :] = _unpack_complex(data[0], 1)
                 self.longitudinal[timestep, ind, :, :] = _unpack_complex(data[1], 3)
                 self.transverse[timestep, ind, :, :] = _unpack_complex(data[2], 3)
@@ -215,9 +223,9 @@ def _unpack_complex(data: list[float], components: int = 1) -> np.typing.NDArray
     """
     data = np.array(data)
     if components == 1:
-        return data[0::2]+1j*data[1::2]
-    cdata = data[0::2]+1j*data[1::2]
-    unpacked = np.zeros((len(cdata)//components, components), dtype=complex)
+        return data[0::2] + 1j * data[1::2]
+    cdata = data[0::2] + 1j * data[1::2]
+    unpacked = np.zeros((len(cdata) // components, components), dtype=complex)
     for cmp in range(components):
         unpacked[:, cmp] = cdata[cmp::components]
     return unpacked

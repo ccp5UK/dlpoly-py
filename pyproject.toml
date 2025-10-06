@@ -11,7 +11,7 @@ description = "DLPoly python module for file manipulation."
 authors = [{name = "Alin M Elena", email = "alinm.elena@gmail.com"},
            {name = "Jacob Wilkins", email = "jacob.wilkins@stfc.ac.uk"},
            {name = "Harvey Devereux", email = "h.devereux@qmul.ac.uk"}]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.rst"
 license = {text = "BSD-3-Clause"}
 keywords = ["dlpoly", "molecular dynamics"]
@@ -48,7 +48,7 @@ docs = [
     'sphinx',
 ]
 lint = [
-    'flake8',
+    'ruff',
 ]
 all = ["dlpoly-py[test,docs,lint]"]
 
@@ -60,21 +60,13 @@ Repository = 'https://gitlab.com/drFaustroll/dlpoly-py'
 line_length = 100
 force_sort_within_sections = true
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
+profile = "black"
 
 [tool.pytest.ini_options]
 # Configuration for [pytest](https://docs.pytest.org)
 python_files = "test_*.py"
 addopts = '--cov-report xml'
 pythonpath = ["."]
-
-[tool.black]
-line-length = 100
-
-[tool.pylint.format]
-max-line-length = 100
-max-args = 10
-good-names = ["e", "i", "j", "k"]
-min-similarity-lines=9
 
 [tool.numpydoc_validation]
 # report on all checks, except the below
@@ -90,3 +82,62 @@ exclude = [  # don't report on objects that match any of these regex
     '\.__str__',
     '\._$',
 ]
+
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+# Allow unused variables when underscore-prefixed.
+preview = true
+select = [
+    "PL",  # Pylint
+    "E",   # Pycodestyle
+    "W",   # Pycodestyle warnings
+    "F",   # Pyflakes
+    # "B",   # Flake8 bugbear
+    # "SIM", # Flake8 Simplify
+    # "A",   # Flake8 builtins
+    # "COM", # Flake8 commas
+    # "ISC", # Flake8 implicit string concat
+    # "RSE", # Flake8 raise
+    # "FA",  # Flake8 future
+    # "FBT", # Flake8 boolean trap
+    # "C4",  # Flake8 comprehensions
+    # "Q",   # Flake8 Quotes
+    # "RET", # Flake8 return
+    # "ARG", # Flake8 unused args
+    # "PTH", # Flake8 use pathlib
+    # "YTT", # Flake8 2020
+    # "ANN", # Flake8 annotations
+    # "BLE", # Flake8 Blind except
+    # "C4",  # Flake8 comprehensions
+    # "T10", # Flake8 debugger statements
+    # "T20", # Flake8 Print
+    # "FIX", # Flake8 Fixme
+    # "LOG", # Flake8 Logging
+    # "G",   # Flake8 Logging format
+    # "PIE", # Flake8 Pie
+    # "I",   # Isort
+    # "PERF",# Perflint
+    # "RUF", # Ruff specific
+    # "FURB",# Refurb
+    # "PERF",# Perflint
+    # "D",   # Pydocstyle
+    # "DOC", # Pydoclint
+    # "UP",  # Pyupgrade
+]
+ignore = [
+    "PLR0912",  # Too many branches
+    "PLR0913",  # Too many arguments
+    "PLR0914",  # Too many locals
+    "PLR0915",  # Too many statements
+    "PLR0917",  # Too many positionals
+    "PLR0904",  # Too many public methods
+    "PLR2004",  # Magic constant
+]
+allowed-confusables = ["α", "β", "γ"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

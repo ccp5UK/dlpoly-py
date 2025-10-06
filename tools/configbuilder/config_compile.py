@@ -11,7 +11,7 @@ def main():
     """Run main config buider  """
     argList = get_command_args()
     for source in argList.sources:
-        with open(source, 'r') as sourceFile:
+        with open(source, encoding="utf-8") as sourceFile:
             system = build(sourceFile)
             system.config.write(argList.output.strip() + '.config')
             system.field.write(argList.output.strip() + '.field')

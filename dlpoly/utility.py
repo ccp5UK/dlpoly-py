@@ -1,9 +1,10 @@
-'''
+"""
 Module containing utility functions supporting the DLPoly Python Workflow.
-'''
+"""
 
 from abc import ABC
 from collections.abc import Iterable
+from functools import filterfalse
 import glob
 import itertools
 from pathlib import Path
@@ -16,7 +17,7 @@ import numpy as np
 
 from .types import OptPath, PathLike, ThreeByThree
 
-COMMENT_CHAR = '#'
+COMMENT_CHAR = "#"
 
 
 class DLPFile:
@@ -56,7 +57,7 @@ class DLPFile:
         if self.filename_var:
             name = self.filename_var
         else:
-            name = name.removesuffix('_file')
+            name = name.removesuffix("_file")
         self.attr = f"io_file_{name}"
 
     def __get__(self, obj, objtype=None) -> Union[Path, str]:
@@ -128,8 +129,7 @@ def next_file(filename: PathLike) -> str:
     files = glob.glob(f"{filename}*")
     if files:
         # Get last dir number
-        idx = (int(match.group(0)) for file in files
-               if (match := re.search('([0-9]+)$', file)))
+        idx = (int(match.group(0)) for file in files if (match := re.search("([0-9]+)$", file)))
 
         new_num = max(idx, default=1) + 1
 
@@ -161,24 +161,164 @@ def peek(iterable: Iterator[Any]) -> Union[None, Iterator[Any]]:
     return itertools.chain([first], iterable)
 
 
-def parse_line(line: str) -> str:
-    """
-    Handle comment chars and whitespace.
+def _strip_inline_comments(
+    data: Iterable[str],
+    *,
+    comment_char: set[str],
+) -> Iterator[str]:
+    r"""
+    Strip all comments from provided data.
 
     Parameters
     ----------
-    line : str
-        Line to parse.
+    data
+        Data to strip comments from.
+    comment_char
+        Characters to interpret as comments.
+
+    Yields
+    ------
+    str
+        Data with line-initial comments stripped.
+
+    Notes
+    -----
+    Also strips trailing, but not leading whitespace to clean up comment blocks.
+
+    Also strips empty lines.
+
+    Examples
+    --------
+    >>> from io import StringIO
+    >>> inp = StringIO('''
+    ... Hello
+    ... # Initial line comment
+    ... End of line # comment
+    ... ''')
+    >>> '|'.join(_strip_inline_comments(inp, comment_char={"#",}))
+    'Hello|End of line'
+    """
+    comment_re = re.compile(f"({'|'.join(comment_char)})")
+
+    for line in data:
+        new_line = comment_re.split(line, maxsplit=1)[0].rstrip()
+        if not new_line:
+            continue
+
+        yield new_line
+
+
+def _strip_initial_comments(
+    data: Iterable[str],
+    *,
+    comment_char: set[str],
+) -> Iterator[str]:
+    r"""
+    Strip line-initial comments from provided data.
+
+    Parameters
+    ----------
+    data
+        Data to strip comments from.
+    comment_char
+        Characters to interpret as comments.
+
+    Yields
+    ------
+    str
+        Data with line-initial comments stripped.
+
+    Notes
+    -----
+    Also strips trailing, but not leading whitespace to clean up comment blocks.
+
+    Also strips empty lines.
+
+    Examples
+    --------
+    >>> from io import StringIO
+    >>> inp = StringIO('''
+    ... Hello
+    ... # Initial line comment
+    ... End of line # comment
+    ... ''')
+    >>> '|'.join(_strip_initial_comments(inp, comment_char={"#",}))
+    'Hello|End of line # comment'
+    """
+    comment_re = re.compile(rf"^\s*({'|'.join(comment_char)})")
+    data = filterfalse(comment_re.match, data)
+    data = map(str.rstrip, data)
+    data = filter(None, data)
+    yield from data
+
+
+def strip_comments(
+    data: Iterable[str],
+    *,
+    comment_char: str | set[str] = "#!",
+    remove_inline: bool = True,
+) -> Iterator[str]:
+    r"""
+    Strip comments from data.
+
+    Parameters
+    ----------
+    data
+        Data to strip comments from.
+    remove_inline
+        Whether to remove inline comments or just line initial.
+    comment_char
+        Character sets to read as comments and remove.
+
+        .. note::
+
+            If the chars are passed as a string, it is assumed that
+            each character is a comment character.
+
+            To match a multicharacter comment you **must** pass this
+            as a set or sequence of strings.
 
     Returns
     -------
-    str
-        Line with comments and leading/trailing whitespace removed.
+    Iterable[str]
+        Block of data without comments.
+
+    Notes
+    -----
+    Also strips trailing, but not leading whitespace to clean up comment blocks.
+
+    Also strips empty lines.
+
+    Examples
+    --------
+    >>> from io import StringIO
+    >>> inp = StringIO('''
+    ... Hello
+    ... # Initial line comment
+    ... End of line # comment
+    ... // C-style
+    ... ''')
+    >>> x = strip_comments(inp, remove_inline=False)
+    >>> '|'.join(x)
+    'Hello|End of line # comment|// C-style'
+    >>> _ = inp.seek(0)
+    >>> x = strip_comments(inp, remove_inline=True)
+    >>> '|'.join(x)
+    'Hello|End of line|// C-style'
+    >>> _ = inp.seek(0)
+    >>> x = strip_comments(inp, comment_char={"//", "#"})
+    >>> '|'.join(x)
+    'Hello|End of line # comment'
     """
-    return line.split(COMMENT_CHAR)[0].strip()
+    if not isinstance(comment_char, set):
+        comment_char = set(comment_char)
+
+    strip_function = _strip_inline_comments if remove_inline else _strip_initial_comments
+
+    return strip_function(data, comment_char=comment_char)
 
 
-def read_line(in_file: TextIO) -> Optional[str]:
+def read_line(in_file: TextIO, *, comment_char: str | set[str] = COMMENT_CHAR) -> Optional[str]:
     """
     Read a line, stripping comments and blank lines.
 
@@ -194,8 +334,7 @@ def read_line(in_file: TextIO) -> Optional[str]:
         Returns `None` if file exhausted.
     """
 
-    for line in in_file:
-        line = parse_line(line)
+    for line in strip_comments(in_file, comment_char=comment_char):
         if line:
             return line
 
@@ -223,16 +362,15 @@ def batched(iterable: Iterator[Any], n: int) -> Iterator[Tuple[Any, ...]]:
     batched('ABCDEFG', 3) → ABC DEF G.
     """
     if n < 1:
-        raise ValueError('n must be at least one')
+        raise ValueError("n must be at least one")
     it = iter(iterable)
     while batch := tuple(itertools.islice(it, n)):
         yield batch
 
 
-def build_3d_rotation_matrix(alpha: float = 0.,
-                             beta: float = 0.,
-                             gamma: float = 0.,
-                             units: Literal["deg", "rad"] = "rad") -> ThreeByThree:
+def build_3d_rotation_matrix(
+    alpha: float = 0.0, beta: float = 0.0, gamma: float = 0.0, units: Literal["deg", "rad"] = "rad"
+) -> ThreeByThree:
     """
     Build a rotation matrix in degrees or radians.
 
@@ -256,9 +394,14 @@ def build_3d_rotation_matrix(alpha: float = 0.,
         alpha, beta, gamma = map(np.deg2rad, (alpha, beta, gamma))
     salp, sbet, sgam = map(np.sin, (alpha, beta, gamma))
     calp, cbet, cgam = map(np.cos, (alpha, beta, gamma))
-    matrix = np.asarray([[cbet*cgam, cgam*salp*sbet - calp*sgam, calp*cgam*sbet + salp*sgam],
-                         [cbet*sgam, calp*cgam+salp*sbet*sgam, calp*sbet*sgam-cgam*salp],
-                         [-1.*sbet, cbet*salp, calp*cbet]], dtype=float)
+    matrix = np.asarray(
+        [
+            [cbet * cgam, cgam * salp * sbet - calp * sgam, calp * cgam * sbet + salp * sgam],
+            [cbet * sgam, calp * cgam + salp * sbet * sgam, calp * sbet * sgam - cgam * salp],
+            [-1.0 * sbet, cbet * salp, calp * cbet],
+        ],
+        dtype=float,
+    )
     return matrix
 
 
@@ -294,8 +437,9 @@ class DLPData(ABC):
         self._strict = strict
 
     datatypes = property(lambda self: self._datatypes)
-    keys = property(lambda self: {key for key in self.datatypes
-                                  if key not in ("keysHandled", "_strict")})
+    keys = property(
+        lambda self: {key for key in self.datatypes if key not in {"keysHandled", "_strict"}}
+    )
     set_keys = property(lambda self: (key for key in self.keys if self.is_set(key)))
     className = property(lambda self: type(self).__name__)
 
@@ -338,7 +482,6 @@ class DLPData(ABC):
         Maps types to those defined in `datatypes` before assigning.
         """
         if key == "_datatypes":  # Protect datatypes
-
             if not hasattr(self, "_datatypes"):
                 self.__dict__[key] = {**val, "keysHandled": tuple, "_strict": bool}
             else:
@@ -474,10 +617,13 @@ class DLPData(ABC):
         datatype = self._datatypes[key]
         val: Any
 
-        if all((isinstance(vals, (tuple, list)),          # Given a list but datatype
+        if all(
+            (
+                isinstance(vals, (tuple, list)),  # Given a list but datatype
                 not isinstance(datatype, (tuple, bool)),  # is some scalar non-boolean
-                datatype is not tuple)):
-
+                datatype is not tuple,
+            )
+        ):
             if not vals:
                 pass
             elif len(vals) == 1:
@@ -491,8 +637,10 @@ class DLPData(ABC):
                         pass
                 else:
                     assert isinstance(datatype, type)
-                    raise TypeError(f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
-                                    f"for key {key} valid, must be castable to {datatype.__name__}")
+                    raise TypeError(
+                        f"No arg of {vals} ({[type(x).__name__ for x in vals]}) "
+                        f"for key {key} valid, must be castable to {datatype.__name__}"
+                    )
 
         if isinstance(datatype, tuple):
             if isinstance(vals, (int, float, str)):
@@ -505,27 +653,32 @@ class DLPData(ABC):
             try:
                 if ... in datatype:
                     loc = datatype.index(...)
-                    if loc != len(datatype)-1:
+                    if loc != len(datatype) - 1:
                         pre: Tuple[type, ...] = datatype[:loc]
-                        post: Tuple[type, ...] = datatype[loc+1:]
-                        ellided: itertools.repeat = itertools.repeat(datatype[loc-1], len(post) - loc)
+                        post: Tuple[type, ...] = datatype[loc + 1 :]
+                        ellided: itertools.repeat = itertools.repeat(
+                            datatype[loc - 1], len(post) - loc
+                        )
 
                         val_iter = iter(vals)
 
-                        transf = itertools.chain(zip(val_iter, pre),
-                                                 zip(val_iter, ellided),
-                                                 zip(val_iter, post))
+                        transf = itertools.chain(
+                            zip(val_iter, pre), zip(val_iter, ellided), zip(val_iter, post)
+                        )
                         val = [target_type(item) for item, target_type in transf]
                     else:
-                        pre, ellided = datatype[:loc], datatype[loc-1]
-                        val = ([target_type(item) for item, target_type in zip(vals[:loc], pre)] +
-                               [ellided(item) for item in vals[loc:]])
+                        pre, ellided = datatype[:loc], datatype[loc - 1]
+                        val = [target_type(item) for item, target_type in zip(vals[:loc], pre)] + [
+                            ellided(item) for item in vals[loc:]
+                        ]
 
                 else:
                     val = [target_type(item) for item, target_type in zip(vals, datatype)]
             except TypeError as err:
-                message = (f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
-                           f"must be castable to {[x.__name__ for x in datatype]}")
+                message = (
+                    f"Type of {vals} ({[type(x).__name__ for x in vals]}) not valid, "
+                    f"must be castable to {[x.__name__ for x in datatype]}"
+                )
 
                 if not self.strict:
                     print(message)
@@ -541,8 +694,10 @@ class DLPData(ABC):
             try:
                 val = datatype(vals)
             except TypeError as err:
-                message = (f"Type of {vals} ({type(vals).__name__}) not valid, "
-                           f"must be castable to {datatype.__name__}")
+                message = (
+                    f"Type of {vals} ({type(vals).__name__}) not valid, "
+                    f"must be castable to {datatype.__name__}"
+                )
 
                 if not self.strict:
                     print(err)
@@ -589,8 +744,9 @@ def is_mpi() -> bool:
         Whether MPI is available.
     """
     # Imported mpi4py
-    if 'mpi4py' in sys.modules:
-        from mpi4py import MPI
+    if "mpi4py" in sys.modules:
+        from mpi4py import MPI  # noqa: PLC0415
+
         return MPI.COMM_WORLD.Get_size() > 1
 
     return False

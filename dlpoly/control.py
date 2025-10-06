@@ -11,8 +11,19 @@ from .types import OptPath, PathLike
 from .utility import DLPData, check_arg
 
 EnsembleTypes = Literal["nve", "nvt", "npt", "nst"]
-MeansTypes = Literal["evans", "langevin", "andersen", "berendsen",
-                     "hoover", "gst", "ttm", "dpd", "mtk", None]
+MeansTypes = Literal[
+    "evans", "langevin", "andersen", "berendsen", "hoover", "gst", "ttm", "dpd", "mtk", None
+]
+COUL_TYPES = (
+    "off",
+    "ewald",
+    "spme",
+    "shift",
+    "dddp",
+    "pairwise",
+    "reaction_field",
+    "force_shifted",
+)
 
 
 class _FField(DLPData):
@@ -50,6 +61,7 @@ class _FField(DLPData):
     polar_t_hole : int
         Number of T Holes in polarisation.
     """
+
     def __init__(self, *_):
         """
         Instantiate class handling force-field parameters.
@@ -59,10 +71,25 @@ class _FField(DLPData):
         *_
            Ignore all parameters, construction only valid through `parse`.
         """
-        DLPData.__init__(self, {"rvdw": float, "rcut": float, "rpad": float, "rpadset": bool,
-                                "elec": bool, "elec_method": str, "metal": bool, "vdw": bool,
-                                "ewald_vdw": bool, "elec_params": tuple, "vdw_params": dict,
-                                "metal_style": str, "polar_method": str, "polar_t_hole": int})
+        DLPData.__init__(
+            self,
+            {
+                "rvdw": float,
+                "rcut": float,
+                "rpad": float,
+                "rpadset": bool,
+                "elec": bool,
+                "elec_method": str,
+                "metal": bool,
+                "vdw": bool,
+                "ewald_vdw": bool,
+                "elec_params": tuple,
+                "vdw_params": dict,
+                "metal_style": str,
+                "polar_method": str,
+                "polar_t_hole": int,
+            },
+        )
         self.elec = False
         self.elec_method = "coul"
         self.elec_params = ("",)
@@ -83,9 +110,27 @@ class _FField(DLPData):
         self.polar_method = ""
         self.polar_t_hole = 0
 
-    keysHandled = property(lambda self: ("reaction", "shift", "distance", "ewald", "spme",
-                                         "coulomb", "rpad", "delr", "padding", "cutoff", "rcut",
-                                         "cut", "rvdw", "metal", "vdw", "polar", "ewald_vdw"))
+    keysHandled = property(
+        lambda self: (
+            "reaction",
+            "shift",
+            "distance",
+            "ewald",
+            "spme",
+            "coulomb",
+            "rpad",
+            "delr",
+            "padding",
+            "cutoff",
+            "rcut",
+            "cut",
+            "rvdw",
+            "metal",
+            "vdw",
+            "polar",
+            "ewald_vdw",
+        )
+    )
 
     def parse(self, key: str, vals: Any):
         """
@@ -98,9 +143,15 @@ class _FField(DLPData):
         vals : Any
             Values associated with key.
         """
-        full_name = {"lore": "lorentz-bethelot", "fend": "fender-halsey", "hoge": "hogervorst",
-                     "halg": "halgren", "wald": "waldman-hagler", "tang": "tang-tonnies", "func":
-                     "functional"}
+        full_name = {
+            "lore": "lorentz-bethelot",
+            "fend": "fender-halsey",
+            "hoge": "hogervorst",
+            "halg": "halgren",
+            "wald": "waldman-hagler",
+            "tang": "tang-tonnies",
+            "func": "functional",
+        }
 
         if check_arg(key, "spme"):
             key = "ewald"
@@ -182,6 +233,7 @@ class _Ignore(DLPData):
     strict : bool
         Disable strict checks.
     """
+
     def __init__(self, *_):
         """
         Instantiate class handling properties that can be ignored/disabled.
@@ -191,9 +243,20 @@ class _Ignore(DLPData):
         *_
            Ignore all parameters, construction only valid through `parse`.
         """
-        DLPData.__init__(self, {"elec": bool, "ind": bool, "str": bool,
-                                "top": bool, "vdw": bool, "vafav": bool,
-                                "vom": bool, "link": bool, "strict": bool})
+        DLPData.__init__(
+            self,
+            {
+                "elec": bool,
+                "ind": bool,
+                "str": bool,
+                "top": bool,
+                "vdw": bool,
+                "vafav": bool,
+                "vom": bool,
+                "link": bool,
+                "strict": bool,
+            },
+        )
         self.elec = False
         self.ind = False
         self.str = False
@@ -244,6 +307,7 @@ class _Analysis(DLPData):
     inv : tuple[int, int]
         Analyse inversions.
     """
+
     def __init__(self, *_):
         """
         Instantiate class handling properties of analysis.
@@ -253,11 +317,16 @@ class _Analysis(DLPData):
         *_
            Ignore all parameters, construction only valid through `parse`.
         """
-        DLPData.__init__(self, {"all": (int, int, float),
-                                "bon": (int, int, float),
-                                "ang": (int, int),
-                                "dih": (int, int),
-                                "inv": (int, int)})
+        DLPData.__init__(
+            self,
+            {
+                "all": (int, int, float),
+                "bon": (int, int, float),
+                "ang": (int, int),
+                "dih": (int, int),
+                "inv": (int, int),
+            },
+        )
         self.all = (0, 0, 0)
         self.bon = (0, 0)
         self.ang = (0, 0)
@@ -278,17 +347,17 @@ class _Analysis(DLPData):
         self[args[0]] = args[1:]
 
     # def __str__(self):
-        # if any(self.all > 0):
-        #     return "analyse all every {} nbins {} rmax {}".format(*self.all)
+    # if any(self.all > 0):
+    #     return "analyse all every {} nbins {} rmax {}".format(*self.all)
 
-        # outstr = ""
-        # for analtype in ("bonds", "angles", "dihedrals", "inversions"):
-        #     freq, nbins, rmax = getattr(self, analtype)
-        #     if any(args > 0):
-        #         outstr += f"analyse {analtype} every {freq} nbins {nbins} rmax {rmax}\n"
-        # else
-        #                    "analyse {} every {} nbind {}\n".format(analtype, *args))
-        # return outstr
+    # outstr = ""
+    # for analtype in ("bonds", "angles", "dihedrals", "inversions"):
+    #     freq, nbins, rmax = getattr(self, analtype)
+    #     if any(args > 0):
+    #         outstr += f"analyse {analtype} every {freq} nbins {nbins} rmax {rmax}\n"
+    # else
+    #                    "analyse {} every {} nbind {}\n".format(analtype, *args))
+    # return outstr
 
 
 class _Print(DLPData):
@@ -332,6 +401,7 @@ class _Print(DLPData):
     zdenprint : bool
        Whether to write ZDEN file.
     """
+
     def __init__(self, *_):
         """
         Instantiate class handling properties of that can be printed.
@@ -341,11 +411,26 @@ class _Print(DLPData):
         *_
            Ignore all parameters, construction only valid through `parse`.
         """
-        DLPData.__init__(self, {"rdf": bool, "analysis": bool, "analysisprint": bool,
-                                "analysis_object": _Analysis, "printevery": int,
-                                "vaf": bool, "zden": bool, "rdfevery": int, "vafevery": int,
-                                "vafbin": int, "statsevery": int, "zdenevery": int,
-                                "rdfprint": bool, "zdenprint": bool, "vafprint": bool})
+        DLPData.__init__(
+            self,
+            {
+                "rdf": bool,
+                "analysis": bool,
+                "analysisprint": bool,
+                "analysis_object": _Analysis,
+                "printevery": int,
+                "vaf": bool,
+                "zden": bool,
+                "rdfevery": int,
+                "vafevery": int,
+                "vafbin": int,
+                "statsevery": int,
+                "zdenevery": int,
+                "rdfprint": bool,
+                "zdenprint": bool,
+                "vafprint": bool,
+            },
+        )
 
         self.analysis_object = _Analysis()
         self.rdf = False
@@ -383,17 +468,17 @@ class _Print(DLPData):
             if args[0].isdigit():
                 self.printevery = args[0]
             else:
-                setattr(self, args[0]+"print", True)
+                setattr(self, args[0] + "print", True)
                 setattr(self, args[0], True)
-                if hasattr(self, args[0]+"every"):
-                    if not getattr(self, args[0]+"every") > 0:
-                        setattr(self, args[0]+"every", 1)
+                if hasattr(self, args[0] + "every"):
+                    if not getattr(self, args[0] + "every") > 0:
+                        setattr(self, args[0] + "every", 1)
         elif check_arg(key, "stats"):
             self.statsevery = args[0]
         elif check_arg(key, "rdf", "zden"):
             active = check_arg(key, "rdf", "zden")
             setattr(self, active, True)
-            setattr(self, active+"every", args[0])
+            setattr(self, active + "every", args[0])
         elif check_arg(key, "ana"):
             self.analysis_object.parse(args)
         elif check_arg(key, "vaf"):
@@ -410,7 +495,7 @@ class _Print(DLPData):
             out_str += "print analysis\n"
             out_str += str(self.analysis_object)
         for item in ("rdf", "vaf", "zden"):
-            to_print, freq = getattr(self, item), getattr(self, item+"every")
+            to_print, freq = getattr(self, item), getattr(self, item + "every")
             if to_print and freq:
                 out_str += f"print {item}\n"
                 out_str += f"{item}  {freq}\n"
@@ -455,10 +540,30 @@ class _IOParam(DLPData):
         Parse a handled key into object parameters.
     """
 
-    dlp_files = property(lambda self: {"control", "field", "config", "statis", "output", "history",
-                                       "historf", "revive", "revcon", "revold", "rdf", "msd",
-                                       "tabvdw", "tabbnd", "tabang", "tabdih", "tabinv",
-                                       "tabeam", "cor", "currents"})
+    dlp_files = property(
+        lambda self: {
+            "control",
+            "field",
+            "config",
+            "statis",
+            "output",
+            "history",
+            "historf",
+            "revive",
+            "revcon",
+            "revold",
+            "rdf",
+            "msd",
+            "tabvdw",
+            "tabbnd",
+            "tabang",
+            "tabdih",
+            "tabinv",
+            "tabeam",
+            "cor",
+            "currents",
+        }
+    )
 
     def __init__(self, **files_in: PathLike):
         """
@@ -472,7 +577,7 @@ class _IOParam(DLPData):
 
         DLPData.__init__(self, {file_type: str for file_type in self.dlp_files})
 
-        control_defined = 'control' in files_in and files_in['control']
+        control_defined = "control" in files_in and files_in["control"]
 
         # Set defaults
         for file in self.dlp_files:
@@ -480,24 +585,22 @@ class _IOParam(DLPData):
 
         # Get control's path
         if control_defined:
-            control = files_in['control']
+            control = files_in["control"]
 
             true_control_path = Path(control).absolute().parent
 
             # Make other paths relative to control (i.e. load them correctly)
             # files = self.dlp_files - {"control"}
 
-            files_in = {file: true_control_path / files_in[file]
-                        for file in self.dlp_files}
+            files_in = {file: true_control_path / files_in[file] for file in self.dlp_files}
 
-        for file in ('control', 'field', 'config', 'statis',
-                     'output', 'revive', 'revcon'):
+        for file in ("control", "field", "config", "statis", "output", "revive", "revcon"):
             setattr(self, file, files_in[file])
 
-        for file in ('history', 'historf', 'revold', 'rdf', 'msd', 'cor', 'currents'):
+        for file in ("history", "historf", "revold", "rdf", "msd", "cor", "currents"):
             setattr(self, file, "")
 
-        for file in ('tabvdw', 'tabbnd', 'tabang', 'tabdih', 'tabinv', 'tabeam'):
+        for file in ("tabvdw", "tabbnd", "tabang", "tabdih", "tabinv", "tabeam"):
             curr = files_in[file]
             setattr(self, file, curr if Path(curr).is_file() else "")
 
@@ -517,9 +620,11 @@ class _IOParam(DLPData):
         setattr(self, args[0], args[1])
 
     def __str__(self):
-        out = '\n'.join(f"io {file} {file_name}"
-                        for file in self.dlp_files
-                        if (file_name := getattr(self, file)))
+        out = "\n".join(
+            f"io {file} {file_name}"
+            for file in self.dlp_files
+            if (file_name := getattr(self, file))
+        )
         return out
 
 
@@ -556,22 +661,44 @@ class _EnsembleParam:
     semi : bool
         Semi-isotropic ensemble constraints.
     """
-    validMeans = {"nve": (None,), "pmf": (None,),
-                  "nvt": ("evans", "langevin", "andersen", "berendsen",
-                          "hoover", "gst", "ttm", "dpd"),
-                  "npt": ("langevin", "berendsen", "hoover", "mtk"),
-                  "nst": ("langevin", "berendsen", "hoover", "mtk")}
-    meansArgs = {("nve", None): 0, ("pmf", None): 0,
-                 ("nvt", "evans"): 0, ("nvt", "langevin"): 1, ("nvt", "andersen"): 2,
-                 ("nvt", "berendsen"): 1, ("nvt", "berendsen"): 1,
-                 ("nvt", "hoover"): (1, 2), ("nvt", "gst"): 2,
-                 ("npt", "langevin"): 2, ("npt", "berendsen"): 2, ("npt", "berendsen"): 2,
-                 ("npt", "hoover"): 2, ("npt", "mtk"): 2,
-                 ("nst", "langevin"): range(2, 6), ("nst", "berendsen"): range(2, 6),
-                 ("nst", "hoover"): range(2, 6), ("nst", "mtk"): range(2, 6)}
 
-    full_name = {"lang": "langevin", "ander": "andersen", "ber": "berendsen", "hoover": "hoover",
-                 "inhomo": "ttm", "ttm": "ttm", "mtk": "mtk", "dpd": "dpd", "gst": "gst"}
+    validMeans = {
+        "nve": (None,),
+        "pmf": (None,),
+        "nvt": ("evans", "langevin", "andersen", "berendsen", "hoover", "gst", "ttm", "dpd"),
+        "npt": ("langevin", "berendsen", "hoover", "mtk"),
+        "nst": ("langevin", "berendsen", "hoover", "mtk"),
+    }
+    meansArgs = {
+        ("nve", None): 0,
+        ("pmf", None): 0,
+        ("nvt", "evans"): 0,
+        ("nvt", "langevin"): 1,
+        ("nvt", "andersen"): 2,
+        ("nvt", "berendsen"): 1,
+        ("nvt", "hoover"): (1, 2),
+        ("nvt", "gst"): 2,
+        ("npt", "langevin"): 2,
+        ("npt", "berendsen"): 2,
+        ("npt", "hoover"): 2,
+        ("npt", "mtk"): 2,
+        ("nst", "langevin"): range(2, 6),
+        ("nst", "berendsen"): range(2, 6),
+        ("nst", "hoover"): range(2, 6),
+        ("nst", "mtk"): range(2, 6),
+    }
+
+    full_name = {
+        "lang": "langevin",
+        "ander": "andersen",
+        "ber": "berendsen",
+        "hoover": "hoover",
+        "inhomo": "ttm",
+        "ttm": "ttm",
+        "mtk": "mtk",
+        "dpd": "dpd",
+        "gst": "gst",
+    }
 
     keysHandled = property(lambda self: ("ensemble",))
 
@@ -584,12 +711,12 @@ class _EnsembleParam:
         *argsIn : Tuple[str, ...]
             Split DLPoly old-style ``ensemble`` line.
         """
-        if not argsIn:          # Default to NVE because why not?
-            argsIn = ("nve")
+        if not argsIn:  # Default to NVE because why not?
+            argsIn = "nve"
         args = list(argsIn)[:]  # Make copy
         self._ensemble = args.pop(0)
         self._means = None
-        if self.ensemble not in ("nve", "pmf"):
+        if self.ensemble not in {"nve", "pmf"}:
             trial = args.pop(0)
             test = check_arg(trial, *self.full_name)
             self.means = self.full_name.get(test, trial)
@@ -608,7 +735,7 @@ class _EnsembleParam:
                 self.orth = True
             if check_arg(arg, "tens"):
                 self.tens = True
-                self.tension = self.args[index+1]
+                self.tension = self.args[index + 1]
             if check_arg(arg, "semi"):
                 self.semi = True
 
@@ -635,8 +762,10 @@ class _EnsembleParam:
             If ensemble not in allowed ensembles.
         """
         if ensemble not in _EnsembleParam.validMeans:
-            raise ValueError(f"Cannot set ensemble to be {ensemble}. "
-                             f"Valid ensembles {', '.join(_EnsembleParam.validMeans.keys())}.")
+            raise ValueError(
+                f"Cannot set ensemble to be {ensemble}. "
+                f"Valid ensembles {', '.join(_EnsembleParam.validMeans.keys())}."
+            )
         self._means = None
         self.args = []
         self._ensemble = ensemble
@@ -649,23 +778,25 @@ class _EnsembleParam:
     @means.setter
     def means(self, means: MeansTypes):
         if means not in _EnsembleParam.validMeans[self.ensemble]:
-            raise ValueError(f"Cannot set means to be {means}. "
-                             f"Valid means {', '.join(map(str, _EnsembleParam.validMeans[self.ensemble]))}.")
+            raise ValueError(
+                f"Cannot set means to be {means}. "
+                f"Valid means {', '.join(map(str, _EnsembleParam.validMeans[self.ensemble]))}."
+            )
         self.args = []
         self._means = means
 
     def __str__(self):
         expect = _EnsembleParam.meansArgs[(self.ensemble, self.means)]
         received = len(self.args)
-        if ((isinstance(expect, (range, tuple)) and received not in expect) or
-                (isinstance(expect, int) and received != expect)):
-            raise IndexError(f"Wrong number of args in ensemble {self.ensemble} {self.means}. "
-                             f"Expected {expect}, received {received}.")
+        if (isinstance(expect, (range, tuple)) and received not in expect) or (
+            isinstance(expect, int) and received != expect
+        ):
+            raise IndexError(
+                f"Wrong number of args in ensemble {self.ensemble} {self.means}. "
+                f"Expected {expect}, received {received}."
+            )
 
-        return " ".join((self.ensemble,
-                         self.means if self.means else '',
-                         *map(str, self.args))
-                        )
+        return " ".join((self.ensemble, self.means if self.means else "", *map(str, self.args)))
 
 
 class _TimingParam(DLPData):
@@ -686,6 +817,7 @@ class _TimingParam(DLPData):
     collect : bool
     dump : int
     """
+
     def __init__(self, **kwargs):
         """
         Instantiate class for handling parameters related to time.
@@ -696,9 +828,22 @@ class _TimingParam(DLPData):
             Params to initialise defaults from.
         """
 
-        DLPData.__init__(self, {"close": float, "steps": int, "equil": int, "timestep": float,
-                                "variable": bool, "maxdis": float, "mindis": float, "mxstep": float,
-                                "job": float, "collect": bool, "dump": int})
+        DLPData.__init__(
+            self,
+            {
+                "close": float,
+                "steps": int,
+                "equil": int,
+                "timestep": float,
+                "variable": bool,
+                "maxdis": float,
+                "mindis": float,
+                "mxstep": float,
+                "job": float,
+                "collect": bool,
+                "dump": int,
+            },
+        )
         self.close = 0
         self.steps = 0
         self.equil = 0
@@ -714,8 +859,21 @@ class _TimingParam(DLPData):
         for key, val in kwargs.items():
             self.parse(key, val)
 
-    keysHandled = property(lambda self: ("close", "steps", "equil", "timestep", "variable",
-                                         "maxdis", "mindis", "mxstep", "job", "collect", "dump"))
+    keysHandled = property(
+        lambda self: (
+            "close",
+            "steps",
+            "equil",
+            "timestep",
+            "variable",
+            "maxdis",
+            "mindis",
+            "mxstep",
+            "job",
+            "collect",
+            "dump",
+        )
+    )
 
     def parse(self, key: str, args: Union[Any, Sequence[Any]]):
         """
@@ -728,16 +886,9 @@ class _TimingParam(DLPData):
         args : Union[Any, Sequence[Any]]
             Values associated with key.
         """
-        if check_arg(key,
-                     "close",
-                     "steps",
-                     "equil",
-                     "maxdis",
-                     "mindis",
-                     "mxstep",
-                     "job",
-                     "collect",
-                     "dump"):
+        if check_arg(
+            key, "close", "steps", "equil", "maxdis", "mindis", "mxstep", "job", "collect", "dump"
+        ):
             setattr(self, key, args)
         if check_arg(key, "timestep", "variable"):
             if isinstance(args, (list, tuple)):
@@ -747,7 +898,7 @@ class _TimingParam(DLPData):
             else:
                 word1 = ""
 
-            if (key, word1) in (("timestep", "variable"), ("variable", "timestep")):
+            if (key, word1) in {("timestep", "variable"), ("variable", "timestep")}:
                 self.variable = True
                 self.timestep = args
             elif key == "variable":
@@ -783,29 +934,73 @@ class Control(DLPData):
         source : OptPath
             File to read data from.
         """
-        DLPData.__init__(self, {"l_scr": bool, "l_print": int, "l_eng": bool, "l_rout": bool,
-                                "l_rin": bool, "l_tor": bool, "l_dis": int, "unit_test": bool,
-                                "l_vdw": bool, "l_fast": bool, "ana": _Analysis,
-                                "app_test": bool, "currents": bool,
-                                "binsize": float, "cap": float,
-                                "densvar": float, "eps": float, "exclu": bool,
-                                "heat_flux": bool, "rdf": int,
-                                "coord": (int, int, int), "adf": (int, float),
-                                "zden": int, "vaf": bool,
-                                "mult": int, "mxshak": int, "pres": (float, ...),
-                                "regaus": int, "replay": str, "restart": str, "quaternion": float,
-                                "rlxtol": float, "scale": int, "slab": bool, "shake": float,
-                                "stack": int, "temp": float, "yml_statis": bool, "yml_rdf": bool,
-                                "title": str, "zero": str, "timing": _TimingParam,
-                                "print": _Print, "ffield": _FField, "ensemble": _EnsembleParam,
-                                "ignore": _Ignore, "io": _IOParam, "subcell": float,
-                                "impact": (int, int, float, float, float, float),
-                                "minim": (str, int, float, ...), "msdtmp": (int, int),
-                                "nfold": (int, int, int), "optim": (str, float),
-                                "pseudo": (str, float, float), "seed": (int, ...),
-                                "time_depth": int, "time_per_mpi": bool, "dftb_driver": bool,
-                                "disp": (int, int, float), "traj": (int, int, int),
-                                "defe": (int, int, float, str), "evb": int})
+        DLPData.__init__(
+            self,
+            {
+                "l_scr": bool,
+                "l_print": int,
+                "l_eng": bool,
+                "l_rout": bool,
+                "l_rin": bool,
+                "l_tor": bool,
+                "l_dis": int,
+                "unit_test": bool,
+                "l_vdw": bool,
+                "l_fast": bool,
+                "ana": _Analysis,
+                "app_test": bool,
+                "currents": bool,
+                "binsize": float,
+                "cap": float,
+                "densvar": float,
+                "eps": float,
+                "exclu": bool,
+                "heat_flux": bool,
+                "rdf": int,
+                "coord": (int, int, int),
+                "adf": (int, float),
+                "zden": int,
+                "vaf": bool,
+                "mult": int,
+                "mxshak": int,
+                "pres": (float, ...),
+                "regaus": int,
+                "replay": str,
+                "restart": str,
+                "quaternion": float,
+                "rlxtol": float,
+                "scale": int,
+                "slab": bool,
+                "shake": float,
+                "stack": int,
+                "temp": float,
+                "yml_statis": bool,
+                "yml_rdf": bool,
+                "title": str,
+                "zero": str,
+                "timing": _TimingParam,
+                "print": _Print,
+                "ffield": _FField,
+                "ensemble": _EnsembleParam,
+                "ignore": _Ignore,
+                "io": _IOParam,
+                "subcell": float,
+                "impact": (int, int, float, float, float, float),
+                "minim": (str, int, float, ...),
+                "msdtmp": (int, int),
+                "nfold": (int, int, int),
+                "optim": (str, float),
+                "pseudo": (str, float, float),
+                "seed": (int, ...),
+                "time_depth": int,
+                "time_per_mpi": bool,
+                "dftb_driver": bool,
+                "disp": (int, int, float),
+                "traj": (int, int, int),
+                "defe": (int, int, float, str),
+                "evb": int,
+            },
+        )
 
         self.temp = 300.0
         self.title = "no title"
@@ -822,11 +1017,7 @@ class Control(DLPData):
         self.ffield = _FField()
         self.ensemble = _EnsembleParam("nve")
         self.ana = _Analysis()
-        self.timing = _TimingParam(collect=False,
-                                   steps=0,
-                                   equil=0,
-                                   variable=False,
-                                   timestep=0.001)
+        self.timing = _TimingParam(collect=False, steps=0, equil=0, variable=False, timestep=0.001)
 
         if source is not None:
             self.source = source
@@ -860,12 +1051,30 @@ class Control(DLPData):
             Stripped argument list.
         """
 
-        return [arg for arg in args if
-                not check_arg(arg, "constant", "every", "sampl", "tol",
-                              "temp", "cutoff", "tensor", "collect",
-                              "step", "forces", "sum", "time", "width", "threshold",
-                              "nbins", "rmax")
-                or check_arg(arg, "timestep")]
+        return [
+            arg
+            for arg in args
+            if not check_arg(
+                arg,
+                "constant",
+                "every",
+                "sampl",
+                "tol",
+                "temp",
+                "cutoff",
+                "tensor",
+                "collect",
+                "step",
+                "forces",
+                "sum",
+                "time",
+                "width",
+                "threshold",
+                "nbins",
+                "rmax",
+            )
+            or check_arg(arg, "timestep")
+        ]
 
     def read(self, filename: PathLike) -> "Control":
         """
@@ -883,8 +1092,7 @@ class Control(DLPData):
         """
         with open(filename, "r", encoding="utf-8") as in_file:
             self["title"] = in_file.readline()
-            for line in in_file:
-                line = line.strip()
+            for line in map(str.strip, in_file):
                 if line == "finish":
                     break
                 if not line or line.startswith("#"):
@@ -918,6 +1126,7 @@ class Control(DLPData):
         filename : PathLike
             File to write to.
         """
+
         def output(*args: Any):
             """
             Write arguments to file as space-separated strings.
@@ -927,25 +1136,26 @@ class Control(DLPData):
         with open(filename, "w", encoding="utf-8") as out_file:
             output(self.title)
             for key, val in self.__dict__.items():
-                if key in ("title", "filename") or key.startswith("_"):
+                if key in {"title", "filename"} or key.startswith("_"):
                     continue
+
                 if key == "timing":
                     for keyt, valt in self.timing.__dict__.items():
-                        if keyt in ("job", "close"):
-                            output(f"{keyt} time {valt}")
-                        elif keyt == "timestep":
-                            if self.timing.variable:
+                        match keyt:
+                            case "job" | "close":
+                                output(f"{keyt} time {valt}")
+                            case "timestep" if self.timing.variable:
                                 print("variable", keyt, valt, file=out_file)
-                            else:
+                            case "timestep" if not self.timing.variable:
                                 print(keyt, valt, file=out_file)
-                        elif keyt == "variable":
-                            continue
-                        elif keyt in ("dump", "mindis", "maxdix", "mxstep") and valt > 0:
-                            output(keyt, valt)
-                        elif keyt == "collect" and valt:
-                            output(keyt)
-                        elif keyt in ("steps", "equil"):
-                            output(keyt, valt)
+                            case "variable":
+                                continue
+                            case "dump" | "mindis" | "maxdis" | "mxstep" if valt > 0:
+                                output(keyt, valt)
+                            case "collect" if valt:
+                                output(keyt)
+                            case "steps" | "equil":
+                                output(keyt, valt)
                 elif isinstance(val, bool):
                     if val and (key != "variable"):
                         output(key)
@@ -984,264 +1194,269 @@ class Control(DLPData):
 
         output("title", self.title)
         for key, val in self.__dict__.items():
-            if key in ("title", "filename") or key.startswith("_"):
-                continue
-
-            if key == "l_scr" and self.l_scr:
-                output("io_file_output", "SCREEN")
-            elif key == "l_tor" and self.l_tor:
-                output("io_file_revcon", "NONE")
-                output("io_file_revive", "NONE")
-            elif key == "l_eng" and self.l_eng:
-                output("output_energy", "ON")
-            elif key == "l_rout" and self.l_rout:
-                output("io_write_ascii_revive", "ON")
-            elif key == "l_rin" and self.l_rin:
-                output("io_read_ascii_revold", "ON")
-            elif key == "l_print":
-                output("print_level", val)
-            elif key == "l_dis":
-                output("initial_minimum_separation", val, "ang")
-            elif key == "l_fast" and self.l_fast:
-                output("unsafe_comms", "ON")
-            elif key == "binsize":
-                output("rdf_binsize", val, "ang")
-                output("zden_binsize", val, "ang")
-            elif key == "cap":
-                output("equilibration_force_cap", val, "k_B.temp/ang")
-            elif key == "densvar":
-                output("density_variance", val, "%")
-            elif key == "eps":
-                output("coul_dielectric_constant", val)
-            elif key == "exclu":
-                output("coul_extended_exclusion", "ON")
-            elif key == "heat_flux":
-                output("heat_flux", "ON")
-            elif key == "mxshak":
-                output("shake_max_iter", val)
-            elif key == "pres":
-                if isinstance(val, (tuple, list)) and len(val) == 6:
+            match key:
+                case "title" | "filename" | ["_", *_]:
+                    continue
+                case "l_scr" if self.l_scf:
+                    output("io_file_output", "SCREEN")
+                case "l_tor" if self.l_tor:
+                    output("io_file_revcon", "NONE")
+                    output("io_file_revive", "NONE")
+                case "l_eng" if self.l_eng:
+                    output("output_energy", "ON")
+                case "l_rout" if self.l_rout:
+                    output("io_write_ascii_revive", "ON")
+                case "l_rin" if self.l_rin:
+                    output("io_read_ascii_revold", "ON")
+                case "l_print":
+                    output("print_level", val)
+                case "l_dis":
+                    output("initial_minimum_separation", val, "ang")
+                case "l_fast" if self.l_fast:
+                    output("unsafe_comms", "ON")
+                case "binsize":
+                    output("rdf_binsize", val, "ang")
+                    output("zden_binsize", val, "ang")
+                case "cap":
+                    output("equilibration_force_cap", val, "k_B.temp/ang")
+                case "densvar":
+                    output("density_variance", val, "%")
+                case "eps":
+                    output("coul_dielectric_constant", val)
+                case "exclu":
+                    output("coul_extended_exclusion", "ON")
+                case "heat_flux":
+                    output("heat_flux", "ON")
+                case "mxshak":
+                    output("shake_max_iter", val)
+                case "pres" if isinstance(val, (tuple, list)) and len(val) == 6:
                     output("pressure_tensor", *val, "katm")
-                else:
+                case "pres":
                     output("pressure_hydrostatic", val[0], "katm")
-
-            elif key == "regaus":
-                output("regauss_frequency", val, "steps")
-            elif key == "restart":
-                if check_arg(val, 'scale'):
+                case "regaus":
+                    output("regauss_frequency", val, "steps")
+                case "restart" if check_arg(val, "scale"):
                     output("restart", "rescale")
-                elif check_arg(val, "noscale", "unscale"):
+                case "restart" if check_arg(val, "noscale", "rescale"):
                     output("restart", "noscale")
-                elif not val:
+                case "restart" if not val:
                     output("restart", "continue")
-                else:
+                case "restart":
                     output("restart", "clean")
-            elif key == "rlxtol":
-                if isinstance(val, (tuple, list)):
+                case "rlxtol" if isinstance(val, (tuple, list)):
                     output("rlx_tol", val[0])
                     output("rlx_cgm_step", val[1])
-                else:
+                case "rlxtol":
                     output("rlx_tol", val)
+                case "scale":
+                    output("rescale_frequency", val, "steps")
+                case "shake":
+                    output("shake_tolerance", val, "ang")
+                case "stack":
+                    output("stack_size", val, "steps")
+                case "temp":
+                    output("temperature", val, "K")
+                case "zero":
+                    try:
+                        output("reset_temperature_interval", val, "steps")
+                    except ValueError:
+                        output("reset_temperature_interval", 1, "steps")
+                case "print":
+                    output("print_frequency", val.printevery, "steps")
+                    output("stats_frequency", val.statsevery, "steps")
 
-            elif key == "scale":
-                output("rescale_frequency", val, "steps")
-            elif key == "shake":
-                output("shake_tolerance", val, "ang")
-            elif key == "stack":
-                output("stack_size", val, "steps")
-            elif key == "temp":
-                output("temperature", val, "K")
-            elif key == "zero":
-                try:
-                    output("reset_temperature_interval", val, "steps")
-                except ValueError:
-                    output("reset_temperature_interval", 1, "steps")
-            elif key == "print":
+                    if val.rdfprint:
+                        output("rdf_print", "ON")
 
-                output("print_frequency", val.printevery, "steps")
-                output("stats_frequency", val.statsevery, "steps")
+                    if val.rdf:
+                        if not val.rdfprint:
+                            output("rdf_print", "OFF")
 
-                if val.rdfprint:
-                    output("rdf_print", "ON")
+                        output("rdf_calculate", "ON")
+                        output("rdf_frequency", val.rdfevery, "steps")
 
-                if val.rdf:
-                    if not val.rdfprint:
-                        output("rdf_print", "OFF")
+                    if val.vafprint:
+                        output("vaf_print", "ON")
 
-                    output("rdf_calculate", "ON")
-                    output("rdf_frequency", val.rdfevery, "steps")
+                    if val.vaf:
+                        if not val.vafprint:
+                            output("vaf_print", "OFF")
+                        output("vaf_calculate", "ON")
+                        output("vaf_frequency", val.vafevery, "steps")
+                        output("vaf_binsize", val.vafbin, "steps")
 
-                if val.vafprint:
-                    output("vaf_print", "ON")
+                    if val.zdenprint:
+                        output("zden_print", "ON")
 
-                if val.vaf:
-                    if not val.vafprint:
-                        output("vaf_print", "OFF")
-                    output("vaf_calculate", "ON")
-                    output("vaf_frequency", val.vafevery, "steps")
-                    output("vaf_binsize", val.vafbin, "steps")
+                    if val.zden:
+                        if not val.zdenprint:
+                            output("zden_print", "OFF")
+                        output("zden_calculate", "ON")
+                        output("zden_frequency", val.zdenevery, "steps")
 
-                if val.zdenprint:
-                    output("zden_print", "ON")
+                case "ffield":
+                    if val.vdw and not self.ignore.vdw:
+                        if "direct" in val.vdw_params:
+                            output("vdw_method", "direct")
+                        if "mix" in val.vdw_params:
+                            output("vdw_mix_method", val.vdw_params["mix"])
+                        if "shift" in val.vdw_params:
+                            output("vdw_force_shift", "ON")
 
-                if val.zden:
-                    if not val.zdenprint:
-                        output("zden_print", "OFF")
-                    output("zden_calculate", "ON")
-                    output("zden_frequency", val.zdenevery, "steps")
+                    if val.rvdw:
+                        output("vdw_cutoff", val.rvdw, "ang")
 
-            elif key == "ffield":
-                if val.vdw and not self.ignore.vdw:
-                    if "direct" in val.vdw_params:
-                        output("vdw_method", "direct")
-                    if "mix" in val.vdw_params:
-                        output("vdw_mix_method", val.vdw_params["mix"])
-                    if "shift" in val.vdw_params:
-                        output("vdw_force_shift", "ON")
+                    if val.rpadset:
+                        output("padding", val.rpad, "ang")
+                    if val.rcut:
+                        output("cutoff", val.rcut, "ang")
 
-                if val.rvdw:
-                    output("vdw_cutoff", val.rvdw, "ang")
+                    if val.elec:
+                        elec_method = check_arg(val.elec_method, *COUL_TYPES)
 
-                if val.rpadset:
-                    output("padding", val.rpad, "ang")
-                if val.rcut:
-                    output("cutoff", val.rcut, "ang")
+                        match (elec_method, val.elec_params):
+                            case ("spme" | "ewald", ["precision", prec, *nsplines]):
+                                output("coul_method", "spme")
+                                output("spme_precision", prec)
+                                if nsplines:
+                                    output("spme_nsplines", *nsplines)
+                            case ("spme" | "ewald", ["sum", alpha, *kvec] | [alpha, *kvec]):
+                                output("coul_method", "spme")
+                                output("spme_alpha", alpha, "ang^-1")
 
-                if val.elec:
+                                nsplines = None
+                                if len(kvec) == 4:
+                                    *kvec, nsplines = kvec
 
-                    if val.elec_method == "shift":
-                        elec_method = "force_shifted"
+                                if kvec:
+                                    output("spme_kvec", *kvec)
+                                if nsplines:
+                                    output("spme_nsplines", nsplines)
+                            case ("shift" | "force_shifted", _):
+                                output("coul_method", elec_method)
+                            case (method, _):
+                                output("coul_method", method)
 
-                    if val.elec_method == "ewald":
-                        elec_method = "spme"
+                    match val.metal_style:
+                        case "sqrtrho":
+                            output("metal_sqrtrho", "ON")
+                        case "direct":
+                            output("metal_direct", "ON")
 
-                    output("coul_method", elec_method)
-                    if check_arg(elec_method, "ewald", "spme"):
+                case "ensemble":
+                    output("ensemble", val.ensemble)
 
-                        if check_arg(val.elec_params[0], "precision"):
-                            output("spme_precision", val.elec_params[1])
-                            if len(val.elec_params) > 2:
-                                output("spme_nsplines", val.elec_params[2])
+                    match (val.ensemble, val.means, val.args):
+                        case ("nve" | "pmf", _, _):
+                            pass
+                        case ("nvt", "evans", []):
+                            output("ensemble_method", "evans")
+                        case ("nvt", "langevin", [friction]):
+                            output("ensemble_method", "langevin")
+                            output("ensemble_thermostat_friction", friction, "ps^-1")
+                        case ("nvt", "andersen", [coupling, softness]):
+                            output("ensemble_method", "andersen")
+                            output("ensemble_thermostat_coupling", coupling, "ps")
+                            output("ensemble_thermostat_softness", softness)
+                        case ("nvt", "berendsen" | "hoover" as means, [coupling]):
+                            output("ensemble_method", means)
+                            output("ensemble_thermostat_coupling", coupling, "ps")
+                        case ("nvt", "gst", [coupling, friction]):
+                            output("ensemble_method", "gst")
+                            output("ensemble_thermostat_coupling", coupling, "ps")
+                            output("ensemble_thermostat_friction", friction, "ps^-1")
+                        case ("nvt", "dpd", [*drag]):
+                            output("ensemble_method", "dpd")
+                            output("ensemble_dpd_order", val.dpd_order)
+                            if drag:
+                                output("ensemble_dpd_drag", drag[0], "Da/ps")
+                        case (
+                            "nvt",
+                            "ttm",
+                            [phonon_friction, stopping_friction, stopping_velocity],
+                        ):
+                            output("ensemble_method", "ttm")
+                            output("ttm_e-phonon_friction", phonon_friction, "ps^-1")
+                            output("ttm_e-stopping_friction", stopping_friction, "ps^-1")
+                            output("ttm_e-stopping_velocity", stopping_velocity, "ang/ps")
+                        case ("npt" | "nst", "langevin", [thermostat_friction, barostat_friction]):
+                            output("ensemble_method", "langevin")
+                            output("ensemble_thermostat_friction", thermostat_friction, "ps^-1")
+                            output("ensemble_barostat_friction", barostat_friction, "ps^-1")
+                        case (
+                            "npt" | "nst",
+                            "berendsen" | "hoover" | "mtk" as means,
+                            [thermostat_coupling, barostat_coupling],
+                        ):
+                            output("ensemble_method", means)
+                            output("ensemble_thermostat_coupling", thermostat_coupling, "ps")
+                            output("ensemble_barostat_coupling", barostat_coupling, "ps")
+                        case _:
+                            raise Exception(f"{val.ensemble} not compatible with {val.means}.")
 
-                        else:
-                            if check_arg(val.elec_params[0], "sum"):
-                                parms = list(val.elec_params[1:])
-                            else:
-                                parms = list(val.elec_params)
+                    if val.ensemble == "nst":
+                        if val.area:
+                            output("ensemble_semi_isotropic", "area")
+                        elif val.tens:
+                            output("ensemble_semi_isotropic", "tension")
+                            output("ensemble_tension", val.tension, "dyn/cm")
+                        elif val.orth:
+                            output("ensemble_semi_isotropic", "orthorhombic")
+                        if val.semi:
+                            output("ensemble_semi_orthorhombic", "ON")
 
-                            output("spme_alpha", parms.pop(0), "ang^-1")
-                            if len(parms) >= 3:
-                                output("spme_kvec", parms.pop(0), parms.pop(0), parms.pop(0))
-                            else:
-                                continue
-                            if parms:
-                                output("spme_nsplines", parms.pop(0))
-
-                if val.metal_style == "sqrtrho":
-                    output("metal_sqrtrho", "ON")
-                elif val.metal_style == "direct":
-                    output("metal_direct", "ON")
-
-            elif key == "ensemble":
-                output("ensemble", val.ensemble)
-                if val.ensemble not in ("nve", "pmf"):
-                    output("ensemble_method", val.means)
-
-                if val.ensemble == "nvt":
-                    if check_arg(val.means, "evans"):
+                case "ignore":
+                    if val.elec:
+                        output("coul_method", "OFF")
+                    if val.ind:
+                        output("ignore_config_indices", "ON")
+                    if val.str:
+                        output("strict_checks", "OFF")
+                    if val.top:
+                        output("print_topology_info", "OFF")
+                    if val.vdw:
+                        output("vdw_method", "OFF")
+                    if val.vafav:
+                        output("vaf_averaging", "OFF")
+                    if val.vom:
+                        output("fixed_com", "OFF")
+                    if val.link:
                         continue
 
-                    if check_arg(val.means, "langevin"):
-                        output("ensemble_thermostat_friction", val.args[0], "ps^-1")
-                    elif check_arg(val.means, "andersen"):
-                        output("ensemble_thermostat_coupling", val.args[0], "ps")
-                        output("ensemble_thermostat_softness", val.args[1])
-                    elif check_arg(val.means, "berendsen", "hoover"):
-                        output("ensemble_thermostat_coupling", val.args[0], "ps")
-                    elif check_arg(val.means, "gst"):
-                        output("ensemble_thermostat_coupling", val.args[0], "ps")
-                        output("ensemble_thermostat_friction", val.args[1], "ps^-1")
-                    elif check_arg(val.means, "dpd"):
-                        output("ensemble_dpd_order", val.dpd_order)
-                        if val.args:
-                            output("ensemble_dpd_drag", val.args[0], 'Da/ps')
-                    elif check_arg(val.means, "ttm"):
-                        output("ttm_e-phonon_friction", val.args[0], "ps^-1")
-                        output("ttm_e-stopping_friction", val.args[1], "ps^-1")
-                        output("ttm_e-stopping_velocity", val.args[2], "ang/ps")
-
-                if val.ensemble in ("npt", "nst"):
-                    if check_arg(val.means, "langevin"):
-                        output("ensemble_thermostat_friction", val.args[0], "ps^-1")
-                        output("ensemble_barostat_friction", val.args[1], "ps^-1")
-                    elif check_arg(val.means, "berendsen", "hoover", "mtk"):
-                        output("ensemble_thermostat_coupling", val.args[0], "ps")
-                        output("ensemble_barostat_coupling", val.args[1], "ps")
-
-                if val.ensemble == "nst":
-                    if val.area:
-                        output('ensemble_semi_isotropic', 'area')
-                    elif val.tens:
-                        output('ensemble_semi_isotropic', 'tension')
-                        output('ensemble_tension', val.tension, 'dyn/cm')
-                    elif val.orth:
-                        output('ensemble_semi_isotropic', 'orthorhombic')
-                    if val.semi:
-                        output('ensemble_semi_orthorhombic', 'ON')
-
-            elif key == "ignore":
-                if val.elec:
-                    output("coul_method", "OFF")
-                if val.ind:
-                    output("ignore_config_indices", "ON")
-                if val.str:
-                    output("strict_checks", "OFF")
-                if val.top:
-                    output("print_topology_info", "OFF")
-                if val.vdw:
-                    output("vdw_method", "OFF")
-                if val.vafav:
-                    output("vaf_averaging", "OFF")
-                if val.vom:
-                    output("fixed_com", "OFF")
-                if val.link:
-                    continue
-
-            elif key == "io":
-                if not val.field.endswith("FIELD"):
-                    output("io_file_field", val.field)
-                if not val.config.endswith("CONFIG"):
-                    output("io_file_config", val.config)
-                if not val.statis.endswith("STATIS"):
-                    output("io_file_statis", val.statis)
-                if not val.history.endswith("HISTORY"):
-                    output("io_file_history", val.history)
-                if not val.historf.endswith("HISTORF"):
-                    output("io_file_historf", val.historf)
-                if not val.revive.endswith("REVIVE"):
-                    output("io_file_revive", val.revive)
-                if not val.revcon.endswith("REVCON") and not self.l_tor:
-                    output("io_file_revcon", val.revcon)
-                if not val.revold.endswith("REVOLD") and not self.l_tor:
-                    output("io_file_revold", val.revold)
-                if not val.rdf.endswith('RDFDAT'):
-                    output('io_file_rdf', val.rdf)
-                if not val.msd.endswith('MSDTMP'):
-                    output('io_file_msd', val.msd)
-                if not val.tabbnd.endswith('TABBND'):
-                    output('io_file_tabbnd', val.tabbnd)
-                if not val.tabang.endswith('TABANG'):
-                    output('io_file_tabang', val.tabang)
-                if not val.tabdih.endswith('TABDIH'):
-                    output('io_file_tabdih', val.tabdih)
-                if not val.tabinv.endswith('TABINV'):
-                    output('io_file_tabinv', val.tabinv)
-                if not val.tabvdw.endswith('TABVDW'):
-                    output('io_file_tabvdw', val.tabvdw)
-                if not val.tabeam.endswith('TABEAM'):
-                    output('io_file_tabeam', val.tabeam)
-            elif key == "defe":
-                if val:
+                case "io":
+                    if not val.field.endswith("FIELD"):
+                        output("io_file_field", val.field)
+                    if not val.config.endswith("CONFIG"):
+                        output("io_file_config", val.config)
+                    if not val.statis.endswith("STATIS"):
+                        output("io_file_statis", val.statis)
+                    if not val.history.endswith("HISTORY"):
+                        output("io_file_history", val.history)
+                    if not val.historf.endswith("HISTORF"):
+                        output("io_file_historf", val.historf)
+                    if not val.revive.endswith("REVIVE"):
+                        output("io_file_revive", val.revive)
+                    if not val.revcon.endswith("REVCON") and not self.l_tor:
+                        output("io_file_revcon", val.revcon)
+                    if not val.revold.endswith("REVOLD") and not self.l_tor:
+                        output("io_file_revold", val.revold)
+                    if not val.rdf.endswith("RDFDAT"):
+                        output("io_file_rdf", val.rdf)
+                    if not val.msd.endswith("MSDTMP"):
+                        output("io_file_msd", val.msd)
+                    if not val.tabbnd.endswith("TABBND"):
+                        output("io_file_tabbnd", val.tabbnd)
+                    if not val.tabang.endswith("TABANG"):
+                        output("io_file_tabang", val.tabang)
+                    if not val.tabdih.endswith("TABDIH"):
+                        output("io_file_tabdih", val.tabdih)
+                    if not val.tabinv.endswith("TABINV"):
+                        output("io_file_tabinv", val.tabinv)
+                    if not val.tabvdw.endswith("TABVDW"):
+                        output("io_file_tabvdw", val.tabvdw)
+                    if not val.tabeam.endswith("TABEAM"):
+                        output("io_file_tabeam", val.tabeam)
+                case "defe" if val:
                     output("defects_calculate", "ON")
                     output("defects_start", val[0], "steps")
                     output("defects_interval", val[1], "steps")
@@ -1249,130 +1464,111 @@ class Control(DLPData):
                     if len(val) > 3:
                         output("defects_backup", "ON")
 
-            elif key == "disp":
-                if val:
+                case "disp" if val:
                     output("displacements_calculate", "ON")
                     output("displacements_start", val[0], "steps")
                     output("displacements_interval", val[1], "steps")
                     output("displacements_distance", val[2], "ang")
 
-            elif key == "impact":
-                if val:
+                case "impact" if val:
                     output("impact_part_index", val[0])
                     output("impact_time", val[1], "steps")
                     output("impact_energy", val[2], "ke.V")
                     output("impact_direction", *val[3:], "ang/ps")
 
-            elif key in ("minim", "optim"):
+                case "minim" | "optim":
+                    crit = val.pop(0)
+                    tol = freq = step = 0
+                    if key == "minim" and val:
+                        freq = val.pop(0)
+                    if val:
+                        tol = val.pop(0)
+                    if val:
+                        step = val.pop(0)
 
-                crit = val.pop(0)
-                tol = freq = step = 0
-                if key == "minim" and val:
-                    freq = val.pop(0)
-                if val:
-                    tol = val.pop(0)
-                if val:
-                    step = val.pop(0)
+                    if check_arg(crit, "forc"):
+                        output("minimisation_criterion", "force")
+                        criterion_unit = "internal_f"
+                    elif check_arg(crit, "ener"):
+                        output("minimisation_criterion", "energy")
+                        criterion_unit = "internal_e"
+                    elif check_arg(crit, "dist"):
+                        output("minimisation_criterion", "distance")
+                        criterion_unit = "internal_l"
 
-                if check_arg(crit, "forc"):
-                    output("minimisation_criterion", "force")
-                    criterion_unit = "internal_f"
-                elif check_arg(crit, "ener"):
-                    output("minimisation_criterion", "energy")
-                    criterion_unit = "internal_e"
-                elif check_arg(crit, "dist"):
-                    output("minimisation_criterion", "distance")
-                    criterion_unit = "internal_l"
+                    if tol:
+                        output("minimisation_tolerance", tol, criterion_unit)
+                    if freq:
+                        output("minimisation_frequency", freq, "steps")
+                    if step:
+                        output("minimisation_step_length", step, "ang")
 
-                if tol:
-                    output("minimisation_tolerance", tol, criterion_unit)
-                if freq:
-                    output("minimisation_frequency", freq, "steps")
-                if step:
-                    output("minimisation_step_length", step, "ang")
-
-            elif key == "msdtmp":
-                if val:
+                case "msdtmp" if val:
                     output("msd_calculate", "ON")
                     output("msd_start", val[0], "steps")
                     output("msd_frequency", val[1], "steps")
 
-            elif key == "nfold":
-                if val:
+                case "nfold" if val:
                     output("nfold", *val)
 
-            elif key == "pseudo":
-                if val:
+                case "pseudo" if val:
                     output("pseudo_thermostat_method", val[0])
                     output("pseudo_thermostat_width", val[1], "ang")
                     output("pseudo_thermostat_temperature", val[2], "K")
 
-            elif key == "seed":
-                output("random_seed", *val)
-            elif key == "traj":
-                if val:
+                case "seed":
+                    output("random_seed", *val)
+                case "traj" if val:
                     output("traj_calculate", "ON")
                     output("traj_start", val[0], "steps")
                     output("traj_interval", val[1], "steps")
-                    if val[2] == 0:
-                        tmp = 'pos'
-                    elif val[2] == 1:
-                        tmp = 'pos-vel'
-                    elif val[2] == 2:
-                        tmp = 'pos-vel-force'
-                    elif val[2] == 3:
-                        tmp = 'compressed'
+
+                    tmp = ("pos", "pos-vel", "pos-vel-force", "compressed")[val[2]]
 
                     output("traj_key", tmp)
 
-            elif key == "timing":
-                output("time_run", val.steps, "steps")
-                output("time_equilibration", val.equil, "steps")
+                case "timing":
+                    output("time_run", val.steps, "steps")
+                    output("time_equilibration", val.equil, "steps")
 
-                if val.dump:
-                    output("data_dump_frequency", val.dump, "steps")
+                    if val.dump:
+                        output("data_dump_frequency", val.dump, "steps")
 
-                if val.job > 0.1:
-                    output("time_job", val.job, "s")
-                if val.close > 0.1:
-                    output("time_close", val.close, "s")
-                if val.collect:
-                    output("record_equilibration", "ON")
+                    if val.job > 0.1:
+                        output("time_job", val.job, "s")
+                    if val.close > 0.1:
+                        output("time_close", val.close, "s")
+                    if val.collect:
+                        output("record_equilibration", "ON")
 
-                if val.variable:
-                    output("timestep_variable", "ON")
-                    if val.mindis:
-                        output("timestep_variable_min_dist", val.mindis, "ang")
-                    if val.maxdis:
-                        output("timestep_variable_max_dist", val.maxdis, "ang")
-                    if val.mxstep:
-                        output("timestep_variable_max_delta", val.mxstep, "ps")
+                    if val.variable:
+                        output("timestep_variable", "ON")
+                        if val.mindis:
+                            output("timestep_variable_min_dist", val.mindis, "ang")
+                        if val.maxdis:
+                            output("timestep_variable_max_dist", val.maxdis, "ang")
+                        if val.mxstep:
+                            output("timestep_variable_max_delta", val.mxstep, "ps")
 
-                output("timestep", val.timestep, "ps")
-            elif key == "adf":
+                    output("timestep", val.timestep, "ps")
+                case "adf":
+                    output("adf_calculate", "ON")
+                    output("adf_frequency", val[0], "steps")
+                    output("adf_precision", val[1])
 
-                output("adf_calculate", "ON")
-                output("adf_frequency", val[0], "steps")
-                output("adf_precision", val[1])
-
-            elif key == "coord":
-
-                output("coord_calculate", "ON")
-                if val[0] == 0:
-                    tmp = "icoord"
-                elif val[0] == 1:
-                    tmp = "ccoord"
-                elif val[0] == 2:
-                    tmp = "full"
-                output("coord_ops", tmp)
-                output("coord_interval", val[2], "steps")
-                output("coord_start", val[1], "steps")
+                case "coord":
+                    output("coord_calculate", "ON")
+                    tmp = ("icoord", "ccoord", "full")[val[0]]
+                    output("coord_ops", tmp)
+                    output("coord_start", val[1], "steps")
+                    output("coord_interval", val[2], "steps")
 
         return new_control
 
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         CONT = Control(sys.argv[1])
     else:

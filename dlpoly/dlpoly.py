@@ -25,9 +25,9 @@ from .statis import Statis
 from .types import OptPath
 from .utility import copy_file, is_mpi, next_file, DLPFile
 
-FileTypes = Literal["field", "config", "statis", "history",
-                    "historf", "revive", "revcon", "revold",
-                    "rdf", "msd"]
+FileTypes = Literal[
+    "field", "config", "statis", "history", "historf", "revive", "revcon", "revold", "rdf", "msd"
+]
 
 
 class DLPoly:
@@ -105,31 +105,35 @@ class DLPoly:
     inv_file : OptPath
         Path to given input file.
     """
+
     __version__ = "5.0"  # which version of dlpoly supports
 
     OUTPUT_FILES = ("statis", "msd", "rdf", "correlations", "currents")
 
-    def __init__(self, *,
-                 control: OptPath = None,
-                 config: OptPath = None,
-                 field: OptPath = None,
-                 statis: OptPath = None,
-                 output: OptPath = None,
-                 dest_config: OptPath = None,
-                 rdf: OptPath = None,
-                 msd: OptPath = None,
-                 correlations: OptPath = None,
-                 currents: OptPath = None,
-                 workdir: OptPath = None,
-                 default_name: str = "dlprun",
-                 exe: OptPath = None,
-                 vdw_file: OptPath = None,
-                 eam_file: OptPath = None,
-                 bnd_file: OptPath = None,
-                 ang_file: OptPath = None,
-                 dih_file: OptPath = None,
-                 inv_file: OptPath = None,
-                 load_default: bool = True):
+    def __init__(
+        self,
+        *,
+        control: OptPath = None,
+        config: OptPath = None,
+        field: OptPath = None,
+        statis: OptPath = None,
+        output: OptPath = None,
+        dest_config: OptPath = None,
+        rdf: OptPath = None,
+        msd: OptPath = None,
+        correlations: OptPath = None,
+        currents: OptPath = None,
+        workdir: OptPath = None,
+        default_name: str = "dlprun",
+        exe: OptPath = None,
+        vdw_file: OptPath = None,
+        eam_file: OptPath = None,
+        bnd_file: OptPath = None,
+        ang_file: OptPath = None,
+        dih_file: OptPath = None,
+        inv_file: OptPath = None,
+        load_default: bool = True,
+    ):
         # Default to having a control
         self.control = NewControl()
         self.dest_config = dest_config
@@ -142,19 +146,21 @@ class DLPoly:
         if load_default or control is not None:
             self.load_control(control)
 
-        for (cls, source) in ((Config, config),
-                              (Field, field),
-                              (Statis, statis),
-                              (RDF, rdf),
-                              (MSD, msd),
-                              (Correlations, correlations),
-                              (Currents, currents),
-                              (VDW, vdw_file),
-                              (EAM, eam_file),
-                              (BND, bnd_file),
-                              (ANG, ang_file),
-                              (DIH, dih_file),
-                              (INV, inv_file)):
+        for cls, source in (
+            (Config, config),
+            (Field, field),
+            (Statis, statis),
+            (RDF, rdf),
+            (MSD, msd),
+            (Correlations, correlations),
+            (Currents, currents),
+            (VDW, vdw_file),
+            (EAM, eam_file),
+            (BND, bnd_file),
+            (ANG, ang_file),
+            (DIH, dih_file),
+            (INV, inv_file),
+        ):
             if load_default or source is not None:
                 self.load_file(cls, source)
 
@@ -164,17 +170,17 @@ class DLPoly:
 
     control_file = DLPFile()
     field_file = DLPFile()
-    vdw_file = DLPFile('tabvdw')
-    eam_file = DLPFile('tabeam')
-    bnd_file = DLPFile('tabbnd')
-    ang_file = DLPFile('tabang')
-    dih_file = DLPFile('tabdih')
-    inv_file = DLPFile('tabinv')
+    vdw_file = DLPFile("tabvdw")
+    eam_file = DLPFile("tabeam")
+    bnd_file = DLPFile("tabbnd")
+    ang_file = DLPFile("tabang")
+    dih_file = DLPFile("tabdih")
+    inv_file = DLPFile("tabinv")
     config_file = DLPFile()
     statis_file = DLPFile()
     rdf_file = DLPFile()
     msd_file = DLPFile()
-    correlations_file = DLPFile('cor')
+    correlations_file = DLPFile("cor")
     currents_file = DLPFile()
 
     @cached_property
@@ -243,8 +249,7 @@ class DLPoly:
             PathLike
                 Filename from `Control` if set else `default`.
             """
-            if path := getattr(self.control,
-                               f"io_file_{filetype}", False):
+            if path := getattr(self.control, f"io_file_{filetype}", False):
                 return path
             return default
 
@@ -260,30 +265,28 @@ class DLPoly:
 
         if getattr(self.control, "traj_calculate", False) or self.control.io_file_history:
             self.control.io_file_history = str(
-                direc / Path(get_file_def("history", "HISTORY")).name)
+                direc / Path(get_file_def("history", "HISTORY")).name
+            )
 
         if self.control.io_file_historf:
             self.control.io_file_historf = str(direc / Path(self.control.io_file_historf).name)
 
         if getattr(self.control, "restart", "clean") != "clean" or self.control.io_file_revold:
-            self.control.io_file_revold = str(
-                direc / Path(get_file_def("revold", "REVOLD")).name)
+            self.control.io_file_revold = str(direc / Path(get_file_def("revold", "REVOLD")).name)
 
         if getattr(self.control, "rdf_print", False):
-            self.control.io_file_rdf = str(
-                direc / Path(get_file_def("rdf", "RDFDAT")).name)
+            self.control.io_file_rdf = str(direc / Path(get_file_def("rdf", "RDFDAT")).name)
 
         if getattr(self.control, "correlation_observable", False):
-            self.control.io_file_cor = str(
-                direc / Path(get_file_def("cor", "COR")).name)
+            self.control.io_file_cor = str(direc / Path(get_file_def("cor", "COR")).name)
 
         if getattr(self.control, "currents_calculate", False):
             self.control.io_file_currents = str(
-                direc / Path(get_file_def("currents", "CURRENTS")).name)
+                direc / Path(get_file_def("currents", "CURRENTS")).name
+            )
 
         if hasattr(self.control, "msdtmp") or self.control.io_file_msd:
-            self.control.io_file_msd = str(
-                direc / Path(get_file_def("msd", "MSDTMP")).name)
+            self.control.io_file_msd = str(direc / Path(get_file_def("msd", "MSDTMP")).name)
 
     @staticmethod
     def _update_file(direc: PathLike, in_file: PathLike, dest_name: OptPath = None) -> Path:
@@ -349,12 +352,14 @@ class DLPoly:
         if self.inv_file:
             self.inv_file = self._update_file(direc, self.inv_file)
 
-    def write(self,
-              control: bool = True,
-              config: bool = True,
-              field: bool = True,
-              prefix: str = '',
-              suffix: str = ''):
+    def write(
+        self,
+        control: bool = True,
+        config: bool = True,
+        field: bool = True,
+        prefix: str = "",
+        suffix: str = "",
+    ):
         """
         Write necessary DLPoly input files to disc.
 
@@ -372,16 +377,15 @@ class DLPoly:
             Suffix to add to file name(s).
         """
         if control:
-            self.control.write(prefix+self.control_file+suffix)
+            self.control.write(prefix + self.control_file + suffix)
         if config and self.config:
-            self.config.write(prefix+self.config_file+suffix)
+            self.config.write(prefix + self.config_file + suffix)
         if field and self.field:
-            self.field.write(prefix+self.field_file+suffix)
+            self.field.write(prefix + self.field_file + suffix)
 
-    def load_control(self,
-                     source: OptPath = None,
-                     quiet: Optional[bool] = None,
-                     required: bool = False):
+    def load_control(
+        self, source: OptPath = None, quiet: Optional[bool] = None, required: bool = False
+    ):
         """
         Load control file into class.
 
@@ -404,7 +408,6 @@ class DLPoly:
             quiet = source is None
 
         if source is None:
-
             source = self.control_file
 
         source = Path(source)
@@ -420,11 +423,13 @@ class DLPoly:
         elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_file(self,
-                  cls: Type,
-                  source: OptPath = None,
-                  quiet: Optional[bool] = None,
-                  required: bool = False):
+    def load_file(
+        self,
+        cls: Type,
+        source: OptPath = None,
+        quiet: Optional[bool] = None,
+        required: bool = False,
+    ):
         """
         Load file based on class descriptor.
 
@@ -447,7 +452,7 @@ class DLPoly:
             If `required` is ``True`` and `source` not found.
         """
         cls_name = cls.__name__.lower()
-        fld_name = cls_name+"_file"
+        fld_name = cls_name + "_file"
         if quiet is None:  # If we haven't defined quiet or a source, should be quiet
             quiet = source is None
 
@@ -463,8 +468,7 @@ class DLPoly:
         elif not quiet:
             print(f"Unable to find file: {source.absolute()}")
 
-    def load_field(self, source: OptPath = None, quiet: bool = False,
-                   required: bool = False):
+    def load_field(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load field file into class.
 
@@ -485,8 +489,7 @@ class DLPoly:
         """
         self.load_file(Field, source, quiet, required)
 
-    def load_config(self, source: OptPath = None, quiet: bool = False,
-                    required: bool = False):
+    def load_config(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load config file into class.
 
@@ -507,8 +510,7 @@ class DLPoly:
         """
         self.load_file(Config, source, quiet, required)
 
-    def load_statis(self, source: OptPath = None, quiet: bool = False,
-                    required: bool = False):
+    def load_statis(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load statis file into class.
 
@@ -529,8 +531,7 @@ class DLPoly:
         """
         self.load_file(Statis, source, quiet, required)
 
-    def load_rdf(self, source: OptPath = None, quiet: bool = False,
-                 required: bool = False):
+    def load_rdf(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load statis file into class.
 
@@ -551,8 +552,7 @@ class DLPoly:
         """
         self.load_file(RDF, source, quiet, required)
 
-    def load_msd(self, source: OptPath = None, quiet: bool = False,
-                 required: bool = False):
+    def load_msd(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load msd file into class.
 
@@ -573,8 +573,9 @@ class DLPoly:
         """
         self.load_file(MSD, source, quiet, required)
 
-    def load_correlations(self, source: OptPath = None, quiet: bool = False,
-                          required: bool = False):
+    def load_correlations(
+        self, source: OptPath = None, quiet: bool = False, required: bool = False
+    ):
         """
         Load correlations file into class.
 
@@ -595,8 +596,7 @@ class DLPoly:
         """
         self.load_file(Correlations, source, quiet, required)
 
-    def load_currents(self, source: OptPath = None, quiet: bool = False,
-                      required: bool = False):
+    def load_currents(self, source: OptPath = None, quiet: bool = False, required: bool = False):
         """
         Load currents file into class.
 
@@ -661,9 +661,9 @@ class DLPoly:
                 self._exe = Path(exe)
 
         try:
-            with subprocess.Popen([self.exe, '-V'],
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT) as proc:
+            with subprocess.Popen(
+                [self.exe, "-V"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ) as proc:
                 result, _ = proc.communicate()
 
             if "DL_POLY" not in result.decode("utf-8"):
@@ -692,17 +692,20 @@ class DLPoly:
             except AttributeError:
                 pass
 
-    def run(self, *,
-            executable: OptPath = None,
-            numProcs: int = 1,
-            mpi: str = 'mpirun -n',
-            outputFile: OptPath = None,
-            load_outputs: bool = False,
-            modules: Sequence[str] = (),
-            pre_run: str = "",
-            post_run: str = "",
-            run_check: int = 30,
-            debug: bool = False) -> int:
+    def run(
+        self,
+        *,
+        executable: OptPath = None,
+        numProcs: int = 1,
+        mpi: str = "mpirun -n",
+        outputFile: OptPath = None,
+        load_outputs: bool = False,
+        modules: Sequence[str] = (),
+        pre_run: str = "",
+        post_run: str = "",
+        run_check: int = 30,
+        debug: bool = False,
+    ) -> int:
         """
         Perform a DLPoly run with the current setup.
 
@@ -764,15 +767,15 @@ class DLPoly:
             outputFile = next_file(self.control.io_file_output)
 
         if is_mpi():
-            from mpi4py.MPI import COMM_SELF, COMM_WORLD
-            from mpi4py.MPI import Exception as MPIException
+            from mpi4py.MPI import COMM_SELF, COMM_WORLD  # noqa: PLC0415
+            from mpi4py.MPI import Exception as MPIException  # noqa: PLC0415
 
             error_code = 0
             if COMM_WORLD.Get_rank() == 0:
                 try:
-                    COMM_SELF.Spawn(dlpexe,
-                                    [f"-c {control_file}", f"-o {outputFile}"],
-                                    maxprocs=numProcs)
+                    COMM_SELF.Spawn(
+                        dlpexe, [f"-c {control_file}", f"-o {outputFile}"], maxprocs=numProcs
+                    )
                 except MPIException as err:
                     error_code = err.Get_error_code()
 
@@ -789,8 +792,10 @@ class DLPoly:
 
             if pre_run or post_run:
                 if os.name == "nt":
-                    raise SystemError("Script file runs cannot run on Windows,"
-                                      "Cannot use `pre_run` or `post_run` or `modules`")
+                    raise SystemError(
+                        "Script file runs cannot run on Windows,"
+                        "Cannot use `pre_run` or `post_run` or `modules`"
+                    )
 
                 script_file = self.workdir / "env.sh"
                 with open(script_file, "w", encoding="utf-8") as out_file:
@@ -799,10 +804,9 @@ class DLPoly:
                     print(post_run, file=out_file)
                 run_command = f"sh {script_file}"
 
-            with subprocess.Popen(shlex.split(run_command),
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT) as proc:
-
+            with subprocess.Popen(
+                shlex.split(run_command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ) as proc:
                 if debug:
                     if proc.stdout is not None:
                         print(f"STDOUT: \n{proc.stdout.read().decode('utf-8')}")
@@ -823,9 +827,13 @@ def main():
     Run the main program from command line arguments.
     """
     arg_list = get_command_args()
-    dlp_run = DLPoly(control=arg_list.control, config=arg_list.config,
-                     field=arg_list.field, statis=arg_list.statis,
-                     workdir=arg_list.workdir)
+    dlp_run = DLPoly(
+        control=arg_list.control,
+        config=arg_list.config,
+        field=arg_list.field,
+        statis=arg_list.statis,
+        workdir=arg_list.workdir,
+    )
     dlp_run.run(executable=arg_list.dlp)
 
 

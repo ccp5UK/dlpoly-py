@@ -24,13 +24,16 @@ class Species(DLPData):
     repeats : int
         Number of occurences.
     """
-    def __init__(self,
-                 name: str = "X",
-                 index: int = 1,
-                 charge: float = 0.0,
-                 mass: float = 1.0,
-                 frozen: int = 0,
-                 repeats: int = 1):
+
+    def __init__(
+        self,
+        name: str = "X",
+        index: int = 1,
+        charge: float = 0.0,
+        mass: float = 1.0,
+        frozen: int = 0,
+        repeats: int = 1,
+    ):
         """
         Instantiate class defining a DLPoly atomic "species".
 
@@ -50,8 +53,17 @@ class Species(DLPData):
             Number of occurences.
         """
 
-        DLPData.__init__(self, {'element': str, 'index': int, 'charge': float,
-                                'mass': float, 'frozen': int, 'repeats': int})
+        DLPData.__init__(
+            self,
+            {
+                "element": str,
+                "index": int,
+                "charge": float,
+                "mass": float,
+                "frozen": int,
+                "repeats": int,
+            },
+        )
         self.element = name
         self.index = index
         self.charge = charge

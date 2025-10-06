@@ -89,7 +89,7 @@ class CFG(Molecule):
         :param nElem: Number of elements
 
         """
-        self.atoms = [None]*nElem
+        self.atoms = [None] * nElem
         for i in range(nElem):
             datum = read_line(source).split()
             self.atoms[i] = Atom(element=datum[0], pos=np.asarray(datum[1:4]), index=i)
@@ -112,7 +112,7 @@ class CFG(Molecule):
         :param source: Source file to read
 
         """
-        with open(source, "r") as sourceFile:
+        with open(source, encoding="utf-8") as sourceFile:
             self.name = read_line(sourceFile)
             for line in sourceFile:
                 block, num = line.strip().split()

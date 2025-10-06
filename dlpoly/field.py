@@ -10,11 +10,23 @@ from .species import Species
 from .types import OptPath, PathLike
 from .utility import batched, peek, read_line
 
-BondTypes = Literal["atoms", "bonds", "constraints",
-                    "angles", "dihedrals", "inversions", "rigid"]
-PotentialTypes = Literal["dpd", "extern", "vdw", "vdwtab", "metal", "rdf",
-                         "tbp", "fbp", "ters", "kihs", "ters-cross",
-                         "teth", "shell", "pmf"]
+BondTypes = Literal["atoms", "bonds", "constraints", "angles", "dihedrals", "inversions", "rigid"]
+PotentialTypes = Literal[
+    "dpd",
+    "extern",
+    "vdw",
+    "vdwtab",
+    "metal",
+    "rdf",
+    "tbp",
+    "fbp",
+    "ters",
+    "kihs",
+    "ters-cross",
+    "teth",
+    "shell",
+    "pmf",
+]
 
 
 class Interaction(ABC):
@@ -61,8 +73,10 @@ class Interaction(ABC):
             If potential not in valid set of potentials for type.
         """
         if pot_class not in self.pot_classes:
-            raise IOError(f"Unrecognised {type(self).__name__} class {pot_class}. "
-                          f"Must be one of {', '.join(self.pot_classes)}")
+            raise IOError(
+                f"Unrecognised {type(self).__name__} class {pot_class}. "
+                f"Must be one of {', '.join(self.pot_classes)}"
+            )
         self._pot_class = pot_class
 
 
@@ -79,17 +93,19 @@ class Bond(Interaction):
     pot_type : str
         Name of interaction type.
     """
-    n_atoms = {"atoms": 1,
-               "bonds": 2,
-               "constraints": 2,
-               "angles": 3,
-               "dihedrals": 4,
-               "inversions": 4,
-               "rigid": -1,
-               "teth": 1,
-               "shell": 2,
-               "pmf": 1
-               }
+
+    n_atoms = {
+        "atoms": 1,
+        "bonds": 2,
+        "constraints": 2,
+        "angles": 3,
+        "dihedrals": 4,
+        "inversions": 4,
+        "rigid": -1,
+        "teth": 1,
+        "shell": 2,
+        "pmf": 1,
+    }
 
     def __init__(self, pot_class: BondTypes, params: Sequence[float] = ()):
         """
@@ -105,23 +121,24 @@ class Bond(Interaction):
         Interaction.__init__(self)
         self.pot_class = pot_class
         # In bonds key comes first...
-        if pot_class in ["shell", "constraints"]:
-            # except for shell, which has none and two atoms...
-            self.atoms, self.params = params[0:2], params[2:]
-            self.pot_type = "shell"
-        elif pot_class == "pmf":
-            # or pmf which has one atom
-            self.atoms, self.params = params[0], params[1]
-            self.pot_type = "pmf"
-        else:
-            self.pot_type, params = params[0], params[1:]
-            self.atoms, self.params = (params[0:self.n_atoms[pot_class]],
-                                       params[self.n_atoms[pot_class]:])
+        match pot_class:
+            case "shell" | "constraints":
+                # except for shell, which has none and two atoms...
+                self.atoms, self.params = params[0:2], params[2:]
+                self.pot_type = "shell"
+            case "pmf":
+                # or pmf which has one atom
+                self.atoms, self.params = params[0], params[1]
+                self.pot_type = "pmf"
+            case _:
+                self.pot_type, params = params[0], params[1:]
+                self.atoms, self.params = (
+                    params[0 : self.n_atoms[pot_class]],
+                    params[self.n_atoms[pot_class] :],
+                )
 
     def __str__(self) -> str:
-        return " ".join((self.pot_type,
-                         " ".join(self.atoms),
-                         " ".join(self.params)))
+        return " ".join((self.pot_type, " ".join(self.atoms), " ".join(self.params)))
 
 
 class Potential(Interaction):
@@ -137,8 +154,20 @@ class Potential(Interaction):
     pot_type : str
         Name of interaction type.
     """
-    n_atoms = {"extern": 0, "vdw": 2, "vdwtab": 2, "metal": 2, "rdf": 2, "tbp": 3, "fbp": 4,
-               "ters": 1, "ters-cross": 2, "kihs": 2, "dpd": 2}
+
+    n_atoms = {
+        "extern": 0,
+        "vdw": 2,
+        "vdwtab": 2,
+        "metal": 2,
+        "rdf": 2,
+        "tbp": 3,
+        "fbp": 4,
+        "ters": 1,
+        "ters-cross": 2,
+        "kihs": 2,
+        "dpd": 2,
+    }
 
     def __init__(self, pot_class: PotentialTypes, params: Sequence[float] = ()):
         """
@@ -154,7 +183,7 @@ class Potential(Interaction):
         Interaction.__init__(self)
         self.pot_class = pot_class
         # In potentials atoms come first...
-        self.atoms, params = params[0:self.n_atoms[pot_class]], params[self.n_atoms[pot_class]:]
+        self.atoms, params = params[0 : self.n_atoms[pot_class]], params[self.n_atoms[pot_class] :]
         if pot_class != "rdf":
             # rdf is just a pair of atoms
             self.pot_type, self.params = params[0], params[1:]
@@ -163,19 +192,14 @@ class Potential(Interaction):
             self.atoms = sorted(self.atoms)
 
     def __str__(self) -> str:
-        if self.pot_class in ("ters", "kihs"):
-            batched_pars = (" ".join(pars) for pars in batched(self.params, 5))
-            return " ".join((" ".join(self.atoms),
-                             self.pot_class,
-                             "\n".join(batched_pars)))
-
-        if self.pot_class == "ters-cross":
-            return " ".join((self.atoms,
-                            " ".join(self.params)))
-
-        return " ".join((" ".join(self.atoms),
-                         self.pot_type,
-                         " ".join(self.params)))
+        match self.pot_class:
+            case "ters" | "kihs":
+                batched_pars = (" ".join(pars) for pars in batched(self.params, 5))
+                return " ".join((" ".join(self.atoms), self.pot_class, "\n".join(batched_pars)))
+            case "ters-cross":
+                return " ".join((self.atoms, " ".join(self.params)))
+            case _:
+                return " ".join((" ".join(self.atoms), self.pot_type, " ".join(self.params)))
 
 
 class PotHaver(ABC):
@@ -187,6 +211,7 @@ class PotHaver(ABC):
     pots : Dict[Tuple[str, ...], List[Interaction]]
         Potentials managed by object.
     """
+
     def __init__(self):
         """
         Instantiate class which can contain Interactions.
@@ -230,11 +255,13 @@ class PotHaver(ABC):
                 self.pots[old_pot.atoms][i] = new_pot
                 return
 
-    def get_pot(self,
-                species: Optional[Tuple[str, ...]] = None,
-                pot_class: Optional[str] = None,
-                pot_type: Optional[str] = None,
-                quiet: bool = False) -> Iterator[Interaction]:
+    def get_pot(
+        self,
+        species: Optional[Tuple[str, ...]] = None,
+        pot_class: Optional[str] = None,
+        pot_type: Optional[str] = None,
+        quiet: bool = False,
+    ) -> Iterator[Interaction]:
         """
         Return all pots matching criteria.
 
@@ -255,9 +282,12 @@ class PotHaver(ABC):
             Potentials matching criteria.
         """
         tests = (("atoms", species), ("pot_class", pot_class), ("pot_type", pot_type))
-        out = peek(pot for potSet in self.pots.values() for pot in potSet if
-                   all(getattr(pot, prop) == val for prop, val in tests if val is not None)
-                   )
+        out = peek(
+            pot
+            for potSet in self.pots.values()
+            for pot in potSet
+            if all(getattr(pot, prop) == val for prop, val in tests if val is not None)
+        )
 
         if out is None:
             if not quiet:
@@ -267,9 +297,9 @@ class PotHaver(ABC):
             out = ()
         return out
 
-    def get_pot_by_species(self,
-                           species: Tuple[str, ...],
-                           quiet: bool = False) -> Iterator[Interaction]:
+    def get_pot_by_species(
+        self, species: Tuple[str, ...], quiet: bool = False
+    ) -> Iterator[Interaction]:
         """
         Return all pots for a given pot species.
 
@@ -489,10 +519,7 @@ class Molecule(PotHaver):
                 print(pot, file=out_file)
         print("finish", file=out_file)
 
-    def _read_block(self,
-                    field_file: TextIO,
-                    pot_class: BondTypes,
-                    n_pots: int):
+    def _read_block(self, field_file: TextIO, pot_class: BondTypes, n_pots: int):
         """
         Read a potentials block.
 
@@ -567,18 +594,20 @@ class Molecule(PotHaver):
             name, mass, charge, *repeats_frozen = read_line(field_file).split()
 
             repeats_frozen = tuple(map(int, repeats_frozen))
-            if not repeats_frozen:
-                repeats, frozen = 1, 0
-            elif len(repeats_frozen) == 1:
-                repeats, frozen = repeats_frozen[0], 0
-            elif len(repeats_frozen) == 2:
-                repeats, frozen = repeats_frozen
-            else:
-                repeats, frozen, *_ = repeats_frozen
+            match len(repeats_frozen):
+                case 0:
+                    repeats, frozen = 1, 0
+                case 1:
+                    repeats, frozen = repeats_frozen[0], 0
+                case 2:
+                    repeats, frozen = repeats_frozen
+                case _:
+                    repeats, frozen, *_ = repeats_frozen
 
             repeats = int(repeats)
-            self.species[index] = Species(name, len(self.species),
-                                          float(charge), float(mass), frozen, repeats)
+            self.species[index] = Species(
+                name, len(self.species), float(charge), float(mass), frozen, repeats
+            )
             atom += repeats
             index += 1
 
@@ -587,6 +616,7 @@ class _PotList:  # pylint: disable=too-few-public-methods,attribute-defined-outs
     """
     List of potentials with given type.
     """
+
     def __set_name__(self, owner, name):
         if name == "tersoffs":
             name = "ters"
@@ -606,6 +636,7 @@ class _PotCount:  # pylint: disable=too-few-public-methods,attribute-defined-out
     """
     Number of potentials with given type.
     """
+
     def __set_name__(self, owner, name):
         self.pot_name = name[1:].lower()  # Strip "n"
 
@@ -674,25 +705,23 @@ class Field(PotHaver):
         """
         Generator of all `Interaction` names in `Field`.
         """
-        return (name for name in Potential.n_atoms
-                if self.get_num_pot_by_class(name, quiet=True))
+        return (name for name in Potential.n_atoms if self.get_num_pot_by_class(name, quiet=True))
 
     @property
     def species(self) -> Dict[str, str]:
         """
         Dictionary of `Species` by name.
         """
-        return {spec.element: spec
-                for mol in self.molecules.values()
-                for spec in mol.species.values()}
+        return {
+            spec.element: spec for mol in self.molecules.values() for spec in mol.species.values()
+        }
 
     @property
     def potSpecies(self) -> Set[str]:
         """
         Set of `Species` involved in potentials.
         """
-        return {spec for specPairs in self.pots
-                for spec in specPairs}
+        return {spec for specPairs in self.pots for spec in specPairs}
 
     def _read_block(self, field_file: TextIO, pot_class: PotentialTypes, n_pots: int):
         """
@@ -710,12 +739,12 @@ class Field(PotHaver):
         if pot_class == "tersoff":
             self._read_tersoff(field_file, n_pots)
             return
-        if 'vdwtab' in pot_class:
-            pot_class = 'vdwtab'
+        if "vdwtab" in pot_class:
+            pot_class = "vdwtab"
         for pot in range(n_pots):
             args = field_file.readline().split()
-            pot = Potential(pot_class, args)
-            self.add_potential(pot.atoms, pot)
+            potential = Potential(pot_class, args)
+            self.add_potential(potential.atoms, pot)
 
     def _parse_kim(self, line: str):
         """
@@ -737,7 +766,10 @@ class Field(PotHaver):
         elif key.lower() == "kim_interactions":
             self.kim_interactions = value.split(" ")
         else:
-            raise Exception(f"Malformed OpenKIM entry {line}. Only 'kim_init' or 'kim_interactions' are allowed.")
+            raise Exception(
+                f"Malformed OpenKIM entry {line}. "
+                "Only 'kim_init' or 'kim_interactions' are allowed."
+            )
 
     def _read_tersoff(self, field_file: TextIO, n_pots: int):
         """
@@ -821,12 +853,12 @@ class Field(PotHaver):
             self.header = in_file.readline().strip()
             units = read_line(in_file).split()
             if len(units) != 2:
-                key, self.units = 'UNITS', 'internal'
+                key, self.units = "UNITS", "internal"
             else:
                 key, self.units = units
             line = read_line(in_file)
             while line.lower() != "close":
-                if line.lower().startswith('kim'):
+                if line.lower().startswith("kim"):
                     self._parse_kim(line)
                 else:
                     key, *n_vals = line.lower().split()
@@ -839,8 +871,8 @@ class Field(PotHaver):
                         self._read_block(in_file, key, n_vals)
                 line = read_line(in_file)
 
-            if ((self.kim_model is not None) != (self.kim_interactions is not None)):
-                raise Exception('Either both kim_init and kim_interactions, or neither is valid.')
+            if (self.kim_model is not None) != (self.kim_interactions is not None):
+                raise Exception("Either both kim_init and kim_interactions, or neither is valid.")
 
     def write(self, field_file: PathLike = "FIELD"):
         """
@@ -859,7 +891,7 @@ class Field(PotHaver):
             for molecule in self.molecules.values():
                 molecule.write(out_file)
 
-            if (self.kim_model is not None and self.kim_interactions is not None):
+            if self.kim_model is not None and self.kim_interactions is not None:
                 print(f"kim_init {self.kim_model}", file=out_file)
                 print(f"kim_interactions {' '.join(self.kim_interactions)}")
 
@@ -871,9 +903,7 @@ class Field(PotHaver):
             print("close", file=out_file)
 
     def __str__(self) -> str:
-        return ("[" +
-                ", \n".join(molecule.name for molecule in self.molecules.values())
-                + "]")
+        return "[" + ", \n".join(molecule.name for molecule in self.molecules.values()) + "]"
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """
 Module containing data related to parsing output.
 """
+
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -8,7 +9,7 @@ import numpy as np
 from .types import ThreeByThree, OptPath, PathLike
 
 
-class Output():
+class Output:
     """
     Class containing parsed OUTPUT data.
 
@@ -32,6 +33,7 @@ class Output():
     diffusion: Optional[Dict[str, Tuple[float, float]]]
     average: Optional[Dict[str, Tuple[float, float]]]
     """
+
     __version__ = "0"
 
     def __init__(self, source: OptPath = None):
@@ -95,7 +97,7 @@ class Output():
         source : PathLike
             File to read data from.
         """
-        with open(source, 'r', encoding="utf-8") as in_file:
+        with open(source, "r", encoding="utf-8") as in_file:
             to_read = map(lambda line: line.strip().split(), in_file)
 
             for line in to_read:
@@ -105,14 +107,14 @@ class Output():
                 values: Any
                 key, *values = line
 
-                if key == 'vdw':
+                if key == "vdw":
                     typ, val, *_ = values
-                    if typ == 'energy':
+                    if typ == "energy":
                         self.vdw_energy = float(val)
-                    elif typ == 'pressure':
+                    elif typ == "pressure":
                         self.vdw_pressure = float(val)
 
-                elif key == 'run':
+                elif key == "run":
                     self.steps = int(values[2])
                     self.time = float(values[5])
                     self.average_steps = int(values[11])
@@ -128,14 +130,15 @@ class Output():
 
                     rmss = [float(val) for _, arr in zip(range(3), to_read) for val in arr[1:]]
 
-                    self.average = {header: (val, rms)
-                                    for (header, val, rms) in zip(headers, vals, rmss)}
+                    self.average = {
+                        header: (val, rms) for (header, val, rms) in zip(headers, vals, rmss)
+                    }
 
-                elif key == 'Loop':
+                elif key == "Loop":
                     self.run_time = float(values[5])
                     self.run_tps = float(values[10])
 
-                elif key == 'Pressure':
+                elif key == "Pressure":
                     next(to_read)
 
                     self.pressure_tensor = np.zeros((3, 3))
@@ -147,7 +150,7 @@ class Output():
 
                     self.pressure = float(next(to_read)[1])
 
-                elif key == 'Approximate':
+                elif key == "Approximate":
                     next(to_read)
                     data = []
                     while line := next(to_read):
@@ -155,7 +158,7 @@ class Output():
 
                     self.diffusion = {atom: (float(x), float(y)) for atom, x, y in data}
 
-                elif key == 'Average':
+                elif key == "Average":
                     self.average_cell = np.zeros((3, 3))
                     self.average_cell_rms = np.zeros((3, 3))
                     for i in range(3):
@@ -164,7 +167,7 @@ class Output():
                         self.average_cell_rms[i, :] = values[3:6]
 
     def __str__(self) -> str:
-        out_str = ''
+        out_str = ""
         if self.vdw_energy is not None:
             out_str += f"long range vdw energy correction: {self.vdw_energy} donkeys\n"
             out_str += f"long range vdw pressure correction: {self.vdw_pressure} donkeys\n"
@@ -191,10 +194,10 @@ class Output():
             out_str += "\n"
 
         if self.pressure_tensor is not None:
-            out_str += self.type_3x3("Average pressure tensor [katm]: ",
-                                     self.pressure_tensor)
-            out_str += self.type_3x3("Average pressure tensor rms [katm]: ",
-                                     self.pressure_tensor_rms)
+            out_str += self.type_3x3("Average pressure tensor [katm]: ", self.pressure_tensor)
+            out_str += self.type_3x3(
+                "Average pressure tensor rms [katm]: ", self.pressure_tensor_rms
+            )
             out_str += f"pressure (trace/3) [katm]: {self.pressure}\n"
 
         if self.average_cell is not None:
@@ -203,8 +206,9 @@ class Output():
         return out_str
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         OUTPUT = Output(sys.argv[1])
     else:

@@ -30,9 +30,7 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
     implemented_properties = ["energy", "forces", "stress"]
     units = UnitRegistry()
     # these can be pre-calculated
-    to_ase_pressure = (
-        units("kiloatmosphere").to("electron_volt / angstrom**3").magnitude
-    )
+    to_ase_pressure = units("kiloatmosphere").to("electron_volt / angstrom**3").magnitude
 
     def __init__(
         self,
@@ -45,7 +43,7 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
         command: Optional[str] = None,
         profile: Optional[str] = "",
         numProcs: int = 1,
-        **kwargs
+        **kwargs,
     ):
         """
         Calculator using DLPoly for ASE.
@@ -74,9 +72,7 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
             Extra options to pass to `DLPoly.__init__`.
         """
 
-        FileIOCalculator.__init__(
-            self, restart, ignore_bad_restart_file, label, atoms, profile
-        )
+        FileIOCalculator.__init__(self, restart, ignore_bad_restart_file, label, atoms, profile)
 
         DLPoly.__init__(self, control=control, field=field, **kwargs)
 
@@ -115,9 +111,9 @@ class DLPolyCalculator(FileIOCalculator, DLPoly):
             # nb read converts dlp units to ase in velocity and forces
             atoms = read(self.control.io_file_revcon, format="dlp4")
 
-            self.results["energy"] = self.statis.data[-1, 5] * self.units(
-                self.field.units
-            ).to("electron_volt")
+            self.results["energy"] = self.statis.data[-1, 5] * self.units(self.field.units).to(
+                "electron_volt"
+            )
             self.results["forces"] = atoms.get_forces()
             self.results["stress"] = (
                 full_3x3_to_voigt_6_stress(self.statis.data[-1, 31:40].reshape((3, 3)))
